@@ -5100,13 +5100,66 @@ if(window.location.protocol != 'https:')
 											
 												<div class="preview-item-links order-handle removable-parent" style="display:inline-block;">
 
-		<a class="removable-parent" href=""  data-link-type="SUBMIT"  data-text='' target="_blank" >
+                <a class="removable-parent" href="#" id="contact-submit-btn" data-link-type="SUBMIT" data-text='' target="_self" >
 
-	<span id="vbid-d2ba6020-0avrngki"  class="preview-element Link item-link magic-circle-holder text-element " data-menu-name="PREVIEW_LINK" >send &gt;</span>
+        <span id="vbid-d2ba6020-0avrngki"  class="preview-element Link item-link magic-circle-holder text-element " data-menu-name="PREVIEW_LINK" >send &gt;</span>
 </a>
 </div>
-											
-										
+<div id="contact-msg" style="display:none;margin-top:15px;font-family:Montserrat,Arial,sans-serif;font-size:14px;letter-spacing:0.1em;"></div>
+
+<script>
+(function(){
+  var btn = document.getElementById('contact-submit-btn');
+  if(!btn) return;
+  btn.addEventListener('click', function(e){
+    e.preventDefault();
+    var name    = (document.getElementById('vbid-d2ba6020-aljsgfn4') || {}).value || '';
+    var email   = (document.getElementById('vbid-d2ba6020-snqct0pe') || {}).value || '';
+    var message = (document.getElementById('vbid-d2ba6020-n3flknex') || {}).value || '';
+    var msgDiv  = document.getElementById('contact-msg');
+
+    if(!name.trim() || !email.trim() || !message.trim()){
+      msgDiv.style.display = 'block';
+      msgDiv.style.color   = '#e05';
+      msgDiv.textContent   = 'Please fill in all fields.';
+      return;
+    }
+
+    btn.style.opacity = '0.5';
+    btn.style.pointerEvents = 'none';
+    msgDiv.style.display = 'none';
+
+    fetch('/send-message', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: name, email: email, message: message})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      btn.style.opacity = '1';
+      btn.style.pointerEvents = 'auto';
+      msgDiv.style.display = 'block';
+      if(data.ok){
+        msgDiv.style.color = '#4caf50';
+        msgDiv.textContent = 'Message sent! Thank you.';
+        document.getElementById('vbid-d2ba6020-aljsgfn4').value = '';
+        document.getElementById('vbid-d2ba6020-snqct0pe').value = '';
+        document.getElementById('vbid-d2ba6020-n3flknex').value = '';
+      } else {
+        msgDiv.style.color = '#e05';
+        msgDiv.textContent = 'Failed to send: ' + (data.error || 'unknown error');
+      }
+    })
+    .catch(function(){
+      btn.style.opacity = '1';
+      btn.style.pointerEvents = 'auto';
+      msgDiv.style.display = 'block';
+      msgDiv.style.color = '#e05';
+      msgDiv.textContent = 'Network error — please try again.';
+    });
+  });
+})();
+</script>
 									
 								
 							</div>

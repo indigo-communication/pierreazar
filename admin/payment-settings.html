@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Payment Settings — Pierre Azar Admin</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/png" href="assets/images/favicon.png">
+    <link href="assets/vendor/metismenu/dist/metisMenu.min.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap-select/dist/css/bootstrap-select.min.css" rel="stylesheet">
+    <link class="main-switcher" href="assets/css/switcher.css" rel="stylesheet">
+    <link class="main-plugins" href="assets/css/plugins.css" rel="stylesheet">
+    <link class="main-css" href="assets/css/style.css" rel="stylesheet">
+    <style>
+        .secret-field { font-family: monospace; letter-spacing: .05em; }
+        .gateway-status { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; }
+        .gateway-status.on  { background:#2ecc71; }
+        .gateway-status.off { background:#e74c3c; }
+        .section-label { font-size:.75rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--bs-secondary-color,#888); margin-bottom:.5rem; margin-top:1.5rem; }
+        .test-result { font-size:.85rem; padding:.4rem .75rem; border-radius:.35rem; display:none; }
+    </style>
+</head>
+<body>
+
+<div id="main-wrapper">
+
+    <!-- Nav Header -->
+    <div class="nav-header">
+        <a href="index.html" class="brand-logo" aria-label="Brand Logo">
+            <span style="font-family:Montserrat,Arial,sans-serif;font-weight:700;font-size:18px;letter-spacing:.15em;color:var(--bs-primary)">PA</span>
+            <span class="brand-title" style="font-family:Montserrat,Arial,sans-serif;font-weight:700;font-size:16px;letter-spacing:.1em;color:var(--bs-heading-color);margin-left:8px">PIERRE AZAR</span>
+        </a>
+        <div class="nav-control">
+            <div class="hamburger"><span class="line"></span><span class="line"></span><span class="line"></span></div>
+        </div>
+    </div>
+
+    <!-- Top Header -->
+    <div class="header">
+        <div class="header-content">
+            <nav class="navbar navbar-expand">
+                <div class="collapse navbar-collapse justify-content-between">
+                    <div class="header-left"><div class="dashboard_bar">Payment Settings</div></div>
+                    <div class="navbar-nav header-right">
+                        <div class="nav-item d-flex align-items-center">
+                            <a href="login.html" class="btn btn-sm btn-outline-danger ms-2">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="deznav">
+        <div class="deznav-scroll">
+            <ul class="metismenu" id="menu">
+                <li class="menu-title">PIERRE AZAR</li>
+                <li>
+                    <a href="index.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M2.5 7.5L10 1.667L17.5 7.5V16.667C17.5 17.109 17.324 17.533 17.012 17.845C16.699 18.158 16.275 18.333 15.833 18.333H4.167C3.725 18.333 3.301 18.158 2.988 17.845C2.676 17.533 2.5 17.109 2.5 16.667V7.5Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="menu-title">MANAGE</li>
+                <li>
+                    <a href="submissions.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><polyline points="22,6 12,13 2,6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Form Submissions</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="course-sales.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="18" height="14" rx="2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 8L14 11L10 14" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Course Sales</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="finance.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><line x1="12" y1="1" x2="12" y2="23" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 5H9.5C8.57 5 7.68 5.37 7.02 6.02C6.37 6.68 6 7.57 6 8.5C6 9.43 6.37 10.32 7.02 10.98C7.68 11.63 8.57 12 9.5 12H14.5C15.43 12 16.32 12.37 16.98 13.02C17.63 13.68 18 14.57 18 15.5C18 16.43 17.63 17.32 16.98 17.98C16.32 18.63 15.43 19 14.5 19H6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Finance</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="reports.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 20V10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 20V4" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 20v-6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Reports</span>
+                    </a>
+                </li>
+                <li class="menu-title">SETTINGS</li>
+                <li>
+                    <a href="content-editor.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Content Editor</span>
+                    </a>
+                </li>
+                <li class="mm-active">
+                    <a href="payment-settings.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="1" y="4" width="22" height="16" rx="2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><line x1="1" y1="10" x2="23" y2="10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Payment Gateway</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="deznav-footer">
+                <a href="https://pierreazar.com" target="_blank">
+                    <div class="d-flex align-items-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><line x1="2" y1="12" x2="22" y2="12" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <p class="ms-2 mb-0">pierreazar.com</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Body -->
+    <div class="content-body">
+        <div class="container-fluid">
+
+            <div class="row page-titles">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.html">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Payment Gateway</li>
+                </ol>
+            </div>
+
+            <div class="row">
+                <div class="col-xl-8 col-lg-10">
+
+                    <!-- Status banner -->
+                    <div class="card mb-3" id="status-card">
+                        <div class="card-body py-3 d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="gateway-status off" id="status-dot"></span>
+                                <strong id="status-text">Loading…</strong>
+                                <span class="text-muted ms-2 small" id="status-sub"></span>
+                            </div>
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" id="toggle-enabled" onchange="toggleEnabled(this)">
+                                <label class="form-check-label" for="toggle-enabled">Enable gateway</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Areeba Payment Gateway — Credentials</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="settings-form" onsubmit="saveSettings(event)">
+
+                                <p class="section-label">Gateway Connection</p>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="gateway_url">Gateway URL</label>
+                                    <input type="url" class="form-control" id="gateway_url" name="gateway_url"
+                                           placeholder="https://gateway.areeba.com" required>
+                                    <div class="form-text">The base URL provided by Areeba (e.g. https://gateway.areeba.com)</div>
+                                </div>
+
+                                <p class="section-label">Merchant Credentials</p>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="merchant_id">Merchant ID</label>
+                                    <input type="text" class="form-control" id="merchant_id" name="merchant_id"
+                                           placeholder="Your Areeba Merchant ID" autocomplete="off" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="api_key">API Key (API Password)</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control secret-field" id="api_key" name="api_key"
+                                               placeholder="••••••••••••••••" autocomplete="new-password">
+                                        <button class="btn btn-outline-secondary" type="button" onclick="toggleVisible('api_key')">Show</button>
+                                    </div>
+                                    <div class="form-text">Leave unchanged (shows ****) to keep the existing key.</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="secret_key">Secret Key (HMAC)</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control secret-field" id="secret_key" name="secret_key"
+                                               placeholder="••••••••••••••••" autocomplete="new-password">
+                                        <button class="btn btn-outline-secondary" type="button" onclick="toggleVisible('secret_key')">Show</button>
+                                    </div>
+                                    <div class="form-text">Used to verify signed callbacks from Areeba.</div>
+                                </div>
+
+                                <p class="section-label">Course &amp; Pricing</p>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-sm-8">
+                                        <label class="form-label" for="course_name">Course Name</label>
+                                        <input type="text" class="form-control" id="course_name" name="course_name"
+                                               placeholder="Cinematography Course">
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="form-label" for="course_price">Price</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="course_price" name="course_price"
+                                                   min="1" step="0.01" placeholder="99.00">
+                                            <select class="form-select" id="currency" name="currency" style="max-width:90px;">
+                                                <option value="USD">USD</option>
+                                                <option value="LBP">LBP</option>
+                                                <option value="EUR">EUR</option>
+                                                <option value="AED">AED</option>
+                                                <option value="SAR">SAR</option>
+                                                <option value="JOD">JOD</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label" for="return_base_url">Site Base URL (for payment return)</label>
+                                    <input type="url" class="form-control" id="return_base_url" name="return_base_url"
+                                           placeholder="https://pierreazar.com">
+                                    <div class="form-text">After payment, Areeba redirects to <code>{this URL}/payment-return</code></div>
+                                </div>
+
+                                <!-- Alert -->
+                                <div id="save-alert" class="alert d-none" role="alert"></div>
+
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary" id="save-btn">
+                                        <span id="save-spinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+                                        Save Settings
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="loadSettings()">Reset</button>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div><!-- /card -->
+
+                    <!-- How it works -->
+                    <div class="card mt-3">
+                        <div class="card-header"><h6 class="mb-0">How it works</h6></div>
+                        <div class="card-body small text-muted">
+                            <ol class="mb-0 ps-3">
+                                <li>A visitor clicks <strong>Buy Course</strong> on the cinematography page.</li>
+                                <li>They enter their name &amp; email — no card details on this site.</li>
+                                <li>The server calls the Areeba API to create a secure checkout session.</li>
+                                <li>The visitor is redirected to <strong>Areeba's hosted payment page</strong> to enter card details.</li>
+                                <li>After payment, Areeba redirects back and the sale is recorded automatically.</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                </div><!-- /col -->
+            </div><!-- /row -->
+
+        </div><!-- /container -->
+    </div><!-- /content-body -->
+
+</div><!-- /main-wrapper -->
+
+<!-- Scripts -->
+<script src="assets/vendor/global/global.min.js"></script>
+<script src="assets/js/translator.js"></script>
+<script src="assets/vendor/metismenu/dist/metisMenu.min.js"></script>
+<script src="assets/vendor/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+<script src="assets/js/custom.min.js"></script>
+
+<script>
+(function() {
+    // Redirect to login if not authenticated
+    function checkAuth(resp) {
+        if (resp.status === 401) { window.location.href = 'login.html'; return false; }
+        return true;
+    }
+
+    window.toggleVisible = function(id) {
+        var el = document.getElementById(id);
+        el.type = el.type === 'password' ? 'text' : 'password';
+    };
+
+    window.toggleEnabled = function(chk) {
+        var cfg = collectForm();
+        cfg.enabled = chk.checked;
+        postConfig(cfg);
+    };
+
+    function collectForm() {
+        var form = document.getElementById('settings-form');
+        var data = {};
+        ['gateway_url','merchant_id','api_key','secret_key','course_name',
+         'course_price','currency','return_base_url'].forEach(function(k) {
+            var el = form.elements[k];
+            data[k] = el ? el.value.trim() : '';
+        });
+        data.course_price = parseFloat(data.course_price) || 99;
+        data.enabled = document.getElementById('toggle-enabled').checked;
+        return data;
+    }
+
+    function showAlert(msg, ok) {
+        var el = document.getElementById('save-alert');
+        el.className = 'alert ' + (ok ? 'alert-success' : 'alert-danger');
+        el.textContent = msg;
+        el.classList.remove('d-none');
+        setTimeout(function() { el.classList.add('d-none'); }, 4000);
+    }
+
+    function postConfig(cfg) {
+        fetch('/api/payment-config', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(cfg)
+        })
+        .then(function(r) { if (!checkAuth(r)) return null; return r.json(); })
+        .then(function(d) {
+            if (!d) return;
+            if (d.ok) { loadSettings(); showAlert('Settings saved.', true); }
+            else showAlert('Error: ' + d.error, false);
+        })
+        .catch(function(e) { showAlert('Network error: ' + e.message, false); });
+    }
+
+    window.saveSettings = function(e) {
+        e.preventDefault();
+        var btn = document.getElementById('save-btn');
+        var sp  = document.getElementById('save-spinner');
+        btn.disabled = true; sp.classList.remove('d-none');
+        var cfg = collectForm();
+        fetch('/api/payment-config', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(cfg)
+        })
+        .then(function(r) { if (!checkAuth(r)) return null; return r.json(); })
+        .then(function(d) {
+            btn.disabled = false; sp.classList.add('d-none');
+            if (!d) return;
+            if (d.ok) { showAlert('Settings saved successfully.', true); loadSettings(); }
+            else showAlert('Error: ' + d.error, false);
+        })
+        .catch(function(e) {
+            btn.disabled = false; sp.classList.add('d-none');
+            showAlert('Network error: ' + e.message, false);
+        });
+    };
+
+    window.loadSettings = function() {
+        fetch('/api/payment-config')
+        .then(function(r) { if (!checkAuth(r)) return null; return r.json(); })
+        .then(function(d) {
+            if (!d || !d.ok) return;
+            var c = d.config;
+            var form = document.getElementById('settings-form');
+            ['gateway_url','merchant_id','api_key','secret_key','course_name',
+             'course_price','return_base_url'].forEach(function(k) {
+                if (form.elements[k]) form.elements[k].value = c[k] || '';
+            });
+            // Currency select
+            var sel = document.getElementById('currency');
+            for (var i = 0; i < sel.options.length; i++) {
+                if (sel.options[i].value === c.currency) { sel.selectedIndex = i; break; }
+            }
+            // Status toggle
+            var enabled = !!c.enabled;
+            document.getElementById('toggle-enabled').checked = enabled;
+            document.getElementById('status-dot').className = 'gateway-status ' + (enabled ? 'on' : 'off');
+            document.getElementById('status-text').textContent = enabled ? 'Gateway Active' : 'Gateway Disabled';
+            document.getElementById('status-sub').textContent = c.merchant_id
+                ? ('Merchant: ' + c.merchant_id)
+                : 'No merchant ID set';
+        })
+        .catch(function(e) {
+            document.getElementById('status-text').textContent = 'Failed to load settings';
+        });
+    };
+
+    document.addEventListener('DOMContentLoaded', loadSettings);
+})();
+</script>
+</body>
+</html>

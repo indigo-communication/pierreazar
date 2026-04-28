@@ -438,8 +438,8 @@ ul#lang-dropdown li{
 		</style>
 		
 		
-			<link rel="icon" type="image/png" href="images/photos/img_033.jpg=s30" />
-			<link rel="apple-touch-icon" href="images/photos/img_033.jpg=s30" />
+			<link rel="icon" type="image/png" href="images/photos/img_033.jpg" />
+			<link rel="apple-touch-icon" href="images/photos/img_033.jpg" />
 		
 	
 	
@@ -2991,14 +2991,14 @@ and (max-width : 768px)  {
 	background-position: center;
 	background-size:cover;
 	background-repeat:no-repeat;
-	background-image:url('images/photos/img_035.jpg=s30');
+	background-image:url('images/photos/img_035.jpg');
 	width:13px;
 	height:13px;
 }
 
 .flex .page-navigator.active , .page-navigator:hover{
 	color:red;
-	background-image:url('images/photos/img_036.jpg=s30');
+	background-image:url('images/photos/img_036.jpg');
 	
 }
 
@@ -3080,7 +3080,7 @@ and (max-width : 768px)  {
 	background-position: center;
 	background-size:cover;
 	background-repeat:no-repeat;
-	background-image:url('images/photos/img_035.jpg=s30');
+	background-image:url('images/photos/img_035.jpg');
 	width:13px;
 	height:13px;
 }
@@ -3097,7 +3097,7 @@ and (max-width : 768px)  {
 
 .page-navigator.active , .page-navigator:hover{
 	color:red;
-	background-image:url('images/photos/img_036.jpg=s30');
+	background-image:url('images/photos/img_036.jpg');
 	
 }
 
@@ -4670,13 +4670,13 @@ and (max-width : 768px)  {
 	
 		
 		<!-- SCRIPT -->
-		<script src="/js/jquery-2.x-git.min.js" type="text/javascript"></script>
+		<script defer src="/js/jquery-2.x-git.min.js" type="text/javascript"></script>
 		
-		<script src="/js/xprs_helper.js" type="text/javascript"></script>
+		<script defer src="/js/xprs_helper.js" type="text/javascript"></script>
 		
 		
-		<script type="text/javascript" src="/js/all_js.js"></script>
-		<script src="/js/jquery.mobile.custom.min.js"></script>
+		<script defer type="text/javascript" src="/js/all_js.js"></script>
+		<script defer src="/js/jquery.mobile.custom.min.js"></script>
 		
 		
 	
@@ -4698,7 +4698,100 @@ if(window.location.protocol != 'https:')
 		
 		 var LABEL_CONFIG = {};
 		 
-		</script></head>
+		</script>
+<style>
+/* Course page: video left, text right, price below */
+
+/* Override the section min-height */
+#vbid-c1e000b4-ylaf0aoi.sub.item-box { min-height: 0 !important; }
+#vbid-c1e000b4-ylaf0aoi .multi-container { height: auto !important; }
+#vbid-c1e000b4-ylaf0aoi .Picture.item-preview,
+#vbid-c1e000b4-ylaf0aoi .preview-image-holder:not(.inner-pic-holder) {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+}
+
+/* Flex row for helper-div */
+#vbid-c1e000b4-ylaf0aoi .helper-div.bottom-center {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    position: relative !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+}
+
+/* ── LEFT: video column ── */
+#vbid-c1e000b4-ylaf0aoi .pic-side {
+    position: relative !important;
+    width: 50% !important;
+    flex: 0 0 50% !important;
+    height: 380px !important;
+    top: auto !important; bottom: auto !important; left: auto !important;
+}
+#vbid-c1e000b4-ylaf0aoi .pic-side .vertical-aligner,
+#vbid-c1e000b4-ylaf0aoi .pic-side .inner-pic-holder {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+}
+#vbid-c1e000b4-ylaf0aoi #vbid-c1e000b4-3ybmwuzg {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    background-image: none !important;
+}
+#vbid-c1e000b4-ylaf0aoi .preview-video-holder,
+#vbid-c1e000b4-ylaf0aoi .preview-video-source,
+#vbid-c1e000b4-ylaf0aoi .preview-video-source iframe {
+    position: absolute !important;
+    top: 0 !important; left: 0 !important;
+    width: 100% !important; height: 100% !important;
+}
+/* Hide lightbox link covering the video */
+#vbid-c1e000b4-ylaf0aoi a.image-link.not-wrapping {
+    display: none !important;
+}
+
+/* ── RIGHT: text column ── */
+#vbid-c1e000b4-ylaf0aoi .text-side {
+    flex: 1 1 50% !important;
+    width: 50% !important;
+    position: relative !important;
+    float: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding-left: 30px !important;
+    padding-right: 10px !important;
+    box-sizing: border-box !important;
+    display: block !important;
+    align-self: center !important;
+}
+#vbid-c1e000b4-ylaf0aoi .text-side .vertical-aligner {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+}
+
+/* ── BOTTOM: price + buy row ── */
+.course-price-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+.course-price-row .preview-price-holder,
+.course-price-row .preview-item-links {
+    display: inline-block !important;
+    margin: 0 15px !important;
+}
+</style>
+</head>
 
 	<body class="fast-animated-bg fixed-bg  " data-ecommerce-solution="DISABLED" data-root-id="vbid-6d830c27-abbmfckb" data-root-style-id="style-6d830c27-akddbsak" data-default-currency="USD"   data-app-version="1.6.0f2-noimos-no-viewer" data-caller="live"  data-ecommerce-dashboard="" data-static-server="//www.indigo-cy.com" data-imos-server="https://imos006-dot-im--os.appspot.com" >
 	
@@ -4720,7 +4813,7 @@ if(window.location.protocol != 'https:')
 		data-AUTO_PLAY_DURATION="4"
 		data-SLIDE_EFFECT="SLIDE"
 		data-FLEX_ELEMENT_EFFECT=""
-		data-FLEX_ARROWS="images/photos/img_037.jpg=s50"
+		data-FLEX_ARROWS="images/photos/img_037.jpg"
 	></div>
 	<div class="layout-settings" style="display:none;" data-type="multi"></div>
 	<div id="children">
@@ -4874,7 +4967,7 @@ if(window.location.protocol != 'https:')
 		data-AUTO_PLAY_DURATION="4"
 		data-SLIDE_EFFECT="SLIDE"
 		data-FLEX_ELEMENT_EFFECT="effect-fadein"
-		data-FLEX_ARROWS="images/photos/img_037.jpg=s50"
+		data-FLEX_ARROWS="images/photos/img_037.jpg"
 	></div>
 	<div class="layout-settings" style="display:none;" data-type="multi"></div>
 	<div id="children">
@@ -4902,7 +4995,7 @@ if(window.location.protocol != 'https:')
 				<div class="vertical-aligner">
 					<div id="vbid-ca1eb861-5whq9twf-holder" class="preview-image-holder inner-pic-holder" data-menu-name="PREVIEW_INLINE_IMAGE_HOLDER">
     
-    <div id="vbid-ca1eb861-5whq9twf" class="inner-pic preview-element  magic-circle-holder  load-high-res " data-menu-name="PREVIEW_INLINE_IMAGE" style="background-image:url(images/photos/img_038.jpg=s300);" data-orig-width="4160" data-orig-height="2774" >
+    <div id="vbid-ca1eb861-5whq9twf" class="inner-pic preview-element  magic-circle-holder  load-high-res " data-menu-name="PREVIEW_INLINE_IMAGE" style="background-image:url(images/photos/img_038.jpg);" data-orig-width="4160" data-orig-height="2774" >
         
          
          
@@ -4992,7 +5085,7 @@ if(window.location.protocol != 'https:')
 		data-AUTO_PLAY_DURATION="4"
 		data-SLIDE_EFFECT="SLIDE"
 		data-FLEX_ELEMENT_EFFECT=""
-		data-FLEX_ARROWS="images/photos/img_037.jpg=s50"
+		data-FLEX_ARROWS="images/photos/img_037.jpg"
 	></div>
 	<div class="layout-settings" style="display:none;" data-type="multi"></div>
 	<div id="children">
@@ -5076,7 +5169,7 @@ if(window.location.protocol != 'https:')
 					<div id="vbid-c1e000b4-3ybmwuzg-holder" class="preview-image-holder inner-pic-holder" data-menu-name="PREVIEW_INLINE_IMAGE_HOLDER">
     
     <a class="image-link top-layer not-wrapping" href="/vbid-c1e000b4-kdtvmnoi"  data-link-type="LIGHTBOX" target="_self"></a> 
-    <div id="vbid-c1e000b4-3ybmwuzg" class="inner-pic preview-element  magic-circle-holder  load-high-res " data-menu-name="PREVIEW_INLINE_IMAGE" style="background-image:url(images/photos/img_039.jpg=s300);" data-orig-width="4160" data-orig-height="2774" >
+    <div id="vbid-c1e000b4-3ybmwuzg" class="inner-pic preview-element  magic-circle-holder  load-high-res " data-menu-name="PREVIEW_INLINE_IMAGE" style="background-image:url(images/photos/img_039.jpg);" data-orig-width="4160" data-orig-height="2774" >
         
         
 
@@ -5140,6 +5233,20 @@ if(window.location.protocol != 'https:')
 
 										
 											
+
+										
+											
+										
+											
+										
+									
+								
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+<div class="course-price-row" style="clear:both; text-align:center; padding:30px 6% 20px; width:100%;">
 <br class="upper-line-break" />
 <div class="preview-price-holder removable-parent order-handle">
 	<div id="vbid-c1e000b4-odsvwj1v" class="preview-element preview-price magic-circle-holder text-element quick-text-style-menu " data-menu-name="PREVIEW_PRICE" data-product-type="SERVICE" data-product-id="product-c1e000b4-odsvwj1v" >
@@ -5172,7 +5279,7 @@ if(window.location.protocol != 'https:')
 	<div class="preview-links-wrapper">
 
 	
-		<a class="removable-parent" href="/" data-link-type="BUY"   target="_self" >
+		<a class="removable-parent" href="#" data-link-type="BUY" onclick="openCheckout(event)" target="_self" >
 	
 		<span id="vbid-c1e000b4-nold91wb"  class="preview-element Link item-link magic-circle-holder text-element " data-menu-name="PREVIEW_LINK" >Buy Now</span>
 			</a>
@@ -5181,18 +5288,7 @@ if(window.location.protocol != 'https:')
 	
 	</div>
 </div>
-										
-											
-										
-											
-										
-									
-								
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+</div>
 		</div>
 	</div>
 </div>
@@ -5242,7 +5338,7 @@ if(window.location.protocol != 'https:')
 		data-AUTO_PLAY_DURATION="4"
 		data-SLIDE_EFFECT="SLIDE"
 		data-FLEX_ELEMENT_EFFECT=""
-		data-FLEX_ARROWS="images/photos/img_037.jpg=s50"
+		data-FLEX_ARROWS="images/photos/img_037.jpg"
 	></div>
 	<div class="layout-settings" style="display:none;" data-type="multi"></div>
 	<div id="children">
@@ -5766,7 +5862,7 @@ if(window.location.protocol != 'https:')
 		data-AUTO_PLAY_DURATION="4"
 		data-SLIDE_EFFECT="SLIDE"
 		data-FLEX_ELEMENT_EFFECT="effect-fadein"
-		data-FLEX_ARROWS="images/photos/img_037.jpg=s50"
+		data-FLEX_ARROWS="images/photos/img_037.jpg"
 	></div>
 	<div class="layout-settings" style="display:none;" data-type="multi"></div>
 	<div id="children">
@@ -6066,7 +6162,7 @@ if(window.location.protocol != 'https:')
 		data-AUTO_PLAY_DURATION="4"
 		data-SLIDE_EFFECT="SLIDE"
 		data-FLEX_ELEMENT_EFFECT="effect-fadein"
-		data-FLEX_ARROWS="images/photos/img_037.jpg=s50"
+		data-FLEX_ARROWS="images/photos/img_037.jpg"
 	></div>
 	<div class="layout-settings" style="display:none;" data-type="multi"></div>
 	<div id="children">
@@ -6133,15 +6229,15 @@ if(window.location.protocol != 'https:')
 		<div id="vbid-6d830c27-gxdblbln" class="preview-element preview-social-holder magic-circle-holder" data-menu-name="PREVIEW_SOCIAL" data-theme="8" >
 			
 			<div id="FACEBOOK" class='link-entry ' data-menu-name="PREVIEW_SOCIAL" style='display:inline-block;' data-title="FACEBOOK" data-img-url="/images/icons/8facebook.png">
-				<a class='social-link-url' href="https://www.facebook.com/" target='_blank'><img class='preview-link-img nopin load-high-res' data-pin-nopin="true" src="images/photos/img_044.jpg=s100" ></a>
+				<a class='social-link-url' href="https://www.facebook.com/" target='_blank'><img class='preview-link-img nopin load-high-res' data-pin-nopin="true" src="images/photos/img_044.jpg" ></a>
 			</div>
 			
 			<div id="INSTAGRAM" class='link-entry ' data-menu-name="PREVIEW_SOCIAL" style='display:inline-block;' data-title="INSTAGRAM" data-img-url="/images/icons/8instagram.png">
-				<a class='social-link-url' href="https://www.instagram.com" target='_blank'><img class='preview-link-img nopin load-high-res' data-pin-nopin="true" src="images/photos/img_045.jpg=s100" ></a>
+				<a class='social-link-url' href="https://www.instagram.com" target='_blank'><img class='preview-link-img nopin load-high-res' data-pin-nopin="true" src="images/photos/img_045.jpg" ></a>
 			</div>
 			
 			<div id="VIMEO" class='link-entry ' data-menu-name="PREVIEW_SOCIAL" style='display:inline-block;' data-title="VIMEO" data-img-url="/images/icons/8vimeo.png">
-				<a class='social-link-url' href="https://www.vimeo.com" target='_blank'><img class='preview-link-img nopin load-high-res' data-pin-nopin="true" src="images/photos/img_046.jpg=s100" ></a>
+				<a class='social-link-url' href="https://www.vimeo.com" target='_blank'><img class='preview-link-img nopin load-high-res' data-pin-nopin="true" src="images/photos/img_046.jpg" ></a>
 			</div>
 			
 		</div> 
@@ -6205,10 +6301,10 @@ if(window.location.protocol != 'https:')
 			</div>
 		</div>
 	</div>
-	    <img src="images/photos/img_047.jpg=s50" class="download-gallery-btn clickable" style="display: none;">
-		<img src="images/photos/img_048.jpg=s50" class="close-lightbox-btn clickable" style="opacity: 1;">
-		<img src="images/photos/img_049.jpg=s50" class="lightbox-arrow lightbox-left clickable top-layer" >
-		<img src="images/photos/img_050.jpg=s50" class="lightbox-arrow lightbox-right clickable top-layer" >
+	    <img src="images/photos/img_047.jpg" class="download-gallery-btn clickable" style="display: none;">
+		<img src="images/photos/img_048.jpg" class="close-lightbox-btn clickable" style="opacity: 1;">
+		<img src="images/photos/img_049.jpg" class="lightbox-arrow lightbox-left clickable top-layer" >
+		<img src="images/photos/img_050.jpg" class="lightbox-arrow lightbox-right clickable top-layer" >
 </div>
 
 	</div>
@@ -6231,8 +6327,8 @@ if(window.location.protocol != 'https:')
 	</script>
 
 	
-	<script src="/js/lightbox.js"  type="text/javascript"></script>
-	<script src="/js/spimeengine.js"  type="text/javascript"></script>
+	<script defer src="/js/lightbox.js" type="text/javascript"></script>
+	<script defer src="/js/spimeengine.js" type="text/javascript"></script>
 
 
 	
@@ -6240,6 +6336,107 @@ if(window.location.protocol != 'https:')
 	
 
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"ca13be5178b34d8fb5836910442f2fd8","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+
+<!-- ── Areeba Checkout Modal ─────────────────────────────────────────────── -->
+<style>
+#pa-checkout-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:99999;align-items:center;justify-content:center;}
+#pa-checkout-overlay.open{display:flex;}
+#pa-checkout-box{background:#111;color:#f0f0f0;border-radius:8px;padding:2.2rem 2rem;max-width:400px;width:92%;box-shadow:0 8px 40px rgba(0,0,0,.6);position:relative;}
+#pa-checkout-box h2{font-size:1.25rem;font-weight:700;margin-bottom:.25rem;}
+#pa-checkout-box p.sub{color:#888;font-size:.875rem;margin-bottom:1.5rem;}
+#pa-checkout-box label{display:block;font-size:.8rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#999;margin-bottom:.3rem;}
+#pa-checkout-box input{width:100%;background:#1a1a1a;border:1px solid #333;border-radius:4px;padding:.65rem .85rem;color:#f0f0f0;font-size:.95rem;margin-bottom:1rem;outline:none;transition:border-color .2s;}
+#pa-checkout-box input:focus{border-color:#fff;}
+#pa-checkout-btn{width:100%;padding:.8rem;background:#fff;color:#000;font-weight:700;font-size:1rem;border:none;border-radius:4px;cursor:pointer;transition:opacity .2s;}
+#pa-checkout-btn:hover{opacity:.85;}
+#pa-checkout-btn:disabled{opacity:.5;cursor:default;}
+#pa-checkout-close{position:absolute;top:.75rem;right:1rem;background:none;border:none;color:#888;font-size:1.4rem;cursor:pointer;line-height:1;}
+#pa-checkout-close:hover{color:#fff;}
+#pa-checkout-error{display:none;margin-top:.75rem;padding:.5rem .75rem;background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.4);border-radius:4px;color:#e74c3c;font-size:.85rem;}
+#pa-checkout-secure{display:flex;align-items:center;gap:.4rem;color:#666;font-size:.75rem;margin-top:.9rem;justify-content:center;}
+</style>
+
+<div id="pa-checkout-overlay" role="dialog" aria-modal="true" aria-label="Course checkout">
+  <div id="pa-checkout-box">
+    <button id="pa-checkout-close" onclick="closeCheckout()" aria-label="Close">&times;</button>
+    <h2>Enroll in the Course</h2>
+    <p class="sub">You will be redirected to our secure payment page to complete your purchase.</p>
+    <form id="pa-checkout-form" onsubmit="submitCheckout(event)">
+      <label for="pa-name">Full Name</label>
+      <input type="text" id="pa-name" placeholder="Your name" required autocomplete="name">
+      <label for="pa-email">Email Address</label>
+      <input type="email" id="pa-email" placeholder="your@email.com" required autocomplete="email">
+      <button type="submit" id="pa-checkout-btn">
+        <span id="pa-btn-text">Proceed to Secure Payment</span>
+        <span id="pa-btn-spinner" style="display:none;">Processing…</span>
+      </button>
+      <div id="pa-checkout-error"></div>
+    </form>
+    <div id="pa-checkout-secure">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Secured by Areeba — card details entered on Areeba's page only
+    </div>
+  </div>
+</div>
+
+<script>
+function openCheckout(e) {
+  if (e) e.preventDefault();
+  document.getElementById('pa-checkout-overlay').classList.add('open');
+  document.getElementById('pa-name').focus();
+}
+function closeCheckout() {
+  document.getElementById('pa-checkout-overlay').classList.remove('open');
+  document.getElementById('pa-checkout-error').style.display = 'none';
+}
+document.getElementById('pa-checkout-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeCheckout();
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeCheckout();
+});
+function submitCheckout(e) {
+  e.preventDefault();
+  var name  = document.getElementById('pa-name').value.trim();
+  var email = document.getElementById('pa-email').value.trim();
+  var btn   = document.getElementById('pa-checkout-btn');
+  var errEl = document.getElementById('pa-checkout-error');
+  var txt   = document.getElementById('pa-btn-text');
+  var spin  = document.getElementById('pa-btn-spinner');
+
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  txt.style.display = 'none';
+  spin.style.display = 'inline';
+
+  fetch('/api/initiate-payment', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name: name, email: email})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.ok && d.checkout_url) {
+      window.location.href = d.checkout_url;
+    } else {
+      errEl.textContent = d.error || 'Something went wrong. Please try again.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      txt.style.display = 'inline';
+      spin.style.display = 'none';
+    }
+  })
+  .catch(function() {
+    errEl.textContent = 'Network error. Please check your connection and try again.';
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    txt.style.display = 'inline';
+    spin.style.display = 'none';
+  });
+}
+</script>
+<!-- ── End Areeba Checkout ────────────────────────────────────────────────── -->
+
 </body>
 
 	

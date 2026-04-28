@@ -1,0 +1,24 @@
+# Credentials — never commit
+mail_config.py
+.credentials.md
+data/
+
+# Admin vendor libraries (third-party, not ours)
+admin/assets/vendor/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Backups & temp
+*.bak
+*.zip
+crm_temp/
+deploy/
+
+# Images (large originals)
+images/hq/
+
+# Session notes
+PROJECT_RECAP.md

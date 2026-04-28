@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+	<!-- Title -->
+	<title>Pierre Azar — Admin Panel</title>
+	
+	<!-- Meta -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="author" content="Pierre Azar">
+	<meta name="robots" content="index, follow">
+	<meta name="format-detection" content="telephone=no">
+	
+	<meta name="keywords" content="admin, admin dashboard, bootstrap, template, analytics, dark mode, modern, responsive admin dashboard, sass, ui kit">
+	<meta name="description" content="Elevate your administrative efficiency and enhance productivity with the Pierre Azar Bootstrap Admin Dashboard Template. Designed to streamline your tasks, this powerful tool provides a user-friendly interface, robust features, and customizable options, making it the ideal choice for managing your data and operations with ease.">
+	
+	<meta property="og:title" content="Pierre Azar — Admin Panel">
+	<meta property="og:description" content="Elevate your administrative efficiency and enhance productivity with the Pierre Azar Bootstrap Admin Dashboard Template. Designed to streamline your tasks, this powerful tool provides a user-friendly interface, robust features, and customizable options, making it the ideal choice for managing your data and operations with ease.">
+	<meta property="og:image" content="https://pierreazar.com/xhtml/social-image.png">
+	
+	<!-- TWITTER META -->
+	<meta name="twitter:title" content="Pierre Azar — Admin Panel">
+	<meta name="twitter:description" content="Elevate your administrative efficiency and enhance productivity with the Pierre Azar Bootstrap Admin Dashboard Template. Designed to streamline your tasks, this powerful tool provides a user-friendly interface, robust features, and customizable options, making it the ideal choice for managing your data and operations with ease.">
+	<meta name="twitter:image" content="https://pierreazar.com/xhtml/social-image.png">
+	<meta name="twitter:card" content="summary_large_image">
+	
+	<!-- FAVICONS ICON -->
+	<link rel="shortcut icon" type="image/png" href="assets/images/favicon.png">
+	
+	<!-- MOBILE SPECIFIC -->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	
+	<!-- Canonical URL -->
+	<link rel="canonical" href="https://pierreazar.com/xhtml/login.html">
+	
+	<!-- Plugins Stylesheet -->
+	<link href="assets/vendor/metismenu/dist/metisMenu.min.css" rel="stylesheet">
+	<link href="assets/vendor/bootstrap-select/dist/css/bootstrap-select.min.css" rel="stylesheet">
+	<link class="main-switcher" href="assets/css/switcher.css" rel="stylesheet">
+	
+	<!-- Start - Style CSS -->
+	<link class="main-plugins" href="assets/css/plugins.css" rel="stylesheet">
+	<link class="main-css" href="assets/css/style.css" rel="stylesheet">
+	<!-- End - Style CSS -->
+
+</head>
+<body>
+
+	<!-- Start - Authentication Wrapper -->
+	<div class="auth-wrapper">
+		<div class="row">
+			<div class="col-xl-6 col-lg-6 order-lg-1">
+				<div class="auth-info text-center">
+					<div class="mb-5 mx-auto col-xxl-6">
+						<div class="brand-logo mb-3">
+							<span style="font-family:Montserrat,Arial,sans-serif;font-weight:700;font-size:13px;letter-spacing:0.1em;color:var(--bs-primary);">PA</span>
+							<span style="font-family:Montserrat,Arial,sans-serif;font-weight:700;font-size:18px;letter-spacing:0.15em;color:var(--bs-primary);">PIERRE AZAR</span>
+						</div>
+						<p class="info-text">Manage your website contacts, course inquiries, and sales from one place.</p>
+					</div>
+					<div class="auth-media">
+						<img class="w-100 img-fluid" src="assets/images/login.png" alt="">
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-6 col-lg-6 mx-auto align-self-center">
+				<div class="auth-form">
+<div class="text-center mb-4">
+<h3 class="mb-0">Admin Login</h3>
+<p class="mb-0">Sign in to manage your website.</p>
+</div>
+<form id="loginForm" onsubmit="doLogin(event)">
+<div class="mb-3">
+<label class="form-label">Username</label>
+<input type="text" id="login-user" class="form-control form-control-lg" placeholder="admin" autocomplete="username">
+</div>
+<div class="mb-3">
+<label class="form-label">Password</label>
+<input type="password" id="login-pass" autocomplete="current-password" class="form-control form-control-lg" placeholder="Enter your password">
+</div>
+<div id="login-error" class="alert alert-danger d-none mb-3"></div>
+<div class="text-center mb-4">
+<button type="submit" class="btn btn-primary btn-lg w-100">Sign In</button>
+</div>
+</form>
+</div>
+<script>
+function doLogin(e) {
+e.preventDefault();
+var u = document.getElementById('login-user').value.trim();
+var p = document.getElementById('login-pass').value;
+var err = document.getElementById('login-error');
+err.classList.add('d-none');
+fetch('/admin/login', {
+method: 'POST',
+headers: {'Content-Type': 'application/json'},
+body: JSON.stringify({username: u, password: p})
+}).then(function(r){ return r.json(); }).then(function(d){
+if (d.ok) {
+window.location.href = 'submissions.html';
+} else {
+err.textContent = d.error || 'Invalid credentials.';
+err.classList.remove('d-none');
+}
+}).catch(function(ex){
+err.textContent = ex.message;
+err.classList.remove('d-none');
+});
+}
+</script>
+
+		<!-- End - Authentication Wrapper -->
+
+	<!-- Start - Page Scripts -->
+	<script src="assets/vendor/jquery/dist/jquery.min.js"></script>
+	<script src="assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="assets/vendor/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+	<script src="assets/vendor/metismenu/dist/metisMenu.min.js"></script>
+	<script src="assets/vendor/@yaireo/tagify/dist/tagify.js"></script>
+	
+	<!-- Script For Custom JS -->
+	<script src="assets/js/translator.js"></script>
+    <script src="assets/js/deznav-init.js"></script>
+    <script src="assets/js/custom.js"></script>
+	
+	
+
+</body>
+</html>

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <!-- Title -->
+	<title>Pierre Azar — Admin Panel</title>
+	
+	<!-- Meta -->
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="author" content="Pierre Azar">
+	<meta name="robots" content="index, follow">
+	<meta name="format-detection" content="telephone=no">
+	
+	<meta name="keywords" content="admin, admin dashboard, bootstrap, template, analytics, dark mode, modern, responsive admin dashboard, sass, ui kit">
+	<meta name="description" content="Elevate your administrative efficiency and enhance productivity with the Pierre Azar Bootstrap Admin Dashboard Template. Designed to streamline your tasks, this powerful tool provides a user-friendly interface, robust features, and customizable options, making it the ideal choice for managing your data and operations with ease.">
+	
+	<meta property="og:title" content="Pierre Azar — Admin Panel">
+	<meta property="og:description" content="Elevate your administrative efficiency and enhance productivity with the Pierre Azar Bootstrap Admin Dashboard Template. Designed to streamline your tasks, this powerful tool provides a user-friendly interface, robust features, and customizable options, making it the ideal choice for managing your data and operations with ease.">
+	<meta property="og:image" content="https://pierreazar.com/xhtml/social-image.png">
+	
+	<!-- TWITTER META -->
+	<meta name="twitter:title" content="Pierre Azar — Admin Panel">
+	<meta name="twitter:description" content="Elevate your administrative efficiency and enhance productivity with the Pierre Azar Bootstrap Admin Dashboard Template. Designed to streamline your tasks, this powerful tool provides a user-friendly interface, robust features, and customizable options, making it the ideal choice for managing your data and operations with ease.">
+	<meta name="twitter:image" content="https://pierreazar.com/xhtml/social-image.png">
+	<meta name="twitter:card" content="summary_large_image">
+	
+	<!-- FAVICONS ICON -->
+	<link rel="shortcut icon" type="image/png" href="assets/images/favicon.png">
+	
+	<!-- MOBILE SPECIFIC -->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	
+	<!-- Canonical URL -->
+	<link rel="canonical" href="https://pierreazar.com/xhtml/finance.html">
+	
+	<!-- Plugins Stylesheet -->
+	<link href="assets/vendor/metismenu/dist/metisMenu.min.css" rel="stylesheet">
+	<link href="assets/vendor/bootstrap-select/dist/css/bootstrap-select.min.css" rel="stylesheet">
+	<link class="main-switcher" href="assets/css/switcher.css" rel="stylesheet">
+	
+	<link href="assets/vendor/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
+	<link href="assets/vendor/bootstrap-datepicker/css/bootstrap-datepicker3.min.css" rel="stylesheet">	
+	<link href="assets/vendor/@yaireo/tagify/dist/tagify.css" rel="stylesheet">
+	
+	<!-- Start - Style CSS -->
+	<link class="main-plugins" href="assets/css/plugins.css" rel="stylesheet">
+	<link class="main-css" href="assets/css/style.css" rel="stylesheet">
+	<!-- End - Style CSS -->
+	
+</head>
+<body>
+
+	<!-- Start - Preloader -->
+	<div id="preloader">
+		<div class="lds-ripple">
+			<div></div>
+			<div></div>
+		</div>
+	</div>
+	<!-- End - Preloader -->
+
+    <!-- Start - Main Wrapper -->
+    <div id="main-wrapper">
+        
+		<!-- Start - Nav Header -->
+		
+            <div class="nav-header">
+                <a href="index.html" class="brand-logo" aria-label="Brand Logo">
+                    <span style="font-family:Montserrat,Arial,sans-serif;font-weight:700;font-size:18px;letter-spacing:.15em;color:var(--bs-primary)">PA</span>
+                    <span class="brand-title" style="font-family:Montserrat,Arial,sans-serif;font-weight:700;font-size:16px;letter-spacing:.1em;color:var(--bs-heading-color);margin-left:8px">PIERRE AZAR</span>
+                </a>
+                <div class="nav-control">
+                    <div class="hamburger"><span class="line"></span><span class="line"></span><span class="line"></span></div>
+                </div>
+            </div>
+            <div class="header">
+                <div class="header-content">
+                    <nav class="navbar navbar-expand">
+                        <div class="collapse navbar-collapse justify-content-between">
+                            <div class="header-left"><div class="dashboard_bar">Finance</div></div>
+                            <div class="navbar-nav header-right">
+                                <div class="nav-item d-flex align-items-center">
+                                    <a href="login.html" class="btn btn-sm btn-outline-danger ms-2">Logout</a>
+                                </div>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+            <div class="deznav">
+                <div class="deznav-scroll">
+                    <ul class="metismenu" id="menu">
+                        <li class="menu-title">PIERRE AZAR</li>
+                        <li>
+                            <a href="index.html" aria-expanded="false">
+                                <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M2.5 7.5L10 1.667L17.5 7.5V16.667C17.5 17.109 17.324 17.533 17.012 17.845C16.699 18.158 16.275 18.333 15.833 18.333H4.167C3.725 18.333 3.301 18.158 2.988 17.845C2.676 17.533 2.5 17.109 2.5 16.667V7.5Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                                <span class="nav-text">Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="menu-title">MANAGE</li>
+                        <li>
+                            <a href="submissions.html" aria-expanded="false">
+                                <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><polyline points="22,6 12,13 2,6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                                <span class="nav-text">Form Submissions</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="course-sales.html" aria-expanded="false">
+                                <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="18" height="14" rx="2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 8L14 11L10 14" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                                <span class="nav-text">Course Sales</span>
+                            </a>
+                        </li>
+                        <li class="mm-active">
+                            <a href="finance.html" aria-expanded="false">
+                                <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><line x1="12" y1="1" x2="12" y2="23" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 5H9.5C8.57 5 7.68 5.37 7.02 6.02C6.37 6.68 6 7.57 6 8.5C6 9.43 6.37 10.32 7.02 10.98C7.68 11.63 8.57 12 9.5 12H14.5C15.43 12 16.32 12.37 16.98 13.02C17.63 13.68 18 14.57 18 15.5C18 16.43 17.63 17.32 16.98 17.98C16.32 18.63 15.43 19 14.5 19H6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                                <span class="nav-text">Finance</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="reports.html" aria-expanded="false">
+                                <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 20V10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 20V4" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 20v-6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                                <span class="nav-text">Reports</span>
+                            </a>
+                        </li>
+                <li class="menu-title">SETTINGS</li>
+                <li>
+                    <a href="content-editor.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Content Editor</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="payment-settings.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="1" y="4" width="22" height="16" rx="2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><line x1="1" y1="10" x2="23" y2="10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Payment Gateway</span>
+                    </a>
+                </li>
+                        <li>
+                            <a href="editor.html" aria-expanded="false">
+                                <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                                <span class="nav-text">Content Editor</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="deznav-footer">
+                        <a href="https://pierreazar.com" target="_blank">
+                            <div class="d-flex align-items-center">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><line x1="2" y1="12" x2="22" y2="12" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                <p class="ms-2 mb-0">pierreazar.com</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        
+        <main class="content-body">
+            
+			<!-- Start - Page Title & Breadcrumb -->
+			<div class="page-title">
+				<nav aria-label="breadcrumb">
+					<ol class="breadcrumb">
+						<li><h1>Finance</h1></li>
+						<li class="breadcrumb-item">
+							<a href="index.html">
+								<svg width="16" height="16" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<path d="M2.125 6.375L8.5 1.41667L14.875 6.375V14.1667C14.875 14.5424 14.7257 14.9027 14.4601 15.1684C14.1944 15.4341 13.8341 15.5833 13.4583 15.5833H3.54167C3.16594 15.5833 2.80561 15.4341 2.53993 15.1684C2.27426 14.9027 2.125 14.5424 2.125 14.1667V6.375Z" stroke="var(--bs-body-color)" stroke-linecap="round" stroke-linejoin="round"/>
+									<path d="M6.375 15.5833V8.5H10.625V15.5833" stroke="var(--bs-body-color)" stroke-linecap="round" stroke-linejoin="round"/>
+								</svg>
+								Home
+							</a>
+						</li>
+						<li class="breadcrumb-item active" aria-current="page">Finance</li>
+					</ol>
+				</nav>
+				<a class="text-primary fs-13" data-bs-toggle="offcanvas" href="#addTaskmodal" role="button" aria-controls="addTaskmodal">+ Add Task</a>
+			</div>
+			<!-- End - Page Title & Breadcrumb -->
+			
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-xxl-3 col-xl-4">
+						<div class="card h-auto">
+							<div class="card-header">
+								<h4 class="card-title">Add New Account </h4>
+							</div>
+							<div class="card-body">
+								<form>
+									<div class="form-group mb-3">
+										<label class="form-label"> Account Title<span class="text-danger">*</span></label>
+										<input type="text" class="form-control"  placeholder="Account Title">
+									</div>
+									<div class="form-group mb-3">
+										<label class="form-label"> Amount<span class="text-danger">*</span></label>
+										<div class="input-group">
+											<div class="input-group-text">$</div>
+											<input type="number" class="form-control type-number" placeholder="5000">
+										</div>
+									</div>
+									<div class="form-group mb-3">
+										<label class="form-label"> Account No<span class="text-danger">*</span></label>
+										<input type="number" class="form-control type-number"  placeholder="123456">
+									</div>
+									<div class="form-group mb-3">
+										<label class="form-label">Branch Code<span class="text-danger">*</span></label>
+										<input type="number" class="form-control type-number"  placeholder="#321456">
+									</div>
+									<div class="form-group mb-3 text-nawrap">
+										<label class="form-label">Branch Name<span class="text-danger">*</span></label>
+										<input type="text" class="form-control"  placeholder="Industrial and Commercial Bank">
+									</div>
+									<button type="submit" class="btn btn-primary">Confirm</button>
+								</form>
+							</div>
+						</div>
+					</div>
+					
+					<div class="col-xxl-9 col-xl-8">
+						<div class="card">
+							<div class="card-header border-0">
+								<h4 class="card-title">Finance</h4>
+								<div id="financeTableExcelBTN"></div>
+							</div>
+							<div class="card-body table-card-body p-0 pb-3">
+								<div class="table-responsive">
+									<table id="financeTable" class="table">
+										<thead class="table-light">
+											<tr>
+												<th class="mw-150">Account Title</th>
+												<th class="mw-150">Amount</th>
+												<th class="mw-150">Account No</th>
+												<th class="mw-150">Branch Code</th>
+												<th class="mw-150">Branch Name</th>
+											</tr>
+										</thead>
+										<tbody>
+										</tbody>										
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+				</div>
+			</div>
+        </main>
+		<!-- End - Content Body -->
+		
+		<!-- Start - Modal Add New Task -->
+		<div class="offcanvas offcanvas-end custom-offcanvas" tabindex="-1" id="addTaskmodal">
+			<div class="offcanvas-header pb-0">
+				<h2 class="modal-title fs-5" id="#gridSystemModal1">Add New Task</h2>
+				<button type="button" class="btn btn-square btn-danger light btn-sm ms-auto" data-bs-dismiss="offcanvas" aria-label="Close">
+					<i class="fa-solid fa-xmark"></i>
+				</button>
+			</div>
+			<div class="offcanvas-body">
+				<form class="row">
+					<div class="col-xl-6 mb-3">
+						<label for="exampleFormControlInputfirst" class="form-label">Title<span class="text-danger">*</span></label>
+						<input type="text" class="form-control" id="exampleFormControlInputfirst" placeholder="Title">
+					</div>	
+					<div class="col-xl-6 mb-3">
+						<label class="form-label">Project<span class="text-danger">*</span></label>
+						<select class="selectpicker form-select">
+							<option data-display="Select">Project</option>
+							<option value="html">HTML</option>
+							<option value="css">CSS</option>
+							<option value="javascript">JavaScript</option>
+						</select>
+					</div>	
+					<div class="col-xl-6 mb-3">
+						<label for="exampleFormControlInputthree" class="form-label">Start Date<span class="text-danger">*</span></label>
+						<input type="text" class="form-control bs-datepicker" id="exampleFormControlInputthree">
+					</div>
+					<div class="col-xl-6 mb-3">
+						<label for="exampleFormControlInputfour" class="form-label">End Date<span class="text-danger">*</span></label>
+						<input type="text" class="form-control bs-datepicker" id="exampleFormControlInputfour">
+					</div>
+					<div class="col-xl-6 mb-3">
+						<label class="form-label">Estimated Hour<span class="text-danger">*</span></label>
+						<input type="text" class="form-control bs-datepicker" value="09:30">
+					</div>
+					<div class="col-xl-6 mb-3">
+						<label class="form-label">Status<span class="text-danger">*</span></label>
+						<select class="selectpicker form-select">
+							<option data-display="Select">Status</option>
+							<option value="In Progess">In Progess</option>
+							<option value="Pending">Pending</option>
+							<option value="Completed">Completed</option>
+						</select>
+					</div>
+					<div class="col-xl-6 mb-3">
+						<label class="form-label">Priority<span class="text-danger">*</span></label>
+						<select class="selectpicker form-select">
+							<option data-display="Select">Priority</option>
+							<option value="Hight">Hight</option>
+							<option value="Medium">Medium</option>
+							<option value="Low">Low</option>
+						</select>
+					</div>
+					<div class="col-xl-6 mb-3">
+						<label class="form-label">Category<span class="text-danger">*</span></label>
+						<select class="selectpicker form-select">
+							<option data-display="Select">Category</option>
+							<option value="Designing">Designing</option>
+							<option value="Development">Development</option>
+							<option value="react developer">React Developer</option>
+						</select>
+					</div>
+					<div class="col-xl-6 mb-3">
+						<label class="form-label">Permission<span class="text-danger">*</span></label>
+						<select class="selectpicker form-select">
+							<option data-display="Select">Permission</option>
+							<option value="Public">Public</option>
+							<option value="Private">Private</option>
+						</select>
+					</div>
+					<div class="col-xl-6 mb-3">
+						<label class="form-label">Deadline add<span class="text-danger">*</span></label>
+						<select class="selectpicker form-select">
+							<option data-display="Select">Deadline</option>
+							<option value="Yes">Yes</option>
+							<option value="No">No</option>
+						</select>
+					</div>
+					<div class="col-xl-6 mb-3">
+						<label class="form-label">Assigned to<span class="text-danger">*</span></label>
+						<select class="selectpicker form-select">
+							<option data-display="Select">Assigned</option>
+							<option value="Bernard">Bernard</option>
+							<option value="Sergey Brin">Sergey Brin</option>
+							<option value="Larry Ellison">Larry Ellison</option>
+						</select>
+					</div>
+					<div class="col-xl-6 mb-3">
+						<label class="form-label">Responsible Person<span class="text-danger">*</span></label>
+						<input name='tagify' class="form-control basic-tagify" value='James, Harry'>
+					</div>
+					<div class="col-xl-12 mb-3">
+						<label class="form-label">Description<span class="text-danger">*</span></label>
+						<textarea rows="3" class="form-control"></textarea>
+					</div>
+					<div class="col-xl-12 mb-3">
+						<label class="form-label">Summary<span class="text-danger">*</span></label>
+						<textarea rows="3" class="form-control"></textarea>
+					</div>
+					<div class="col-xl-12">					
+						<button class="btn btn-danger light">Cancel</button>
+						<button class="btn btn-primary ms-2">Submit</button>
+					</div>
+				</form>
+			</div>
+		</div>
+		<!-- End - Modal Add New Task -->
+		
+		<!-- Start - Footer -->
+		<div class="footer">
+			<div class="copyright text-center">
+			   <p class="mb-0">Copyright © Developed by <a href="https://dexignzone.com/" target="_blank">Pierre Azar</a> <span class="current-year">2025</span></p>
+			</div>
+		</div>
+		<!-- End - Footer -->
+		
+	</div>
+	<!-- End - Main Wrapper -->
+
+	
+	<!-- Start - Page Scripts -->
+	<script src="assets/vendor/jquery/dist/jquery.min.js"></script>
+	<script src="assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+	<script src="assets/vendor/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+	<script src="assets/vendor/metismenu/dist/metisMenu.min.js"></script>
+	<script src="assets/vendor/@yaireo/tagify/dist/tagify.js"></script>
+	
+	<!-- Script For Datatables -->
+	<script src="assets/vendor/datatables/js/jquery.dataTables.bundle.min.js"></script>
+	
+	<!-- Script For Bootstrap Datepicker -->
+	<script src="assets/vendor/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+   
+	<!-- Script For Dashboard Pages -->
+	<script src="assets/js/dashboard/dashboard.js"></script>
+	
+	<!-- Script For Multiple Languages -->
+	<script src="assets/vendor/i18n/i18n.js"></script>
+	<script src="assets/js/translator.js"></script>
+	
+	<!-- Script For Custom JS -->
+	<script src="assets/js/deznav-init.js"></script>
+    <script src="assets/js/custom.js"></script>
+	
+	
+	
+</body>
+</html>

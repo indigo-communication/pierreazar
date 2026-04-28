@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Course Sales — Pierre Azar Admin</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/png" href="assets/images/favicon.png">
+    <link href="assets/vendor/metismenu/dist/metisMenu.min.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap-select/dist/css/bootstrap-select.min.css" rel="stylesheet">
+    <link class="main-switcher" href="assets/css/switcher.css" rel="stylesheet">
+    <link class="main-plugins" href="assets/css/plugins.css" rel="stylesheet">
+    <link class="main-css" href="assets/css/style.css" rel="stylesheet">
+    <link href="assets/vendor/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- Main Wrapper -->
+<div id="main-wrapper">
+
+    <!-- Nav Header + Sidebar -->
+    <div class="nav-header">
+        <a href="index.html" class="brand-logo" aria-label="Brand Logo">
+            <span style="font-family:Montserrat,Arial,sans-serif;font-weight:700;font-size:18px;letter-spacing:.15em;color:var(--bs-primary)">PA</span>
+            <span class="brand-title" style="font-family:Montserrat,Arial,sans-serif;font-weight:700;font-size:16px;letter-spacing:.1em;color:var(--bs-heading-color);margin-left:8px">PIERRE AZAR</span>
+        </a>
+        <div class="nav-control">
+            <div class="hamburger"><span class="line"></span><span class="line"></span><span class="line"></span></div>
+        </div>
+    </div>
+    <div class="header">
+        <div class="header-content">
+            <nav class="navbar navbar-expand">
+                <div class="collapse navbar-collapse justify-content-between">
+                    <div class="header-left"><div class="dashboard_bar">Course Sales</div></div>
+                    <div class="navbar-nav header-right">
+                        <div class="nav-item d-flex align-items-center">
+                            <a href="login.html" class="btn btn-sm btn-outline-danger ms-2">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
+    <div class="deznav">
+        <div class="deznav-scroll">
+            <ul class="metismenu" id="menu">
+                <li class="menu-title">PIERRE AZAR</li>
+                <li>
+                    <a href="index.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 7.5L10 1.667L17.5 7.5V16.667C17.5 17.109 17.324 17.533 17.012 17.845C16.699 18.158 16.275 18.333 15.833 18.333H4.167C3.725 18.333 3.301 18.158 2.988 17.845C2.676 17.533 2.5 17.109 2.5 16.667V7.5Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="menu-title">MANAGE</li>
+                <li>
+                    <a href="submissions.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><polyline points="22,6 12,13 2,6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Form Submissions</span>
+                    </a>
+                </li>
+                <li class="mm-active">
+                    <a href="course-sales.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="3" width="18" height="14" rx="2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 8L14 11L10 14" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Course Sales</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="finance.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="1" x2="12" y2="23" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 5H9.5C8.57 5 7.68 5.37 7.02 6.02C6.37 6.68 6 7.57 6 8.5C6 9.43 6.37 10.32 7.02 10.98C7.68 11.63 8.57 12 9.5 12H14.5C15.43 12 16.32 12.37 16.98 13.02C17.63 13.68 18 14.57 18 15.5C18 16.43 17.63 17.32 16.98 17.98C16.32 18.63 15.43 19 14.5 19H6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Finance</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="reports.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 20V10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 20V4" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 20v-6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Reports</span>
+                    </a>
+                </li>
+                <li class="menu-title">SETTINGS</li>
+                <li>
+                    <a href="content-editor.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Content Editor</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="payment-settings.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="1" y="4" width="22" height="16" rx="2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><line x1="1" y1="10" x2="23" y2="10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Payment Gateway</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="deznav-footer">
+                <a href="https://pierreazar.com" target="_blank">
+                    <div class="d-flex align-items-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><line x1="2" y1="12" x2="22" y2="12" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <p class="ms-2 mb-0">pierreazar.com</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- End Sidebar -->
+
+    <!-- Content Body -->
+    <div class="content-body">
+        <div class="container-fluid">
+
+            <!-- Page Title -->
+            <div class="row page-titles">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.html">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Course Sales</li>
+                </ol>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="row mb-4" id="stats-row">
+                <div class="col-xl-3 col-sm-6">
+                    <div class="card">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="me-3 bg-primary bg-opacity-10 rounded p-3">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="var(--bs-primary)" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="7" r="4" stroke="var(--bs-primary)" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </div>
+                            <div>
+                                <p class="mb-0 text-muted">Total Buyers</p>
+                                <h4 class="mb-0" id="stat-total">—</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="card">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="me-3 bg-success bg-opacity-10 rounded p-3">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><line x1="12" y1="1" x2="12" y2="23" stroke="#2ecc71" stroke-linecap="round"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="#2ecc71" stroke-linecap="round"/></svg>
+                            </div>
+                            <div>
+                                <p class="mb-0 text-muted">Total Revenue</p>
+                                <h4 class="mb-0" id="stat-revenue">—</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="card">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="me-3 bg-info bg-opacity-10 rounded p-3">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="#17a2b8" stroke-linecap="round"/><line x1="16" y1="2" x2="16" y2="6" stroke="#17a2b8" stroke-linecap="round"/><line x1="8" y1="2" x2="8" y2="6" stroke="#17a2b8" stroke-linecap="round"/><line x1="3" y1="10" x2="21" y2="10" stroke="#17a2b8" stroke-linecap="round"/></svg>
+                            </div>
+                            <div>
+                                <p class="mb-0 text-muted">This Month</p>
+                                <h4 class="mb-0" id="stat-month">—</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="card">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="me-3 bg-warning bg-opacity-10 rounded p-3">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="#f39c12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </div>
+                            <div>
+                                <p class="mb-0 text-muted">Avg Price</p>
+                                <h4 class="mb-0" id="stat-avg">—</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-xl-12">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h4 class="mb-0">Course Buyers</h4>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="loadSales()">&#8635; Refresh</button>
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addSaleModal">+ Add Sale</button>
+                        </div>
+                    </div>
+                    <div class="card h-auto">
+                        <div class="card-body table-card-body px-0 pt-2 pb-2">
+                            <div class="table-responsive">
+                                <table id="salesTable" class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="mw-120">Date</th>
+                                            <th class="mw-150">Name</th>
+                                            <th class="mw-180">Email</th>
+                                            <th class="mw-100">Course</th>
+                                            <th class="mw-80">Amount</th>
+                                            <th class="mw-80">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sales-tbody">
+                                        <tr><td colspan="6" class="text-center py-5 text-muted">Loading sales…</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- End Content Body -->
+
+</div>
+<!-- End Main Wrapper -->
+
+<!-- Add Sale Modal -->
+<div class="modal fade" id="addSaleModal" tabindex="-1" aria-labelledby="addSaleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addSaleModalLabel">Record Course Sale</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Buyer Name</label>
+                    <input type="text" class="form-control" id="sale-name" placeholder="John Doe">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" id="sale-email" placeholder="john@example.com">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Course</label>
+                    <select class="form-select" id="sale-course">
+                        <option value="Cinematography Course">Cinematography Course ($99)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Amount ($)</label>
+                    <input type="number" class="form-control" id="sale-amount" value="99" min="0" step="0.01">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="sale-status">
+                        <option value="paid">Paid</option>
+                        <option value="pending">Pending</option>
+                        <option value="refunded">Refunded</option>
+                    </select>
+                </div>
+                <div id="sale-msg" class="alert d-none"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveSale()">Save Sale</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="assets/vendor/jquery/dist/jquery.min.js"></script>
+<script src="assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/vendor/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+<script src="assets/vendor/metismenu/dist/metisMenu.min.js"></script>
+<script src="assets/vendor/datatables/js/jquery.dataTables.bundle.min.js"></script>
+<script src="assets/vendor/i18n/i18n.js"></script>
+<script src="assets/js/translator.js"></script>
+<script src="assets/js/deznav-init.js"></script>
+<script src="assets/js/custom.js"></script>
+<script>
+function formatDate(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    return d.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
+}
+
+function statusBadge(st) {
+    var map = {paid:'success', pending:'warning', refunded:'secondary'};
+    return '<span class="badge bg-' + (map[st]||'secondary') + '">' + (st||'—') + '</span>';
+}
+
+function loadSales() {
+    fetch('/api/sales')
+        .then(function(r) {
+            if (r.status === 401) { window.location.href = 'login.html'; return null; }
+            return r.json();
+        })
+        .then(function(data) {
+            if (!data) return;
+            var sales = (data.sales || []).slice().sort(function(a,b){ return new Date(b.date)-new Date(a.date); });
+            var tbody = document.getElementById('sales-tbody');
+            // Stats
+            var total = sales.length;
+            var revenue = sales.filter(function(s){return s.status==='paid';}).reduce(function(acc,s){return acc+(parseFloat(s.amount)||0);},0);
+            var now = new Date(); var ym = now.getFullYear()+'-'+(now.getMonth()+1);
+            var monthSales = sales.filter(function(s){ var d=new Date(s.date); return (d.getFullYear()+'-'+(d.getMonth()+1))===ym && s.status==='paid'; });
+            var monthRev = monthSales.reduce(function(a,s){return a+(parseFloat(s.amount)||0);},0);
+            var avg = total ? (revenue/total).toFixed(2) : 0;
+            document.getElementById('stat-total').textContent   = total;
+            document.getElementById('stat-revenue').textContent = '$' + revenue.toFixed(2);
+            document.getElementById('stat-month').textContent   = '$' + monthRev.toFixed(2);
+            document.getElementById('stat-avg').textContent     = '$' + avg;
+            if (total === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">No sales yet. Add a sale manually or integrate with a payment processor.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = sales.map(function(s) {
+                return '<tr>' +
+                    '<td class="text-nowrap">' + formatDate(s.date) + '</td>' +
+                    '<td>' + (s.name||'—') + '</td>' +
+                    '<td><a href="mailto:' + (s.email||'') + '">' + (s.email||'—') + '</a></td>' +
+                    '<td>' + (s.course||'Cinematography Course') + '</td>' +
+                    '<td>$' + (parseFloat(s.amount)||0).toFixed(2) + '</td>' +
+                    '<td>' + statusBadge(s.status) + '</td>' +
+                    '</tr>';
+            }).join('');
+        })
+        .catch(function(err) {
+            document.getElementById('sales-tbody').innerHTML =
+                '<tr><td colspan="6" class="text-center py-5 text-danger">Failed to load: ' + err.message + '</td></tr>';
+        });
+}
+
+function saveSale() {
+    var payload = {
+        name:   document.getElementById('sale-name').value.trim(),
+        email:  document.getElementById('sale-email').value.trim(),
+        course: document.getElementById('sale-course').value,
+        amount: parseFloat(document.getElementById('sale-amount').value) || 99,
+        status: document.getElementById('sale-status').value,
+    };
+    var msg = document.getElementById('sale-msg');
+    if (!payload.name || !payload.email) {
+        msg.className = 'alert alert-danger'; msg.textContent = 'Name and email are required.'; return;
+    }
+    fetch('/api/sales', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+    }).then(function(r){ return r.json(); }).then(function(d){
+        if (d.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('addSaleModal')).hide();
+            loadSales();
+        } else {
+            msg.className='alert alert-danger'; msg.textContent=d.error||'Error saving.';
+        }
+    }).catch(function(e){ msg.className='alert alert-danger'; msg.textContent=e.message; });
+}
+
+document.addEventListener('DOMContentLoaded', loadSales);
+</script>
+</body>
+</html>

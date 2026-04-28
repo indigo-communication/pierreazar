@@ -4728,7 +4728,7 @@ if(window.location.protocol != 'https:')
     position: relative !important;
     width: 50% !important;
     flex: 0 0 50% !important;
-    height: 380px !important;
+    height: 520px !important;
     top: auto !important; bottom: auto !important; left: auto !important;
 }
 #vbid-c1e000b4-ylaf0aoi .pic-side .vertical-aligner,
@@ -4777,18 +4777,27 @@ if(window.location.protocol != 'https:')
     min-height: 0 !important;
 }
 
-/* ── BOTTOM: price + buy row ── */
+/* ── Text column: left-align all text ── */
+#vbid-c1e000b4-ylaf0aoi .text-side .preview-title,
+#vbid-c1e000b4-ylaf0aoi .text-side .preview-body,
+#vbid-c1e000b4-ylaf0aoi .text-side .preview-body p,
+#vbid-c1e000b4-ylaf0aoi .text-side .preview-body span {
+    text-align: left !important;
+}
+
+/* ── BOTTOM: price + buy row — aligned under text column ── */
 .course-price-row {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
     gap: 20px;
     flex-wrap: wrap;
+    padding-right: calc(10% + 10px) !important;
 }
 .course-price-row .preview-price-holder,
 .course-price-row .preview-item-links {
     display: inline-block !important;
-    margin: 0 15px !important;
+    margin: 0 8px !important;
 }
 </style>
 </head>

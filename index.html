@@ -4508,13 +4508,13 @@ and (max-width : 768px)  {
 	
 		
 		<!-- SCRIPT -->
-		<script src="/js/jquery-2.x-git.min.js" type="text/javascript"></script>
+		<script defer src="/js/jquery-2.x-git.min.js" type="text/javascript"></script>
 		
-		<script src="/js/xprs_helper.js" type="text/javascript"></script>
+		<script defer src="/js/xprs_helper.js" type="text/javascript"></script>
 		
 		
-		<script type="text/javascript" src="/js/all_js.js"></script>
-		<script src="/js/jquery.mobile.custom.min.js"></script>
+		<script defer type="text/javascript" src="/js/all_js.js"></script>
+		<script defer src="/js/jquery.mobile.custom.min.js"></script>
 		
 		
 	
@@ -4536,7 +4536,176 @@ if(window.location.protocol != 'https:')
 		
 		 var LABEL_CONFIG = {};
 		 
-		</script></head>
+		</script>
+<style>
+/* ── 2-column: injected video left / text right ── */
+
+/* Force full width on all wrapper chain */
+#vbid-c1e000b4-ylaf0aoi.sub.item-box,
+#vbid-c1e000b4-ylaf0aoi .page-wrapper,
+#vbid-c1e000b4-ylaf0aoi .item-content {
+    min-height: 0 !important;
+    width: 100% !important;
+    display: block !important;
+}
+
+/* Flatten section wrappers */
+#vbid-c1e000b4-ylaf0aoi .multi-container,
+#vbid-c1e000b4-ylaf0aoi .Picture.item-preview,
+#vbid-c1e000b4-ylaf0aoi .preview-image-holder:not(.inner-pic-holder) {
+    height: auto !important; min-height: 0 !important; overflow: visible !important;
+    width: 100% !important; display: block !important;
+}
+
+/* Container: flex row, 600px tall, explicit 100% width */
+#vbid-c1e000b4-ylaf0aoi .helper-div.bottom-center {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    height: 600px !important;
+    min-height: 600px !important;
+    overflow: hidden !important;
+    position: relative !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Hide the platform's pic-side — we inject our own video */
+#vbid-c1e000b4-ylaf0aoi .pic-side {
+    display: none !important;
+}
+
+/* Our injected Vimeo column */
+#pa-video-col {
+    flex: 0 0 50% !important;
+    width: 50% !important;
+    height: 600px !important;
+    overflow: visible !important;
+    position: relative !important;
+    order: 0 !important;
+    margin-top: 0 !important;
+    display: block !important;
+    transform: translateY(-25px);
+}
+#pa-video-col iframe {
+    position: absolute !important;
+    top: 0 !important; left: 0 !important;
+    width: 100% !important; height: 100% !important;
+    border: none !important;
+}
+
+/* ── RIGHT: text column ── */
+#vbid-c1e000b4-ylaf0aoi .text-side {
+    flex: 1 1 50% !important;
+    order: 1 !important;
+    display: block !important;
+    position: relative !important;
+    float: none !important;
+    height: auto !important;
+    align-self: center !important;
+    padding-left: 30px !important;
+    padding-right: 10px !important;
+    box-sizing: border-box !important;
+    overflow-y: auto !important;
+    width: 50% !important;
+}
+#vbid-c1e000b4-ylaf0aoi .text-side .vertical-aligner {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+}
+
+/* Left-align text */
+#vbid-c1e000b4-ylaf0aoi .text-side .preview-title,
+#vbid-c1e000b4-ylaf0aoi .text-side .preview-body,
+#vbid-c1e000b4-ylaf0aoi .text-side .preview-body p,
+#vbid-c1e000b4-ylaf0aoi .text-side .preview-body span {
+    text-align: left !important;
+}
+
+/* ── Course section: stack on mobile ── */
+@media (max-width: 768px) {
+  #vbid-c1e000b4-ylaf0aoi .helper-div.bottom-center {
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+  #vbid-c1e000b4-ylaf0aoi .text-side {
+    width: 100% !important;
+    order: 0 !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  #pa-video-col {
+    width: 100% !important;
+    flex: none !important;
+    order: 1 !important;
+    height: 260px !important;
+    transform: none !important;
+    margin-top: 20px !important;
+  }
+}
+
+/* ── Center stats section ── */
+#vbid-9f13b7c7-tbpwoygg .text-side {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    width: 100% !important;
+}
+#vbid-9f13b7c7-tbpwoygg .vertical-aligner,
+#vbid-9f13b7c7-tbpwoygg .preview-content-holder,
+#vbid-9f13b7c7-tbpwoygg .item-details {
+    text-align: center !important;
+    width: 100% !important;
+}
+#vbid-9f13b7c7-tbpwoygg .preview-title,
+#vbid-9f13b7c7-tbpwoygg .preview-subtitle {
+    text-align: center !important;
+    display: block !important;
+    width: 100% !important;
+}
+
+/* ── Top hero: nudge image+video container right ── */
+#vbid-38497da5-v22rkfln-holder {
+    transform: translateX(4%) !important;
+}
+#vbid-38497da5-v22rkfln {
+    position: relative !important;
+    overflow: hidden !important;
+    transform: translateX(-4%) !important;
+}
+#vbid-38497da5-v22rkfln .preview-video-holder {
+    position: absolute !important;
+    top: 0 !important; left: 0 !important;
+    width: 100% !important; height: 100% !important;
+    overflow: hidden !important;
+    opacity: 0;
+    transition: opacity 1.2s ease;
+    pointer-events: none;
+}
+#vbid-38497da5-v22rkfln .preview-video-holder.pa-visible {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+/* ── Member button ── */
+@media (max-width: 768px) {
+  #pa-member-btn {
+    right: 72px !important;
+    top: 45% !important;
+  }
+  #pa-member-btn a, #pa-member-btn button {
+    padding: 4px 7px !important;
+    font-size: 11px !important;
+    letter-spacing: 0 !important;
+  }
+}
+
+</style>
+</head>
 
 	<body class="fast-animated-bg fixed-bg  " data-ecommerce-solution="DISABLED" data-root-id="vbid-6d830c27-abbmfckb" data-root-style-id="style-6d830c27-akddbsak" data-default-currency="USD"   data-app-version="1.6.0f2-noimos-no-viewer" data-caller="live"  data-ecommerce-dashboard="" data-static-server="//www.indigo-cy.com" data-imos-server="https://imos006-dot-im--os.appspot.com" >
 	
@@ -5458,7 +5627,7 @@ if(window.location.protocol != 'https:')
 	<div id="element-676387d0a7f9742" class="preview-element preview-video-source magic-circle-holder vid-autoplay vid-cover vid-mute vid-loop  allow-mobile-hide" data-menu-name="PREVIEW_VIDEO" data-json-name="PREVIEW_VIDEO"   data-spimeVID_LOOP = 'true'  data-spimeVID_AUTOPLAY = 'true'  data-spimeVBID = 'element-676387d0a7f9742'  data-spimeVIDEO_ID = '291044785'  data-spimeVID_COVER = 'True'  data-spimeSOURCE = 'vimeo'  data-spimeCONTEXT = 'PREVIEW'  data-spimeVID_MUTE = 'true'  >
 		
 		
-		<iframe class="vimplayer preview video-frame" id="element-676387d0a7f9742-vidframe" src="https://player.vimeo.com/video/291044785?api=1&player_id=element-676387d0a7f9742-vidframe&autoplay=1&loop=1&title=0&byline=0&badge=0" frameborder="0" width="100%" height="100%"></iframe>
+		<iframe class="vimplayer preview video-frame" id="element-676387d0a7f9742-vidframe" src="https://player.vimeo.com/video/291044785?title=0&byline=0&portrait=0" frameborder="0" width="100%" height="100%"></iframe>
 		
 	</div>
 </div>
@@ -5469,6 +5638,7 @@ if(window.location.protocol != 'https:')
 </div>
 				</div>
 			</div>	
+				<div id="pa-video-col"><iframe src="https://player.vimeo.com/video/291044785?title=0&byline=0&portrait=0" allow="autoplay; fullscreen" allowfullscreen style="border:none;width:100%;height:100%;position:absolute;top:0;left:0;"></iframe></div>
 				<div class="text-side shrinker-parent">
 					<div class="vertical-aligner">
 						<div class="item-details preview-content-wrapper  multi" style="position:relative;">
@@ -5546,7 +5716,7 @@ if(window.location.protocol != 'https:')
 	<div class="preview-links-wrapper">
 
 	
-		<a class="removable-parent" href="/" data-link-type="BUY"   target="_self" >
+		<a class="removable-parent" href="/cinematography-course.html#checkout" data-link-type="BUY"   target="_self" >
 	
 		<span id="vbid-c1e000b4-nold91wb"  class="preview-element Link item-link magic-circle-holder text-element " data-menu-name="PREVIEW_LINK" >Buy Now</span>
 			</a>
@@ -7579,8 +7749,8 @@ if(window.location.protocol != 'https:')
 	</script>
 
 	
-	<script src="/js/lightbox.js"  type="text/javascript"></script>
-	<script src="/js/spimeengine.js"  type="text/javascript"></script>
+	<script defer src="/js/lightbox.js" type="text/javascript"></script>
+	<script defer src="/js/spimeengine.js" type="text/javascript"></script>
 
 
 	
@@ -7588,6 +7758,152 @@ if(window.location.protocol != 'https:')
 	
 
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"ca13be5178b34d8fb5836910442f2fd8","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+
+<script>
+(function() {
+  function initHeroFade() {
+    var container = document.getElementById('vbid-38497da5-v22rkfln');
+    if (!container) return;
+    var vidHolder = container.querySelector('.preview-video-holder');
+    if (!vidHolder) return;
+    container.style.cursor = 'pointer';
+    container.addEventListener('click', function() {
+      vidHolder.classList.add('pa-visible');
+      setTimeout(function() {
+        container.style.backgroundImage = 'none';
+      }, 1200);
+    }, { once: true });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHeroFade);
+  } else {
+    initHeroFade();
+  }
+})();
+</script>
+<script>
+(function() {
+  var stats = [
+    { id: 'vbid-9f13b7c7-5fqtwgns', target: 690,   suffix: '' },
+    { id: 'vbid-9f13b7c7-onozgvcl', target: 12000, suffix: 'K', divisor: 1000 },
+    { id: 'vbid-9f13b7c7-jj2kee0d', target: 92,    suffix: '' },
+    { id: 'vbid-9f13b7c7-yyiasveo', target: 6,     suffix: '' }
+  ];
+
+  function animateCounter(el, target, suffix, divisor, duration) {
+    var start = 0;
+    var startTime = null;
+    function step(timestamp) {
+      if (!startTime) startTime = timestamp;
+      var progress = Math.min((timestamp - startTime) / duration, 1);
+      var eased = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
+      var current = Math.round(eased * target);
+      if (divisor) {
+        var val = current / divisor;
+        el.textContent = (val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)) + suffix;
+      } else {
+        el.textContent = current + suffix;
+      }
+      if (progress < 1) requestAnimationFrame(step);
+      else el.textContent = divisor ? (target / divisor) + suffix : target + suffix;
+    }
+    requestAnimationFrame(step);
+  }
+
+  function initCounters() {
+    var section = document.getElementById('vbid-9f13b7c7-tbpwoygg');
+    if (!section) return;
+    var observer = new IntersectionObserver(function(entries) {
+      if (entries[0].isIntersecting) {
+        stats.forEach(function(s) {
+          var el = document.getElementById(s.id);
+          if (el) animateCounter(el, s.target, s.suffix, s.divisor, 2000);
+        });
+      }
+    }, { threshold: 0.3 });
+    observer.observe(section);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCounters);
+  } else {
+    initCounters();
+  }
+})();
+</script>
+
+<script>
+/* ── Member login button ── */
+(function() {
+  var BASE_STYLE = [
+    'display:inline-flex',
+    'align-items:center',
+    'gap:6px',
+    'font-size:12px',
+    'font-weight:700',
+    'letter-spacing:.08em',
+    'color:#b8b8b8',
+    'background:transparent',
+    'border:none',
+    'border-radius:20px',
+    'padding:7px 18px',
+    'cursor:pointer',
+    'text-decoration:none',
+    'white-space:nowrap',
+    'font-family:Arial,sans-serif',
+    'line-height:1',
+    'box-shadow:none',
+  ].join(';');
+
+  function removeBtn() {
+    var el = document.getElementById('pa-member-btn');
+    if (el) el.remove();
+  }
+
+  function injectBtn(email) {
+    removeBtn();
+    var wrapper = document.createElement('div');
+    wrapper.id = 'pa-member-btn';
+    wrapper.style.cssText = 'position:absolute;top:50%;right:25px;transform:translateY(-50%);z-index:2147483647;display:flex;align-items:center;gap:0;';
+
+    if (email) {
+      var a = document.createElement('a');
+      a.href = '/member-login.html';
+      a.style.cssText = BASE_STYLE;
+      a.innerHTML = '&#128100;<span class="pa-btn-text"> PROFILE</span>';
+      a.title = email;
+      wrapper.appendChild(a);
+    } else {
+      var a = document.createElement('a');
+      a.href = '/member-login.html';
+      a.style.cssText = BASE_STYLE;
+      a.innerHTML = '&#128100;<span class="pa-btn-text"> LOG IN</span>';
+      wrapper.appendChild(a);
+    }
+
+    var header = document.querySelector('.header-box');
+    if (header) {
+      header.style.position = 'relative';
+      header.appendChild(wrapper);
+    } else {
+      document.body.appendChild(wrapper);
+    }
+  }
+
+  function init() {
+    injectBtn(null);
+    fetch('/member/me').then(function(r){ return r.json(); }).then(function(d){
+      if (d && d.ok) injectBtn(d.email);
+    }).catch(function(){});
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
 </body>
 
 	

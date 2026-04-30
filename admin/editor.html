@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Content Editor — Pierre Azar Admin</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/png" href="assets/images/favicon.png">
+    <link href="assets/vendor/metismenu/dist/metisMenu.min.css" rel="stylesheet">
+    <link class="main-switcher" href="assets/css/switcher.css" rel="stylesheet">
+    <link class="main-plugins" href="assets/css/plugins.css" rel="stylesheet">
+    <link class="main-css" href="assets/css/style.css" rel="stylesheet">
+    <style>
+        .tab-section { display:none; }
+        .tab-section.active { display:block; }
+        .save-btn { min-width:130px; }
+        .field-hint { font-size:12px; color:#888; margin-top:3px; }
+        textarea.html-area { font-family:monospace; font-size:13px; min-height:140px; }
+        .img-grid { display:flex; flex-wrap:wrap; gap:16px; }
+        .img-card { 
+            width:160px; border:1px solid #e0e0e0; border-radius:8px; 
+            overflow:hidden; background:#fff; 
+        }
+        .img-card img { width:100%; height:110px; object-fit:cover; display:block; }
+        .img-card .img-name { font-size:11px; color:#666; padding:4px 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .img-card .btn-replace { width:100%; border-radius:0 0 8px 8px; font-size:11px; padding:4px; }
+        .toast-container { position:fixed; bottom:24px; right:24px; z-index:9999; }
+        .tab-nav a { cursor:pointer; }
+        .tab-nav a.active { font-weight:700; border-bottom:2px solid var(--bs-primary); }
+        .saving-spinner { display:none; width:16px; height:16px; }
+    </style>
+</head>
+<body>
+
+<div id="main-wrapper">
+
+    <!-- Nav Header -->
+    <div class="nav-header">
+        <a href="index.html" class="brand-logo" aria-label="Brand Logo">
+            <span style="font-family:Montserrat,Arial,sans-serif;font-weight:700;font-size:18px;letter-spacing:.15em;color:var(--bs-primary)">PA</span>
+            <span class="brand-title" style="font-family:Montserrat,Arial,sans-serif;font-weight:700;font-size:16px;letter-spacing:.1em;color:var(--bs-heading-color);margin-left:8px">PIERRE AZAR</span>
+        </a>
+        <div class="nav-control">
+            <div class="hamburger"><span class="line"></span><span class="line"></span><span class="line"></span></div>
+        </div>
+    </div>
+    <div class="header">
+        <div class="header-content">
+            <nav class="navbar navbar-expand">
+                <div class="collapse navbar-collapse justify-content-between">
+                    <div class="header-left"><div class="dashboard_bar">Content Editor</div></div>
+                    <div class="navbar-nav header-right">
+                        <div class="nav-item d-flex align-items-center gap-2">
+                            <a href="https://127.0.0.1:4443" target="_blank" class="btn btn-sm btn-outline-primary">View Website ↗</a>
+                            <a href="login.html" class="btn btn-sm btn-outline-danger ms-1">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="deznav">
+        <div class="deznav-scroll">
+            <ul class="metismenu" id="menu">
+                <li class="menu-title">PIERRE AZAR</li>
+                <li>
+                    <a href="index.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M2.5 7.5L10 1.667L17.5 7.5V16.667C17.5 17.109 17.324 17.533 17.012 17.845C16.699 18.158 16.275 18.333 15.833 18.333H4.167C3.725 18.333 3.301 18.158 2.988 17.845C2.676 17.533 2.5 17.109 2.5 16.667V7.5Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="menu-title">MANAGE</li>
+                <li>
+                    <a href="submissions.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><polyline points="22,6 12,13 2,6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Form Submissions</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="course-sales.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="18" height="14" rx="2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 8L14 11L10 14" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Course Sales</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="finance.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><line x1="12" y1="1" x2="12" y2="23" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 5H9.5C8.57 5 7.68 5.37 7.02 6.02C6.37 6.68 6 7.57 6 8.5C6 9.43 6.37 10.32 7.02 10.98C7.68 11.63 8.57 12 9.5 12H14.5C15.43 12 16.32 12.37 16.98 13.02C17.63 13.68 18 14.57 18 15.5C18 16.43 17.63 17.32 16.98 17.98C16.32 18.63 15.43 19 14.5 19H6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Finance</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="reports.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 20V10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 20V4" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 20v-6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Reports</span>
+                    </a>
+                </li>
+                <li class="menu-title">SETTINGS</li>
+                <li>
+                    <a href="payment-settings.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="1" y="4" width="22" height="16" rx="2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><line x1="1" y1="10" x2="23" y2="10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Payment Gateway</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="change-password.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Change Password</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="deznav-footer">
+                <a href="https://pierreazar.com" target="_blank">
+                    <div class="d-flex align-items-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><line x1="2" y1="12" x2="22" y2="12" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <p class="ms-2 mb-0">pierreazar.com</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- End Sidebar -->
+
+    <!-- Content Body -->
+    <div class="content-body">
+        <div class="container-fluid">
+
+            <div class="row page-titles">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.html">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Content Editor</li>
+                </ol>
+            </div>
+
+            <!-- Loading state -->
+            <div id="editor-loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-3 text-muted">Loading content…</p>
+            </div>
+
+            <!-- Editor (shown after load) -->
+            <div id="editor-main" style="display:none">
+
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs tab-nav mb-4" id="editorTabs">
+                    <li class="nav-item"><a class="nav-link active" onclick="switchTab('course',this)">🎬 Course Page</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="switchTab('homepage',this)">🏠 Homepage</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="switchTab('social',this)">🔗 Social Links</a></li>
+                    <li class="nav-item"><a class="nav-link" onclick="switchTab('images',this)">🖼 Images</a></li>
+                </ul>
+
+                <!-- ═══════════════════════════════════════════
+                     TAB 1: COURSE PAGE
+                ════════════════════════════════════════════ -->
+                <div id="tab-course" class="tab-section active">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Cinematography Course Page</h5>
+                            <small class="text-muted">Changes go live immediately on the website</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4">
+
+                                <div class="col-xl-6">
+                                    <label class="form-label fw-semibold">Vimeo Video ID</label>
+                                    <input type="text" class="form-control" id="course_vimeo_id" placeholder="e.g. 291044785">
+                                    <div class="field-hint">The numeric ID from your Vimeo URL: vimeo.com/video/<strong>291044785</strong></div>
+                                    <div class="mt-2" id="vimeo-preview-wrap" style="display:none">
+                                        <iframe id="vimeo-preview" src="" width="100%" height="200" frameborder="0" style="border-radius:8px;"></iframe>
+                                    </div>
+                                </div>
+
+                                <div class="col-xl-6">
+                                    <label class="form-label fw-semibold">Course Price ($)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="course_price" min="0" step="1" placeholder="99">
+                                    </div>
+                                    <div class="field-hint">The price shown on the course page</div>
+
+                                    <label class="form-label fw-semibold mt-4">Buy Button Text</label>
+                                    <input type="text" class="form-control" id="course_buy_text" placeholder="Buy Now">
+                                    <div class="field-hint">Text displayed on the purchase button</div>
+
+                                    <label class="form-label fw-semibold mt-4">Buy Button Link (URL)</label>
+                                    <input type="url" class="form-control" id="course_buy_url" placeholder="https://...">
+                                    <div class="field-hint">Where the button takes the visitor (PayPal, Stripe, Gumroad, etc.)</div>
+                                </div>
+
+                            </div>
+
+                            <div class="mt-4 d-flex gap-2 align-items-center">
+                                <button class="btn btn-primary save-btn" onclick="saveCourse()">Save Course</button>
+                                <div id="course-msg" class="ms-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════════════════════════════════════
+                     TAB 2: HOMEPAGE
+                ════════════════════════════════════════════ -->
+                <div id="tab-homepage" class="tab-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Homepage Content</h5>
+                            <small class="text-muted">Changes go live immediately on the website</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Hero Background Video — Vimeo ID</label>
+                                <input type="text" class="form-control" id="homepage_reel_vimeo_id" placeholder="e.g. 1000452483">
+                                <div class="field-hint">The full-screen background video on the homepage. Get the ID from your Vimeo URL.</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Big Quote / Title Text</label>
+                                <textarea class="form-control" id="homepage_quote" rows="3" placeholder="PERFECTION IS ACHIEVED…"></textarea>
+                                <div class="field-hint">The large quote displayed on the homepage. You can use &lt;br&gt; for line breaks.</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">About / Bio Text</label>
+                                <textarea class="form-control html-area" id="homepage_about" rows="8"></textarea>
+                                <div class="field-hint">HTML is supported. Use &lt;p&gt;paragraph&lt;/p&gt; for paragraphs. Use &lt;p&gt;&lt;br&gt;&lt;/p&gt; for blank lines between paragraphs.</div>
+                            </div>
+
+                            <div class="mt-3 d-flex gap-2 align-items-center">
+                                <button class="btn btn-primary save-btn" onclick="saveHomepage()">Save Homepage</button>
+                                <div id="homepage-msg" class="ms-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════════════════════════════════════
+                     TAB 3: SOCIAL LINKS
+                ════════════════════════════════════════════ -->
+                <div id="tab-social" class="tab-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Social Media Links</h5>
+                            <small class="text-muted">Updated across all pages of the website</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4">
+                                <div class="col-xl-4">
+                                    <label class="form-label fw-semibold">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877f2" class="me-1"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                                        Facebook URL
+                                    </label>
+                                    <input type="url" class="form-control" id="social_facebook" placeholder="https://www.facebook.com/yourpage">
+                                </div>
+                                <div class="col-xl-4">
+                                    <label class="form-label fw-semibold">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="me-1"><rect x="2" y="2" width="20" height="20" rx="5" stroke="#e1306c" stroke-width="2"/><circle cx="12" cy="12" r="5" stroke="#e1306c" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.5" fill="#e1306c"/></svg>
+                                        Instagram URL
+                                    </label>
+                                    <input type="url" class="form-control" id="social_instagram" placeholder="https://www.instagram.com/yourhandle">
+                                </div>
+                                <div class="col-xl-4">
+                                    <label class="form-label fw-semibold">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="#1ab7ea" class="me-1"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75,15.02 15.5,12 9.75,8.98 9.75,15.02" fill="white"/></svg>
+                                        Vimeo Profile URL
+                                    </label>
+                                    <input type="url" class="form-control" id="social_vimeo" placeholder="https://vimeo.com/yourprofile">
+                                </div>
+                            </div>
+
+                            <div class="mt-4 d-flex gap-2 align-items-center">
+                                <button class="btn btn-primary save-btn" onclick="saveSocial()">Save Social Links</button>
+                                <div id="social-msg" class="ms-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════════════════════════════════════
+                     TAB 4: IMAGES
+                ════════════════════════════════════════════ -->
+                <div id="tab-images" class="tab-section">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">Website Images</h5>
+                                <small class="text-muted">Click "Replace" on any image to upload a new version. The filename stays the same.</small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="loadImages()">&#8635; Refresh</button>
+                        </div>
+                        <div class="card-body">
+                            <div id="images-msg" class="mb-3" style="display:none"></div>
+                            <div id="img-grid" class="img-grid">
+                                <div class="text-center w-100 py-4 text-muted">Loading images…</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!-- End editor-main -->
+
+        </div>
+    </div>
+
+</div>
+<!-- End main-wrapper -->
+
+<!-- Hidden file inputs for image replace -->
+<input type="file" id="img-file-input" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" onchange="uploadImage(this)">
+<input type="hidden" id="img-target-filename" value="">
+
+<!-- Toast Notifications -->
+<div class="toast-container">
+    <div id="toast-success" class="toast align-items-center text-bg-success border-0 mb-2" role="alert" aria-atomic="true">
+        <div class="d-flex"><div class="toast-body" id="toast-success-text">Saved!</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>
+    </div>
+    <div id="toast-error" class="toast align-items-center text-bg-danger border-0" role="alert" aria-atomic="true">
+        <div class="d-flex"><div class="toast-body" id="toast-error-text">Error</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>
+    </div>
+</div>
+
+<script src="assets/vendor/jquery/dist/jquery.min.js"></script>
+<script src="assets/vendor/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/vendor/metismenu/dist/metisMenu.min.js"></script>
+<script src="assets/vendor/i18n/i18n.js"></script>
+<script src="assets/js/translator.js"></script>
+<script src="assets/js/deznav-init.js"></script>
+<script src="assets/js/custom.js"></script>
+
+<script>
+// ── Utilities ────────────────────────────────────────────────────────────────
+
+function showToast(type, msg) {
+    var el = document.getElementById('toast-' + type);
+    document.getElementById('toast-' + type + '-text').textContent = msg;
+    new bootstrap.Toast(el, {delay: 3500}).show();
+}
+
+function setMsg(id, type, msg) {
+    var el = document.getElementById(id);
+    if (!msg) { el.innerHTML = ''; return; }
+    el.innerHTML = '<span class="text-' + type + '">' + msg + '</span>';
+}
+
+function switchTab(name, link) {
+    document.querySelectorAll('.tab-section').forEach(function(s){ s.classList.remove('active'); });
+    document.querySelectorAll('#editorTabs .nav-link').forEach(function(l){ l.classList.remove('active'); });
+    document.getElementById('tab-' + name).classList.add('active');
+    link.classList.add('active');
+    if (name === 'images') loadImages();
+}
+
+// ── Load all content ─────────────────────────────────────────────────────────
+
+function loadContent() {
+    fetch('/api/content')
+        .then(function(r) {
+            if (r.status === 401) { window.location.href = 'login.html'; return null; }
+            return r.json();
+        })
+        .then(function(d) {
+            if (!d) return;
+            if (!d.ok) { showToast('error', d.error || 'Failed to load content'); return; }
+            var c = d.content;
+            // Course
+            document.getElementById('course_vimeo_id').value  = c.course_vimeo_id  || '';
+            document.getElementById('course_price').value     = c.course_price     || '';
+            document.getElementById('course_buy_text').value  = c.course_buy_text  || '';
+            document.getElementById('course_buy_url').value   = c.course_buy_url   || '';
+            // Homepage
+            document.getElementById('homepage_reel_vimeo_id').value = c.homepage_reel_vimeo_id || '';
+            document.getElementById('homepage_quote').value         = c.homepage_quote         || '';
+            document.getElementById('homepage_about').value         = c.homepage_about         || '';
+            // Social
+            document.getElementById('social_facebook').value  = c.social_facebook  || '';
+            document.getElementById('social_instagram').value = c.social_instagram || '';
+            document.getElementById('social_vimeo').value     = c.social_vimeo     || '';
+            // Show editor
+            document.getElementById('editor-loading').style.display = 'none';
+            document.getElementById('editor-main').style.display    = 'block';
+            // Vimeo live preview
+            updateVimeoPreview(c.course_vimeo_id);
+        })
+        .catch(function(e) { showToast('error', e.message); });
+}
+
+// ── Vimeo preview ─────────────────────────────────────────────────────────────
+
+function updateVimeoPreview(vid) {
+    var wrap   = document.getElementById('vimeo-preview-wrap');
+    var iframe = document.getElementById('vimeo-preview');
+    if (vid && /^\d+$/.test(vid.trim())) {
+        iframe.src = 'https://player.vimeo.com/video/' + vid.trim() + '?title=0&byline=0';
+        wrap.style.display = 'block';
+    } else {
+        wrap.style.display = 'none';
+    }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('course_vimeo_id').addEventListener('blur', function() {
+        updateVimeoPreview(this.value.trim());
+    });
+});
+
+// ── Save course ───────────────────────────────────────────────────────────────
+
+function saveCourse() {
+    setMsg('course-msg', 'secondary', 'Saving…');
+    var payload = {
+        course_vimeo_id:  document.getElementById('course_vimeo_id').value.trim(),
+        course_price:     document.getElementById('course_price').value.trim(),
+        course_buy_text:  document.getElementById('course_buy_text').value.trim(),
+        course_buy_url:   document.getElementById('course_buy_url').value.trim(),
+    };
+    fetch('/api/content', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    }).then(function(r){ return r.json(); }).then(function(d){
+        if (d.ok) {
+            setMsg('course-msg', 'success', '✓ Saved!');
+            showToast('success', 'Course page updated');
+            updateVimeoPreview(payload.course_vimeo_id);
+            setTimeout(function(){ setMsg('course-msg','',''); }, 3000);
+        } else {
+            setMsg('course-msg', 'danger', '✗ ' + (d.error || JSON.stringify(d.errors)));
+            showToast('error', d.error || 'Save failed');
+        }
+    }).catch(function(e){ setMsg('course-msg','danger', e.message); });
+}
+
+// ── Save homepage ─────────────────────────────────────────────────────────────
+
+function saveHomepage() {
+    setMsg('homepage-msg', 'secondary', 'Saving…');
+    var payload = {
+        homepage_reel_vimeo_id: document.getElementById('homepage_reel_vimeo_id').value.trim(),
+        homepage_quote:         document.getElementById('homepage_quote').value,
+        homepage_about:         document.getElementById('homepage_about').value,
+    };
+    fetch('/api/content', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    }).then(function(r){ return r.json(); }).then(function(d){
+        if (d.ok) {
+            setMsg('homepage-msg', 'success', '✓ Saved!');
+            showToast('success', 'Homepage updated');
+            setTimeout(function(){ setMsg('homepage-msg','',''); }, 3000);
+        } else {
+            setMsg('homepage-msg', 'danger', '✗ ' + (d.error || JSON.stringify(d.errors)));
+            showToast('error', d.error || 'Save failed');
+        }
+    }).catch(function(e){ setMsg('homepage-msg','danger', e.message); });
+}
+
+// ── Save social links ─────────────────────────────────────────────────────────
+
+function saveSocial() {
+    setMsg('social-msg', 'secondary', 'Saving…');
+    var payload = {
+        social_facebook:  document.getElementById('social_facebook').value.trim(),
+        social_instagram: document.getElementById('social_instagram').value.trim(),
+        social_vimeo:     document.getElementById('social_vimeo').value.trim(),
+    };
+    fetch('/api/content', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    }).then(function(r){ return r.json(); }).then(function(d){
+        if (d.ok) {
+            setMsg('social-msg', 'success', '✓ Saved across all pages!');
+            showToast('success', 'Social links updated on all pages');
+            setTimeout(function(){ setMsg('social-msg','',''); }, 3000);
+        } else {
+            setMsg('social-msg', 'danger', '✗ ' + (d.error || JSON.stringify(d.errors)));
+            showToast('error', d.error || 'Save failed');
+        }
+    }).catch(function(e){ setMsg('social-msg','danger', e.message); });
+}
+
+// ── Image grid ────────────────────────────────────────────────────────────────
+
+function loadImages() {
+    document.getElementById('img-grid').innerHTML = '<div class="text-center w-100 py-4 text-muted">Loading…</div>';
+    fetch('/api/images')
+        .then(function(r) {
+            if (r.status === 401) { window.location.href = 'login.html'; return null; }
+            return r.json();
+        })
+        .then(function(d) {
+            if (!d) return;
+            var grid = document.getElementById('img-grid');
+            if (!d.images || !d.images.length) {
+                grid.innerHTML = '<p class="text-muted">No images found.</p>';
+                return;
+            }
+            grid.innerHTML = d.images.map(function(fname) {
+                var src = '/images/photos/' + fname + '?t=' + Date.now();
+                return '<div class="img-card" id="imgcard-' + fname.replace(/\./g,'_') + '">' +
+                    '<img src="' + src + '" alt="' + fname + '" loading="lazy">' +
+                    '<div class="img-name" title="' + fname + '">' + fname + '</div>' +
+                    '<button class="btn btn-outline-primary btn-replace" onclick="triggerReplace(\'' + fname + '\')">Replace</button>' +
+                    '</div>';
+            }).join('');
+        })
+        .catch(function(e) { showToast('error', e.message); });
+}
+
+function triggerReplace(filename) {
+    document.getElementById('img-target-filename').value = filename;
+    document.getElementById('img-file-input').click();
+}
+
+function uploadImage(input) {
+    var filename = document.getElementById('img-target-filename').value;
+    if (!input.files || !input.files[0]) return;
+    var file = input.files[0];
+
+    var msgEl = document.getElementById('images-msg');
+    msgEl.style.display = 'block';
+    msgEl.innerHTML = '<div class="alert alert-info py-2">Uploading ' + filename + '…</div>';
+
+    var formData = new FormData();
+    formData.append('file', file);
+    formData.append('filename', filename);
+
+    fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData
+    }).then(function(r){ return r.json(); }).then(function(d){
+        if (d.ok) {
+            msgEl.innerHTML = '<div class="alert alert-success py-2">✓ ' + filename + ' replaced successfully!</div>';
+            showToast('success', filename + ' updated');
+            // Refresh just that card's image
+            var safe = filename.replace(/\./g,'_');
+            var card = document.getElementById('imgcard-' + safe);
+            if (card) {
+                var img = card.querySelector('img');
+                if (img) img.src = '/images/photos/' + filename + '?t=' + Date.now();
+            }
+            setTimeout(function(){ msgEl.style.display='none'; }, 4000);
+        } else {
+            msgEl.innerHTML = '<div class="alert alert-danger py-2">✗ ' + (d.error || 'Upload failed') + '</div>';
+            showToast('error', d.error || 'Upload failed');
+        }
+        input.value = ''; // reset input
+    }).catch(function(e){
+        msgEl.innerHTML = '<div class="alert alert-danger py-2">✗ ' + e.message + '</div>';
+        showToast('error', e.message);
+        input.value = '';
+    });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', loadContent);
+</script>
+</body>
+</html>

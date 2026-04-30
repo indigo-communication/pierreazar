@@ -4700,76 +4700,62 @@ if(window.location.protocol != 'https:')
 		 
 		</script>
 <style>
-/* Course page: video left, text right, price below */
+/* ── 2-column: injected video left / text right ── */
 
-/* Override the section min-height */
+/* Flatten section wrappers */
 #vbid-c1e000b4-ylaf0aoi.sub.item-box { min-height: 0 !important; }
-#vbid-c1e000b4-ylaf0aoi .multi-container { height: auto !important; }
+#vbid-c1e000b4-ylaf0aoi .multi-container,
 #vbid-c1e000b4-ylaf0aoi .Picture.item-preview,
 #vbid-c1e000b4-ylaf0aoi .preview-image-holder:not(.inner-pic-holder) {
-    height: auto !important;
-    min-height: 0 !important;
-    overflow: visible !important;
+    height: auto !important; min-height: 0 !important; overflow: visible !important;
 }
 
-/* Flex row for helper-div */
+/* Container: flex row, 600px tall */
 #vbid-c1e000b4-ylaf0aoi .helper-div.bottom-center {
     display: flex !important;
     flex-direction: row !important;
-    align-items: flex-start !important;
+    align-items: stretch !important;
+    height: 600px !important;
+    min-height: 600px !important;
+    overflow: hidden !important;
     position: relative !important;
-    height: auto !important;
-    min-height: 0 !important;
-    overflow: visible !important;
 }
 
-/* ── LEFT: video column ── */
+/* Hide the platform's pic-side — we inject our own video */
 #vbid-c1e000b4-ylaf0aoi .pic-side {
-    position: relative !important;
-    width: 50% !important;
-    flex: 0 0 50% !important;
-    height: 520px !important;
-    top: auto !important; bottom: auto !important; left: auto !important;
-}
-#vbid-c1e000b4-ylaf0aoi .pic-side .vertical-aligner,
-#vbid-c1e000b4-ylaf0aoi .pic-side .inner-pic-holder {
-    display: block !important;
-    width: 100% !important;
-    height: 100% !important;
-    min-height: 0 !important;
-}
-#vbid-c1e000b4-ylaf0aoi #vbid-c1e000b4-3ybmwuzg {
-    position: relative !important;
-    width: 100% !important;
-    height: 100% !important;
-    min-height: 0 !important;
-    background-image: none !important;
-}
-#vbid-c1e000b4-ylaf0aoi .preview-video-holder,
-#vbid-c1e000b4-ylaf0aoi .preview-video-source,
-#vbid-c1e000b4-ylaf0aoi .preview-video-source iframe {
-    position: absolute !important;
-    top: 0 !important; left: 0 !important;
-    width: 100% !important; height: 100% !important;
-}
-/* Hide lightbox link covering the video */
-#vbid-c1e000b4-ylaf0aoi a.image-link.not-wrapping {
     display: none !important;
+}
+
+/* Our injected YouTube column */
+#pa-video-col {
+    flex: 0 0 50%;
+    width: 50%;
+    height: 600px;
+    overflow: hidden;
+    position: relative;
+    order: 0;
+    margin-top: 40px;
+}
+#pa-video-col iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    border: none;
 }
 
 /* ── RIGHT: text column ── */
 #vbid-c1e000b4-ylaf0aoi .text-side {
     flex: 1 1 50% !important;
-    width: 50% !important;
+    order: 1 !important;
+    display: block !important;
     position: relative !important;
     float: none !important;
     height: auto !important;
-    min-height: 0 !important;
+    align-self: center !important;
     padding-left: 30px !important;
     padding-right: 10px !important;
     box-sizing: border-box !important;
-    display: block !important;
-    align-self: center !important;
+    overflow-y: auto !important;
 }
 #vbid-c1e000b4-ylaf0aoi .text-side .vertical-aligner {
     display: block !important;
@@ -4777,7 +4763,7 @@ if(window.location.protocol != 'https:')
     min-height: 0 !important;
 }
 
-/* ── Text column: left-align all text ── */
+/* Left-align text */
 #vbid-c1e000b4-ylaf0aoi .text-side .preview-title,
 #vbid-c1e000b4-ylaf0aoi .text-side .preview-body,
 #vbid-c1e000b4-ylaf0aoi .text-side .preview-body p,
@@ -4785,14 +4771,14 @@ if(window.location.protocol != 'https:')
     text-align: left !important;
 }
 
-/* ── BOTTOM: price + buy row — aligned under text column ── */
+/* Buy Now row */
+.course-price-row br { display: none !important; }
 .course-price-row {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     gap: 20px;
     flex-wrap: wrap;
-    padding-right: calc(10% + 10px) !important;
 }
 .course-price-row .preview-price-holder,
 .course-price-row .preview-item-links {
@@ -5186,6 +5172,7 @@ if(window.location.protocol != 'https:')
 	<div id="element-676387d0a7f9742" class="preview-element preview-video-source magic-circle-holder vid-autoplay vid-cover vid-mute vid-loop  allow-mobile-hide" data-menu-name="PREVIEW_VIDEO" data-json-name="PREVIEW_VIDEO"   data-spimeVID_LOOP = 'true'  data-spimeVID_AUTOPLAY = 'true'  data-spimeVBID = 'element-676387d0a7f9742'  data-spimeVIDEO_ID = '291044785'  data-spimeVID_COVER = 'True'  data-spimeSOURCE = 'vimeo'  data-spimeCONTEXT = 'PREVIEW'  data-spimeVID_MUTE = 'true'  >
 		
 		
+		<!-- ORIGINAL VIMEO: src="https://player.vimeo.com/video/291044785?api=1&player_id=element-676387d0a7f9742-vidframe&autoplay=1&loop=1&title=0&byline=0&badge=0" -->
 		<iframe class="vimplayer preview video-frame" id="element-676387d0a7f9742-vidframe" src="https://player.vimeo.com/video/291044785?api=1&player_id=element-676387d0a7f9742-vidframe&autoplay=1&loop=1&title=0&byline=0&badge=0" frameborder="0" width="100%" height="100%"></iframe>
 		
 	</div>
@@ -5197,7 +5184,7 @@ if(window.location.protocol != 'https:')
 </div>
 				</div>
 			</div>	
-				<div class="text-side shrinker-parent">
+				<div id="pa-video-col"><iframe src="https://player.vimeo.com/video/291044785?autoplay=1&loop=1&title=0&byline=0&badge=0&muted=1" allow="autoplay; fullscreen" allowfullscreen style="border:none;width:100%;height:100%;position:absolute;top:0;left:0;"></iframe></div><div class="text-side shrinker-parent">
 					<div class="vertical-aligner">
 						<div class="item-details preview-content-wrapper  multi" style="position:relative;">
 							<div class="draggable-div-holder"></div>
@@ -5255,7 +5242,7 @@ if(window.location.protocol != 'https:')
 					</div>
 				</div>
 			</div>
-<div class="course-price-row" style="clear:both; text-align:center; padding:30px 6% 20px; width:100%;">
+<div class="course-price-row" style="clear:both; text-align:center; padding:2px 20px; width:50%; margin-left:50%; margin-top:-80px; box-sizing:border-box; position:relative; z-index:10;">
 <br class="upper-line-break" />
 <div class="preview-price-holder removable-parent order-handle">
 	<div id="vbid-c1e000b4-odsvwj1v" class="preview-element preview-price magic-circle-holder text-element quick-text-style-menu " data-menu-name="PREVIEW_PRICE" data-product-type="SERVICE" data-product-id="product-c1e000b4-odsvwj1v" >
@@ -6348,21 +6335,22 @@ if(window.location.protocol != 'https:')
 
 <!-- ── Areeba Checkout Modal ─────────────────────────────────────────────── -->
 <style>
-#pa-checkout-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:99999;align-items:center;justify-content:center;}
+#pa-checkout-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:99999;align-items:center;justify-content:center;padding:20px;}
 #pa-checkout-overlay.open{display:flex;}
-#pa-checkout-box{background:#111;color:#f0f0f0;border-radius:8px;padding:2.2rem 2rem;max-width:400px;width:92%;box-shadow:0 8px 40px rgba(0,0,0,.6);position:relative;}
-#pa-checkout-box h2{font-size:1.25rem;font-weight:700;margin-bottom:.25rem;}
-#pa-checkout-box p.sub{color:#888;font-size:.875rem;margin-bottom:1.5rem;}
-#pa-checkout-box label{display:block;font-size:.8rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#999;margin-bottom:.3rem;}
-#pa-checkout-box input{width:100%;background:#1a1a1a;border:1px solid #333;border-radius:4px;padding:.65rem .85rem;color:#f0f0f0;font-size:.95rem;margin-bottom:1rem;outline:none;transition:border-color .2s;}
+#pa-checkout-box{background:#111;color:#f0f0f0;border-radius:12px;padding:32px 32px 24px;max-width:460px;width:100%;box-shadow:0 12px 60px rgba(0,0,0,.7);position:relative;font-size:16px;box-sizing:border-box;}
+#pa-checkout-box h2{font-size:22px;font-weight:700;margin:0 0 6px;color:#f0f0f0;}
+#pa-checkout-box p.sub{color:#888;font-size:14px;margin:0 0 22px;line-height:1.5;}
+#pa-checkout-box label{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#999;margin-bottom:6px;}
+#pa-checkout-box input{width:100%;background:#1c1c1c;border:1px solid #2e2e2e;border-radius:6px;padding:13px 16px;color:#f0f0f0;font-size:15px;margin:0 0 18px;outline:none;transition:border-color .2s;box-sizing:border-box;display:block;}
 #pa-checkout-box input:focus{border-color:#fff;}
-#pa-checkout-btn{width:100%;padding:.8rem;background:#fff;color:#000;font-weight:700;font-size:1rem;border:none;border-radius:4px;cursor:pointer;transition:opacity .2s;}
-#pa-checkout-btn:hover{opacity:.85;}
+#pa-checkout-btn{width:100%;padding:14px;background:#fff;color:#000;font-weight:700;font-size:15px;border:none;border-radius:6px;cursor:pointer;transition:opacity .2s;display:block;box-sizing:border-box;}
+#pa-checkout-btn:hover{opacity:.88;}
 #pa-checkout-btn:disabled{opacity:.5;cursor:default;}
-#pa-checkout-close{position:absolute;top:.75rem;right:1rem;background:none;border:none;color:#888;font-size:1.4rem;cursor:pointer;line-height:1;}
+#pa-checkout-close{position:absolute;top:14px;right:18px;background:none;border:none;color:#666;font-size:24px;cursor:pointer;line-height:1;padding:0;}
 #pa-checkout-close:hover{color:#fff;}
-#pa-checkout-error{display:none;margin-top:.75rem;padding:.5rem .75rem;background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.4);border-radius:4px;color:#e74c3c;font-size:.85rem;}
-#pa-checkout-secure{display:flex;align-items:center;gap:.4rem;color:#666;font-size:.75rem;margin-top:.9rem;justify-content:center;}
+#pa-checkout-error{display:none;margin-top:14px;padding:10px 14px;background:rgba(231,76,60,.12);border:1px solid rgba(231,76,60,.4);border-radius:5px;color:#e74c3c;font-size:13px;}
+#pa-checkout-secure{display:flex;align-items:center;gap:6px;color:#555;font-size:12px;margin-top:16px;justify-content:center;}
+@media(max-width:520px){#pa-checkout-box{padding:24px 20px 20px;}#pa-checkout-box h2{font-size:19px;}}
 </style>
 
 <div id="pa-checkout-overlay" role="dialog" aria-modal="true" aria-label="Course checkout">
@@ -6370,11 +6358,18 @@ if(window.location.protocol != 'https:')
     <button id="pa-checkout-close" onclick="closeCheckout()" aria-label="Close">&times;</button>
     <h2>Enroll in the Course</h2>
     <p class="sub">You will be redirected to our secure payment page to complete your purchase.</p>
+    <div id="pa-member-info" style="display:none;background:#1c1c1c;border:1px solid #2e2e2e;border-radius:6px;padding:12px 16px;margin-bottom:18px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#666;margin-bottom:4px;">Purchasing as</div>
+      <div id="pa-member-name" style="font-size:15px;color:#f0f0f0;font-weight:600;"></div>
+      <div id="pa-member-email" style="font-size:13px;color:#888;margin-top:2px;"></div>
+    </div>
     <form id="pa-checkout-form" onsubmit="submitCheckout(event)">
-      <label for="pa-name">Full Name</label>
-      <input type="text" id="pa-name" placeholder="Your name" required autocomplete="name">
-      <label for="pa-email">Email Address</label>
-      <input type="email" id="pa-email" placeholder="your@email.com" required autocomplete="email">
+      <div id="pa-fields-wrap">
+        <label for="pa-name">Full Name</label>
+        <input type="text" id="pa-name" placeholder="Your name" required autocomplete="name">
+        <label for="pa-email">Email Address</label>
+        <input type="email" id="pa-email" placeholder="your@email.com" required autocomplete="email">
+      </div>
       <button type="submit" id="pa-checkout-btn">
         <span id="pa-btn-text">Proceed to Secure Payment</span>
         <span id="pa-btn-spinner" style="display:none;">Processing…</span>
@@ -6389,11 +6384,54 @@ if(window.location.protocol != 'https:')
 </div>
 
 <script>
+var _paPrefilledFromSession = false;
 function openCheckout(e) {
   if (e) e.preventDefault();
   document.getElementById('pa-checkout-overlay').classList.add('open');
-  document.getElementById('pa-name').focus();
+  // Try to pre-fill from member session
+  if (!_paPrefilledFromSession) {
+    fetch('/member/me', {credentials: 'include'})
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(d) {
+        if (d && d.ok && d.email) {
+          _paPrefilledFromSession = true;
+          document.getElementById('pa-name').value  = d.name  || '';
+          document.getElementById('pa-email').value = d.email || '';
+          // Show "Purchasing as" summary and hide fields
+          document.getElementById('pa-member-name').textContent  = d.name  || d.email;
+          document.getElementById('pa-member-email').textContent = d.email;
+          document.getElementById('pa-member-info').style.display = 'block';
+          document.getElementById('pa-fields-wrap').style.display = 'none';
+          // Make inputs not required since they're filled
+          document.getElementById('pa-name').required  = false;
+          document.getElementById('pa-email').required = false;
+        } else {
+          document.getElementById('pa-name').focus();
+        }
+      })
+      .catch(function() {
+        document.getElementById('pa-name').focus();
+      });
+  } else {
+    // Already prefilled — focus the button
+    if (document.getElementById('pa-fields-wrap').style.display === 'none') {
+      document.getElementById('pa-checkout-btn').focus();
+    } else {
+      document.getElementById('pa-name').focus();
+    }
+  }
 }
+// Auto-open if navigated with #checkout hash
+(function() {
+  function maybeOpen() {
+    if (window.location.hash === '#checkout') openCheckout();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', maybeOpen);
+  } else {
+    maybeOpen();
+  }
+})();
 function closeCheckout() {
   document.getElementById('pa-checkout-overlay').classList.remove('open');
   document.getElementById('pa-checkout-error').style.display = 'none';
@@ -6445,6 +6483,79 @@ function submitCheckout(e) {
 }
 </script>
 <!-- ── End Areeba Checkout ────────────────────────────────────────────────── -->
+
+<script>
+/* ── Member login button ── */
+(function() {
+  var BASE_STYLE = [
+    'display:inline-flex',
+    'align-items:center',
+    'gap:6px',
+    'font-size:12px',
+    'font-weight:700',
+    'letter-spacing:.08em',
+    'color:#b8b8b8',
+    'background:transparent',
+    'border:none',
+    'border-radius:20px',
+    'padding:7px 18px',
+    'cursor:pointer',
+    'text-decoration:none',
+    'white-space:nowrap',
+    'font-family:Arial,sans-serif',
+    'line-height:1',
+    'box-shadow:none',
+  ].join(';');
+
+  function removeBtn() {
+    var el = document.getElementById('pa-member-btn');
+    if (el) el.remove();
+  }
+
+  function injectBtn(email) {
+    removeBtn();
+    var wrapper = document.createElement('div');
+    wrapper.id = 'pa-member-btn';
+    wrapper.style.cssText = 'position:absolute;top:50%;right:25px;transform:translateY(-50%);z-index:2147483647;display:flex;align-items:center;gap:0;';
+
+    if (email) {
+      var a = document.createElement('a');
+      a.href = '/member-login.html';
+      a.style.cssText = BASE_STYLE;
+      a.innerHTML = '&#128100;<span class="pa-btn-text"> PROFILE</span>';
+      a.title = email;
+      wrapper.appendChild(a);
+    } else {
+      var a = document.createElement('a');
+      a.href = '/member-login.html';
+      a.style.cssText = BASE_STYLE;
+      a.innerHTML = '&#128100;<span class="pa-btn-text"> LOG IN</span>';
+      wrapper.appendChild(a);
+    }
+
+    var header = document.querySelector('.header-box');
+    if (header) {
+      header.style.position = 'relative';
+      header.appendChild(wrapper);
+    } else {
+      document.body.appendChild(wrapper);
+    }
+  }
+
+  function init() {
+    injectBtn(null);
+    fetch('/member/me').then(function(r){ return r.json(); }).then(function(d){
+      if (d && d.ok) injectBtn(d.email);
+    }).catch(function(){});
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
 
 </body>
 

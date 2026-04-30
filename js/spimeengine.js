@@ -1047,7 +1047,7 @@ SpimeEngine.vimeoMessage = function(event){
 	if (!(/^https?:\/\/player.vimeo.com/).test(event.origin)) {
 		//not from vimeo
 	}else{
-		var data = JSON.parse(event.data);
+		var data = (typeof event.data === "string") ? JSON.parse(event.data) : event.data;
 		switch (data.event) {
             case 'ready':
 	        	$(".vid-mute .vimplayer").each(function(){
@@ -1070,8 +1070,10 @@ SpimeEngine.shrinkImg = function(container){
 		}else{
 			currentImg.attr("data-width-before-shrink",imgWidth);
 			var loadWidth = imgWidth*2;
-			if (currentImg.attr("src").indexOf("=s") == -1){
-				currentImg.attr("src", currentImg.attr("src") + "=s" + loadWidth);
+			var _src = currentImg.attr("src");
+			// Only append Google Cloud Storage resize suffix for GCS-hosted images
+			if (_src.indexOf("=s") == -1 && _src.indexOf("googleusercontent") != -1){
+				currentImg.attr("src", _src + "=s" + loadWidth);
 			}
 		}
 		if (container.width() < imgWidth){

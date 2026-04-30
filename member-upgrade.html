@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Upgrade to Premium — Pierre Azar</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:#0d0d0d;color:#f0f0f0;font-family:Arial,sans-serif;
+      min-height:100vh;display:flex;flex-direction:column;}
+    header{display:flex;align-items:center;justify-content:space-between;
+      padding:18px 5%;border-bottom:1px solid #1e1e1e;}
+    .logo{font-size:13px;font-weight:700;letter-spacing:.12em;color:#fff;
+      text-decoration:none;}
+    .logo span{font-size:18px;letter-spacing:.15em;}
+    main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 5%;}
+    .card{background:#111;border:1px solid #1e1e1e;border-radius:8px;
+      padding:40px 32px;width:100%;max-width:440px;text-align:center;}
+    .lock-icon{font-size:40px;margin-bottom:20px;}
+    h2{font-size:18px;font-weight:700;letter-spacing:.08em;margin-bottom:10px;}
+    .sub{font-size:13px;color:#777;margin-bottom:28px;line-height:1.7;}
+    .features{text-align:left;margin-bottom:28px;border-top:1px solid #1e1e1e;
+      padding-top:20px;}
+    .feature{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;
+      font-size:13px;color:#bbb;line-height:1.5;}
+    .feature-check{color:#5ab87e;font-size:14px;flex-shrink:0;margin-top:1px;}
+    .price-box{background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;
+      padding:16px;margin-bottom:24px;}
+    .price{font-size:32px;font-weight:700;color:#fff;}
+    .price-sub{font-size:12px;color:#555;margin-top:4px;letter-spacing:.06em;}
+    .btn{width:100%;background:#fff;color:#000;font-weight:700;font-size:14px;
+      padding:14px;border:none;border-radius:4px;cursor:pointer;letter-spacing:.06em;
+      transition:opacity .2s;text-transform:uppercase;}
+    .btn:hover{opacity:.85;}
+    .btn:disabled{opacity:.5;cursor:default;}
+    .msg{margin-top:14px;font-size:13px;line-height:1.5;padding:10px 14px;
+      border-radius:4px;display:none;}
+    .msg.error{background:#1a1210;border:1px solid #4a2c1a;color:#c87941;}
+    .note{margin-top:16px;font-size:12px;color:#444;line-height:1.6;}
+    footer{text-align:center;padding:20px;font-size:12px;color:#444;
+      border-top:1px solid #1a1a1a;}
+    footer a{color:#555;}
+    .btn-logout{background:none;border:1px solid #333;color:#666;font-size:12px;
+      font-weight:700;letter-spacing:.08em;padding:7px 14px;border-radius:4px;
+      cursor:pointer;text-transform:uppercase;transition:border-color .2s,color .2s;}
+    .btn-logout:hover{border-color:#666;color:#aaa;}
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo">PA <span>PIERRE AZAR</span></a>
+  <button class="btn-logout" onclick="doLogout()">LOG OUT</button>
+</header>
+
+<main>
+  <div class="card">
+    <div class="lock-icon">🎬</div>
+    <h2>UNLOCK THE FULL COURSE</h2>
+    <p class="sub">Your account is active. Upgrade to Premium to access the full cinematography course.</p>
+
+    <div class="features">
+      <div class="feature">
+        <span class="feature-check">✓</span>
+        <span>Full access to all course videos</span>
+      </div>
+      <div class="feature">
+        <span class="feature-check">✓</span>
+        <span>Stream on up to 2 devices</span>
+      </div>
+      <div class="feature">
+        <span class="feature-check">✓</span>
+        <span>Lifetime access — learn at your own pace</span>
+      </div>
+      <div class="feature">
+        <span class="feature-check">✓</span>
+        <span>Direct techniques from Pierre Azar</span>
+      </div>
+    </div>
+
+    <div class="price-box">
+      <div class="price" id="price-display">$99</div>
+      <div class="price-sub">ONE-TIME PAYMENT · LIFETIME ACCESS</div>
+    </div>
+
+    <button class="btn" id="btn-pay" onclick="doPay()">GET FULL ACCESS NOW</button>
+    <div class="msg error" id="msg-pay"></div>
+    <p class="note">Secure payment. Your account email will be used for the order.</p>
+    <p style="margin-top:18px;font-size:13px;color:#555;">
+      Have an activation code? <a href="/member/activate" style="color:#aaa;text-decoration:underline;">Enter it here →</a>
+    </p>
+  </div>
+</main>
+
+<footer>
+  <a href="/">← Back to pierreazar.com</a>
+</footer>
+
+<script>
+  var userEmail = '';
+  var userName  = '';
+
+  // Load price from config and check session
+  fetch('/member/me').then(function(r){ return r.json(); }).then(function(d){
+    if (!d.ok) {
+      location.href = '/member-login.html?next=/member/upgrade';
+      return;
+    }
+    if (d.premium) {
+      location.href = '/course';
+      return;
+    }
+    userEmail = d.email || '';
+    userName  = d.name  || '';
+  }).catch(function(){
+    location.href = '/member-login.html?next=/member/upgrade';
+  });
+
+  fetch('/api/payment-config').then(function(r){ return r.json(); }).catch(function(){ return {}; });
+
+  function showMsg(text) {
+    var el = document.getElementById('msg-pay');
+    el.textContent = text;
+    el.style.display = 'block';
+  }
+
+  function doLogout() {
+    fetch('/member/logout', {method:'POST'}).finally(function(){
+      location.href = '/member-login.html?logout=1';
+    });
+  }
+
+  function doPay() {
+    var btn = document.getElementById('btn-pay');
+    btn.disabled = true;
+    btn.textContent = 'Redirecting to payment…';
+
+    fetch('/api/initiate-payment', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: userName, email: userEmail})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.ok && d.checkout_url) {
+        location.href = d.checkout_url;
+      } else {
+        showMsg(d.error || 'Payment setup failed. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'GET FULL ACCESS NOW';
+      }
+    })
+    .catch(function(){
+      showMsg('Network error. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'GET FULL ACCESS NOW';
+    });
+  }
+</script>
+</body>
+</html>

@@ -12,18 +12,45 @@
     <link class="main-plugins" href="assets/css/plugins.css" rel="stylesheet">
     <link class="main-css" href="assets/css/style.css" rel="stylesheet">
     <style>
-        .section-label { font-size:.75rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--bs-secondary-color,#888); margin-bottom:.5rem; margin-top:1.5rem; }
-        .save-result { font-size:.85rem; padding:.5rem .85rem; border-radius:.35rem; display:none; margin-top:.75rem; }
+        /* ── Section labels ── */
+        .section-label { font-size:.73rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+            color:#555; margin-bottom:.6rem; margin-top:2rem; padding:.25rem .6rem;
+            border-left:3px solid var(--bs-primary); background:rgba(255,255,255,.03); display:block; }
+        /* ── Save feedback ── */
+        .save-result { font-size:.85rem; padding:.45rem .85rem; border-radius:.35rem; display:none; margin-top:.6rem; }
         .save-result.ok  { background:rgba(46,204,113,.12); border:1px solid rgba(46,204,113,.35); color:#2ecc71; }
         .save-result.err { background:rgba(231,76,60,.12);  border:1px solid rgba(231,76,60,.35);  color:#e74c3c; }
-        .preview-link { font-size:.8rem; color:#888; text-decoration:none; }
+        /* ── Page selector cards ── */
+        .page-selector { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:1.5rem; }
+        .page-btn { cursor:pointer; border:2px solid rgba(255,255,255,.08); border-radius:10px;
+            background:rgba(255,255,255,.03); padding:14px 20px; display:flex; flex-direction:column;
+            align-items:center; gap:6px; min-width:130px; transition:all .2s; user-select:none; }
+        .page-btn:hover { border-color:var(--bs-primary); background:rgba(var(--bs-primary-rgb),.08); }
+        .page-btn.active { border-color:var(--bs-primary); background:rgba(var(--bs-primary-rgb),.15); }
+        .page-btn svg { opacity:.6; }
+        .page-btn.active svg { opacity:1; }
+        .page-btn .page-name { font-size:.8rem; font-weight:600; letter-spacing:.05em; color:var(--bs-heading-color); }
+        .page-btn .page-url  { font-size:.68rem; color:#666; }
+        .page-panel { display:none; }
+        .page-panel.active { display:block; }
+        /* ── Image gallery ── */
+        .img-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; margin-top:10px; }
+        .img-card { position:relative; border:1px solid rgba(255,255,255,.07); border-radius:8px; overflow:hidden; background:rgba(255,255,255,.04); }
+        .img-card img { width:100%; height:90px; object-fit:cover; display:block; }
+        .img-card .img-name { font-size:.68rem; color:#888; padding:3px 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .img-card .replace-btn { position:absolute; top:4px; right:4px; background:rgba(0,0,0,.72); border:none;
+            border-radius:4px; color:#fff; font-size:.68rem; padding:3px 8px; cursor:pointer; transition:background .15s; }
+        .img-card .replace-btn:hover { background:var(--bs-primary); }
+        .img-upload-status { font-size:.82rem; margin-top:8px; padding:5px 10px; border-radius:5px; display:none; }
+        .img-upload-status.ok  { background:rgba(46,204,113,.14); color:#2ecc71; display:block; }
+        .img-upload-status.err { background:rgba(231,76,60,.14);  color:#e74c3c; display:block; }
+        .preview-link { font-size:.78rem; color:#777; text-decoration:none; }
         .preview-link:hover { color:#fff; }
-        .tab-pane .card { margin-bottom:0; }
-        textarea.form-control { font-family: monospace; font-size: .85rem; }
+        textarea.form-control { font-family:monospace; font-size:.84rem; }
+        .form-text { font-size:.78rem; }
     </style>
 </head>
 <body>
-
 <div id="main-wrapper">
 
     <!-- Nav Header -->
@@ -32,9 +59,7 @@
             <span style="font-family:Montserrat,Arial,sans-serif;font-weight:700;font-size:18px;letter-spacing:.15em;color:var(--bs-primary)">PA</span>
             <span class="brand-title" style="font-family:Montserrat,Arial,sans-serif;font-weight:700;font-size:16px;letter-spacing:.1em;color:var(--bs-heading-color);margin-left:8px">PIERRE AZAR</span>
         </a>
-        <div class="nav-control">
-            <div class="hamburger"><span class="line"></span><span class="line"></span><span class="line"></span></div>
-        </div>
+        <div class="nav-control"><div class="hamburger"><span class="line"></span><span class="line"></span><span class="line"></span></div></div>
     </div>
 
     <!-- Top Header -->
@@ -58,50 +83,44 @@
         <div class="deznav-scroll">
             <ul class="metismenu" id="menu">
                 <li class="menu-title">PIERRE AZAR</li>
-                <li>
-                    <a href="index.html" aria-expanded="false">
-                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M2.5 7.5L10 1.667L17.5 7.5V16.667C17.5 17.109 17.324 17.533 17.012 17.845C16.699 18.158 16.275 18.333 15.833 18.333H4.167C3.725 18.333 3.301 18.158 2.988 17.845C2.676 17.533 2.5 17.109 2.5 16.667V7.5Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                        <span class="nav-text">Dashboard</span>
-                    </a>
-                </li>
+                <li><a href="index.html" aria-expanded="false">
+                    <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M2.5 7.5L10 1.667L17.5 7.5V16.667C17.5 17.109 17.324 17.533 17.012 17.845C16.699 18.158 16.275 18.333 15.833 18.333H4.167C3.725 18.333 3.301 18.158 2.988 17.845C2.676 17.533 2.5 17.109 2.5 16.667V7.5Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="nav-text">Dashboard</span>
+                </a></li>
                 <li class="menu-title">MANAGE</li>
-                <li>
-                    <a href="submissions.html" aria-expanded="false">
-                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><polyline points="22,6 12,13 2,6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                        <span class="nav-text">Form Submissions</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="course-sales.html" aria-expanded="false">
-                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="18" height="14" rx="2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 8L14 11L10 14" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                        <span class="nav-text">Course Sales</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="finance.html" aria-expanded="false">
-                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><line x1="12" y1="1" x2="12" y2="23" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 5H9.5C8.57 5 7.68 5.37 7.02 6.02C6.37 6.68 6 7.57 6 8.5C6 9.43 6.37 10.32 7.02 10.98C7.68 11.63 8.57 12 9.5 12H14.5C15.43 12 16.32 12.37 16.98 13.02C17.63 13.68 18 14.57 18 15.5C18 16.43 17.63 17.32 16.98 17.98C16.32 18.63 15.43 19 14.5 19H6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                        <span class="nav-text">Finance</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="reports.html" aria-expanded="false">
-                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 20V10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 20V4" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 20v-6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                        <span class="nav-text">Reports</span>
-                    </a>
-                </li>
+                <li><a href="submissions.html" aria-expanded="false">
+                    <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><polyline points="22,6 12,13 2,6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="nav-text">Form Submissions</span>
+                </a></li>
+                <li><a href="course-sales.html" aria-expanded="false">
+                    <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="18" height="14" rx="2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 8L14 11L10 14" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="nav-text">Course Sales</span>
+                </a></li>
+                <li><a href="members.html" aria-expanded="false">
+                    <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="7" r="4" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="nav-text">Members</span>
+                </a></li>
+                <li><a href="finance.html" aria-expanded="false">
+                    <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><line x1="12" y1="1" x2="12" y2="23" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 5H9.5C8.57 5 7.68 5.37 7.02 6.02C6.37 6.68 6 7.57 6 8.5C6 9.43 6.37 10.32 7.02 10.98C7.68 11.63 8.57 12 9.5 12H14.5C15.43 12 16.32 12.37 16.98 13.02C17.63 13.68 18 14.57 18 15.5C18 16.43 17.63 17.32 16.98 17.98C16.32 18.63 15.43 19 14.5 19H6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="nav-text">Finance</span>
+                </a></li>
+                <li><a href="reports.html" aria-expanded="false">
+                    <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 20V10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 20V4" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 20v-6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="nav-text">Reports</span>
+                </a></li>
                 <li class="menu-title">SETTINGS</li>
-                <li class="mm-active">
-                    <a href="content-editor.html" aria-expanded="false">
-                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                        <span class="nav-text">Content Editor</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="payment-settings.html" aria-expanded="false">
-                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="1" y="4" width="22" height="16" rx="2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><line x1="1" y1="10" x2="23" y2="10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                        <span class="nav-text">Payment Gateway</span>
-                    </a>
-                </li>
+                <li class="mm-active"><a href="content-editor.html" aria-expanded="false">
+                    <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="nav-text">Content Editor</span>
+                </a></li>
+                <li><a href="payment-settings.html" aria-expanded="false">
+                    <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="1" y="4" width="22" height="16" rx="2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><line x1="1" y1="10" x2="23" y2="10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="nav-text">Payment Gateway</span>
+                </a></li>
+                <li><a href="change-password.html" aria-expanded="false">
+                    <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <span class="nav-text">Change Password</span>
+                </a></li>
             </ul>
             <div class="deznav-footer">
                 <a href="https://pierreazar.com" target="_blank">
@@ -126,162 +145,348 @@
             </div>
 
             <div class="row">
-                <div class="col-xl-9 col-lg-11">
+                <div class="col-12">
+                    <p class="text-muted small mb-3">Select a page to edit its content — images, videos, and text all in one place.</p>
 
-                    <!-- Tabs -->
-                    <ul class="nav nav-tabs mb-4" id="contentTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="course-tab" data-bs-toggle="tab" data-bs-target="#tab-course" type="button">Cinematography Course</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="homepage-tab" data-bs-toggle="tab" data-bs-target="#tab-homepage" type="button">Homepage</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="social-tab" data-bs-toggle="tab" data-bs-target="#tab-social" type="button">Social Links</button>
-                        </li>
-                    </ul>
+                    <!-- ── Page Selector ── -->
+                    <div class="page-selector" id="pageSelectorBar">
 
-                    <div class="tab-content" id="contentTabsContent">
-
-                        <!-- ── COURSE TAB ── -->
-                        <div class="tab-pane fade show active" id="tab-course" role="tabpanel">
-                            <div class="card">
-                                <div class="card-header d-flex align-items-center justify-content-between">
-                                    <h5 class="mb-0">Cinematography Course Page</h5>
-                                    <a href="https://pierreazar.com/cinematography-course.html" target="_blank" class="preview-link">&#128279; Preview page</a>
-                                </div>
-                                <div class="card-body">
-                                    <form id="form-course" onsubmit="saveSection(event,'course')">
-
-                                        <p class="section-label">Promo Video</p>
-                                        <div class="mb-4">
-                                            <label class="form-label" for="course_vimeo_id">Vimeo Video ID</label>
-                                            <input type="text" class="form-control" id="course_vimeo_id" name="course_vimeo_id"
-                                                   placeholder="e.g. 291044785" autocomplete="off">
-                                            <div class="form-text">The number after vimeo.com/video/ — visible in the browser address bar when viewing your Vimeo video.</div>
-                                        </div>
-
-                                        <p class="section-label">Pricing &amp; Buy Button</p>
-                                        <div class="mb-3">
-                                            <label class="form-label" for="course_price">Display Price (shown on page)</label>
-                                            <div class="input-group" style="max-width:200px;">
-                                                <span class="input-group-text">$</span>
-                                                <input type="text" class="form-control" id="course_price" name="course_price"
-                                                       placeholder="99">
-                                            </div>
-                                            <div class="form-text">This is the price shown visually on the sales page. Update the actual charge amount in Payment Gateway settings.</div>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label" for="course_buy_text">Buy Button Text</label>
-                                            <input type="text" class="form-control" id="course_buy_text" name="course_buy_text"
-                                                   placeholder="Buy Now" style="max-width:300px;">
-                                        </div>
-                                        <div class="mb-4">
-                                            <label class="form-label" for="course_buy_url">Buy Button URL</label>
-                                            <input type="text" class="form-control" id="course_buy_url" name="course_buy_url"
-                                                   placeholder="#" style="max-width:400px;">
-                                            <div class="form-text">Use <code>#</code> to trigger the payment modal (default). Or enter a full URL to redirect elsewhere.</div>
-                                        </div>
-
-                                        <div class="d-flex align-items-center gap-3">
-                                            <button type="submit" class="btn btn-primary" id="btn-course">Save Course Page</button>
-                                            <div class="save-result" id="result-course"></div>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
+                        <div class="page-btn active" data-page="homepage" onclick="switchPage('homepage')">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"/><polyline points="9 22 9 12 15 12 15 22" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span class="page-name">Homepage</span>
+                            <span class="page-url">pierreazar.com</span>
                         </div>
 
-                        <!-- ── HOMEPAGE TAB ── -->
-                        <div class="tab-pane fade" id="tab-homepage" role="tabpanel">
-                            <div class="card">
-                                <div class="card-header d-flex align-items-center justify-content-between">
-                                    <h5 class="mb-0">Homepage</h5>
-                                    <a href="https://pierreazar.com/" target="_blank" class="preview-link">&#128279; Preview page</a>
-                                </div>
-                                <div class="card-body">
-                                    <form id="form-homepage" onsubmit="saveSection(event,'homepage')">
-
-                                        <p class="section-label">Hero Reel Video</p>
-                                        <div class="mb-4">
-                                            <label class="form-label" for="homepage_reel_vimeo_id">Vimeo Video ID</label>
-                                            <input type="text" class="form-control" id="homepage_reel_vimeo_id" name="homepage_reel_vimeo_id"
-                                                   placeholder="e.g. 1000452483" autocomplete="off" style="max-width:280px;">
-                                            <div class="form-text">The full-screen background reel on the homepage.</div>
-                                        </div>
-
-                                        <p class="section-label">Hero Quote</p>
-                                        <div class="mb-4">
-                                            <label class="form-label" for="homepage_quote">Quote Text</label>
-                                            <input type="text" class="form-control" id="homepage_quote" name="homepage_quote"
-                                                   placeholder="Your headline quote...">
-                                            <div class="form-text">The large heading text displayed over the hero image.</div>
-                                        </div>
-
-                                        <p class="section-label">About Section</p>
-                                        <div class="mb-4">
-                                            <label class="form-label" for="homepage_about">About Body</label>
-                                            <textarea class="form-control" id="homepage_about" name="homepage_about"
-                                                      rows="8" placeholder="About text (HTML supported)..."></textarea>
-                                            <div class="form-text">Supports basic HTML tags like <code>&lt;p&gt;</code>, <code>&lt;strong&gt;</code>, <code>&lt;br&gt;</code>.</div>
-                                        </div>
-
-                                        <div class="d-flex align-items-center gap-3">
-                                            <button type="submit" class="btn btn-primary" id="btn-homepage">Save Homepage</button>
-                                            <div class="save-result" id="result-homepage"></div>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
+                        <div class="page-btn" data-page="portfolio" onclick="switchPage('portfolio')">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"/><rect x="14" y="3" width="7" height="7" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"/><rect x="14" y="14" width="7" height="7" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="14" width="7" height="7" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span class="page-name">Portfolio</span>
+                            <span class="page-url">/portfolio.html</span>
                         </div>
 
-                        <!-- ── SOCIAL TAB ── -->
-                        <div class="tab-pane fade" id="tab-social" role="tabpanel">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5 class="mb-0">Social Media Links</h5>
-                                </div>
-                                <div class="card-body">
-                                    <p class="text-muted small mb-4">These links appear in the footer of every public page.</p>
-                                    <form id="form-social" onsubmit="saveSection(event,'social')">
-
-                                        <div class="mb-3">
-                                            <label class="form-label" for="social_facebook">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="me-1"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                                Facebook URL
-                                            </label>
-                                            <input type="url" class="form-control" id="social_facebook" name="social_facebook"
-                                                   placeholder="https://www.facebook.com/yourpage">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label" for="social_instagram">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="me-1"><rect x="2" y="2" width="20" height="20" rx="5" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                                Instagram URL
-                                            </label>
-                                            <input type="url" class="form-control" id="social_instagram" name="social_instagram"
-                                                   placeholder="https://www.instagram.com/yourhandle">
-                                        </div>
-                                        <div class="mb-4">
-                                            <label class="form-label" for="social_vimeo">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="me-1"><path d="M22 7.42C21.91 9.38 20.54 12.06 17.9 15.46C15.17 19 12.83 20.77 10.87 20.77C9.67 20.77 8.65 19.66 7.81 17.44L6.29 11.97C5.67 9.75 5.01 8.64 4.3 8.64C4.14 8.64 3.59 8.98 2.67 9.65L2 8.82C3.02 7.93 4.02 7.03 5 6.13C6.35 4.96 7.36 4.35 8.03 4.3C9.69 4.15 10.73 5.25 11.14 7.59C11.58 10.1 11.88 11.65 12.04 12.24C12.53 14.43 13.07 15.52 13.66 15.52C14.12 15.52 14.82 14.83 15.75 13.43C16.68 12.03 17.18 10.95 17.24 10.2C17.36 8.97 16.88 8.36 15.75 8.36C15.22 8.36 14.67 8.49 14.1 8.75C15.19 5.26 17.25 3.57 20.28 3.68C22.55 3.75 23.62 5.26 22 7.42Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                                Vimeo URL
-                                            </label>
-                                            <input type="url" class="form-control" id="social_vimeo" name="social_vimeo"
-                                                   placeholder="https://vimeo.com/yourprofile">
-                                        </div>
-
-                                        <div class="d-flex align-items-center gap-3">
-                                            <button type="submit" class="btn btn-primary" id="btn-social">Save Social Links</button>
-                                            <div class="save-result" id="result-social"></div>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
+                        <div class="page-btn" data-page="course" onclick="switchPage('course')">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><polygon points="23 7 16 12 23 17 23 7" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"/><rect x="1" y="5" width="15" height="14" rx="2" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span class="page-name">Course Setup</span>
+                            <span class="page-url">/cinematography-course</span>
                         </div>
 
-                    </div><!-- /tab-content -->
+                        <div class="page-btn" data-page="onset" onclick="switchPage('onset')">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="8" x2="12" y2="16" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"/><line x1="8" y1="12" x2="16" y2="12" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span class="page-name">Onset Experience</span>
+                            <span class="page-url">/onset-experience</span>
+                        </div>
+
+                        <div class="page-btn" data-page="contact" onclick="switchPage('contact')">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"/><polyline points="22,6 12,13 2,6" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            <span class="page-name">Contact</span>
+                            <span class="page-url">/get-in-touch</span>
+                        </div>
+
+                    </div><!-- /page-selector -->
                 </div>
-            </div><!-- /row -->
+            </div>
+
+            <!-- ══════════════════════════════════════════════════════════
+                 PAGE PANELS
+            ══════════════════════════════════════════════════════════ -->
+            <div class="row">
+                <div class="col-xl-10 col-lg-12">
+
+                    <!-- ────────── HOMEPAGE ────────── -->
+                    <div class="page-panel active" id="panel-homepage">
+                        <div class="card">
+                            <div class="card-header d-flex align-items-center justify-content-between">
+                                <h5 class="mb-0">Homepage — <span class="text-muted fw-normal" style="font-size:.9rem">pierreazar.com</span></h5>
+                                <a href="https://pierreazar.com/" target="_blank" class="preview-link">&#128279; Preview live page</a>
+                            </div>
+                            <div class="card-body">
+
+                                <!-- VIDEO -->
+                                <span class="section-label">&#127916; Videos</span>
+                                <form id="form-homepage-video" onsubmit="saveSection(event,'homepage-video',['homepage_reel_vimeo_id','homepage_selected_video_1','homepage_selected_video_2','homepage_selected_video_3','homepage_course_vimeo_id'])">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="homepage_reel_vimeo_id">Hero Background Reel</label>
+                                        <input type="text" class="form-control" id="homepage_reel_vimeo_id" name="homepage_reel_vimeo_id"
+                                               placeholder="e.g. 1000452483" autocomplete="off" style="max-width:280px;">
+                                        <div class="form-text">Full-screen background video behind the headline. Vimeo ID only.</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="homepage_selected_video_1">Selected Works — Video 1</label>
+                                        <input type="text" class="form-control" id="homepage_selected_video_1" name="homepage_selected_video_1"
+                                               placeholder="e.g. 1000452483" autocomplete="off" style="max-width:280px;">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="homepage_selected_video_2">Selected Works — Video 2</label>
+                                        <input type="text" class="form-control" id="homepage_selected_video_2" name="homepage_selected_video_2"
+                                               placeholder="e.g. 1000452483" autocomplete="off" style="max-width:280px;">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="homepage_selected_video_3">Selected Works — Video 3</label>
+                                        <input type="text" class="form-control" id="homepage_selected_video_3" name="homepage_selected_video_3"
+                                               placeholder="e.g. 471331461" autocomplete="off" style="max-width:280px;">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="homepage_course_vimeo_id">Course Promo on Homepage <span class="badge bg-secondary fw-normal">also updates Course page</span></label>
+                                        <input type="text" class="form-control" id="homepage_course_vimeo_id" name="homepage_course_vimeo_id"
+                                               placeholder="e.g. 291044785" autocomplete="off" style="max-width:280px;">
+                                        <div class="form-text">Video shown in the "Cinematography Course" section on the homepage. Saving this also updates the Course page.</div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3 mb-2">
+                                        <button type="submit" class="btn btn-primary btn-sm" id="btn-homepage-video">Save Videos</button>
+                                        <div class="save-result" id="result-homepage-video"></div>
+                                    </div>
+                                </form>
+
+                                <!-- TEXT -->
+                                <span class="section-label">&#9998; Text Content</span>
+                                <form id="form-homepage-text" onsubmit="saveSection(event,'homepage-text',['homepage_quote','homepage_about'])">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="homepage_quote">Hero Quote / Headline</label>
+                                        <input type="text" class="form-control" id="homepage_quote" name="homepage_quote"
+                                               placeholder="Your headline quote…">
+                                        <div class="form-text">Large heading text displayed over the hero section.</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="homepage_about">About Section Body</label>
+                                        <textarea class="form-control" id="homepage_about" name="homepage_about"
+                                                  rows="7" placeholder="About text (HTML supported)…"></textarea>
+                                        <div class="form-text">Supports <code>&lt;p&gt;</code>, <code>&lt;strong&gt;</code>, <code>&lt;br&gt;</code> tags.</div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3 mb-2">
+                                        <button type="submit" class="btn btn-primary btn-sm" id="btn-homepage-text">Save Text</button>
+                                        <div class="save-result" id="result-homepage-text"></div>
+                                    </div>
+                                </form>
+
+                                <!-- SOCIAL LINKS -->
+                                <span class="section-label">&#128279; Social Links (appear on all pages)</span>
+                                <form id="form-homepage-social" onsubmit="saveSection(event,'homepage-social',['social_facebook','social_instagram','social_vimeo'])">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label" for="social_facebook">Facebook URL</label>
+                                            <input type="url" class="form-control" id="social_facebook" name="social_facebook" placeholder="https://www.facebook.com/…">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label" for="social_instagram">Instagram URL</label>
+                                            <input type="url" class="form-control" id="social_instagram" name="social_instagram" placeholder="https://www.instagram.com/…">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label" for="social_vimeo">Vimeo URL</label>
+                                            <input type="url" class="form-control" id="social_vimeo" name="social_vimeo" placeholder="https://vimeo.com/…">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3 mb-2">
+                                        <button type="submit" class="btn btn-primary btn-sm" id="btn-homepage-social">Save Social Links</button>
+                                        <div class="save-result" id="result-homepage-social"></div>
+                                    </div>
+                                </form>
+
+                                <!-- IMAGES -->
+                                <span class="section-label">&#128247; Images</span>
+                                <div id="img-status-homepage" class="img-upload-status"></div>
+                                <div id="img-gallery-homepage"><p class="text-muted small py-2">Loading…</p></div>
+
+                            </div>
+                        </div>
+                    </div><!-- /homepage -->
+
+                    <!-- ────────── PORTFOLIO ────────── -->
+                    <div class="page-panel" id="panel-portfolio">
+                        <div class="card">
+                            <div class="card-header d-flex align-items-center justify-content-between">
+                                <h5 class="mb-0">Portfolio — <span class="text-muted fw-normal" style="font-size:.9rem">portfolio.html</span></h5>
+                                <a href="https://pierreazar.com/portfolio.html" target="_blank" class="preview-link">&#128279; Preview live page</a>
+                            </div>
+                            <div class="card-body">
+
+                                <!-- VIDEOS -->
+                                <span class="section-label">&#127916; Portfolio Videos</span>
+                                <p class="text-muted small">Enter the Vimeo video ID for each portfolio item. Copy the number from the video URL on Vimeo: vimeo.com/<strong>996151610</strong></p>
+                                <form id="form-portfolio-video" onsubmit="saveSection(event,'portfolio-video',['portfolio_video_0','portfolio_video_1','portfolio_video_2','portfolio_video_3','portfolio_video_4','portfolio_video_5','portfolio_video_6','portfolio_video_7','portfolio_video_8'])">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6 col-lg-4">
+                                            <label class="form-label" for="portfolio_video_0">Film / Promo Reel</label>
+                                            <input type="text" class="form-control" id="portfolio_video_0" name="portfolio_video_0" placeholder="Vimeo ID" autocomplete="off">
+                                        </div>
+                                        <div class="col-md-6 col-lg-4">
+                                            <label class="form-label" for="portfolio_video_1">Portfolio Video 1</label>
+                                            <input type="text" class="form-control" id="portfolio_video_1" name="portfolio_video_1" placeholder="Vimeo ID" autocomplete="off">
+                                        </div>
+                                        <div class="col-md-6 col-lg-4">
+                                            <label class="form-label" for="portfolio_video_2">Portfolio Video 2</label>
+                                            <input type="text" class="form-control" id="portfolio_video_2" name="portfolio_video_2" placeholder="Vimeo ID" autocomplete="off">
+                                        </div>
+                                        <div class="col-md-6 col-lg-4">
+                                            <label class="form-label" for="portfolio_video_3">Portfolio Video 3</label>
+                                            <input type="text" class="form-control" id="portfolio_video_3" name="portfolio_video_3" placeholder="Vimeo ID" autocomplete="off">
+                                        </div>
+                                        <div class="col-md-6 col-lg-4">
+                                            <label class="form-label" for="portfolio_video_4">Portfolio Video 4</label>
+                                            <input type="text" class="form-control" id="portfolio_video_4" name="portfolio_video_4" placeholder="Vimeo ID" autocomplete="off">
+                                        </div>
+                                        <div class="col-md-6 col-lg-4">
+                                            <label class="form-label" for="portfolio_video_5">Portfolio Video 5</label>
+                                            <input type="text" class="form-control" id="portfolio_video_5" name="portfolio_video_5" placeholder="Vimeo ID" autocomplete="off">
+                                        </div>
+                                        <div class="col-md-6 col-lg-4">
+                                            <label class="form-label" for="portfolio_video_6">Portfolio Video 6</label>
+                                            <input type="text" class="form-control" id="portfolio_video_6" name="portfolio_video_6" placeholder="Vimeo ID" autocomplete="off">
+                                        </div>
+                                        <div class="col-md-6 col-lg-4">
+                                            <label class="form-label" for="portfolio_video_7">Portfolio Video 7</label>
+                                            <input type="text" class="form-control" id="portfolio_video_7" name="portfolio_video_7" placeholder="Vimeo ID" autocomplete="off">
+                                        </div>
+                                        <div class="col-md-6 col-lg-4">
+                                            <label class="form-label" for="portfolio_video_8">Portfolio Video 8</label>
+                                            <input type="text" class="form-control" id="portfolio_video_8" name="portfolio_video_8" placeholder="Vimeo ID" autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3 mb-2">
+                                        <button type="submit" class="btn btn-primary btn-sm" id="btn-portfolio-video">Save Videos</button>
+                                        <div class="save-result" id="result-portfolio-video"></div>
+                                    </div>
+                                </form>
+
+                                <!-- IMAGES -->
+                                <span class="section-label">&#128247; Portfolio Thumbnail Images</span>
+                                <p class="text-muted small">These are the preview images shown for each portfolio item. Replace any image to update it site-wide.</p>
+                                <div id="img-status-portfolio" class="img-upload-status"></div>
+                                <div id="img-gallery-portfolio"><p class="text-muted small py-2">Loading…</p></div>
+
+                            </div>
+                        </div>
+                    </div><!-- /portfolio -->
+
+                    <!-- ────────── COURSE SETUP ────────── -->
+                    <div class="page-panel" id="panel-course">
+                        <div class="card">
+                            <div class="card-header d-flex align-items-center justify-content-between">
+                                <h5 class="mb-0">Course Setup</h5>
+                                <a href="https://pierreazar.com/cinematography-course.html" target="_blank" class="preview-link">&#128279; Preview live page</a>
+                            </div>
+                            <div class="card-body">
+
+                                <!-- VIDEO -->
+                                <span class="section-label">&#127916; Promo Video</span>
+                                <form id="form-course-video" onsubmit="saveSection(event,'course-video',['course_vimeo_id'])">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="course_vimeo_id">Vimeo Video ID <span class="badge bg-secondary fw-normal">also updates homepage course promo</span></label>
+                                        <input type="text" class="form-control" id="course_vimeo_id" name="course_vimeo_id"
+                                               placeholder="e.g. 291044785" autocomplete="off" style="max-width:280px;">
+                                        <div class="form-text">The promo video shown on the course sales page AND the homepage course section. Copy the number from vimeo.com/<strong>291044785</strong></div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3 mb-2">
+                                        <button type="submit" class="btn btn-primary btn-sm" id="btn-course-video">Save Video</button>
+                                        <div class="save-result" id="result-course-video"></div>
+                                    </div>
+                                </form>
+
+                                <!-- COURSE SECTION VIDEOS -->
+                                <span class="section-label">&#127916; Course Section Videos (Bunny Stream)</span>
+                                <p class="text-muted small">Paste the full Bunny Stream embed URL for each part. Format: <code>https://iframe.mediadelivery.net/embed/{libraryId}/{videoId}</code></p>
+                                <form id="form-course-parts" onsubmit="saveSection(event,'course-parts',['course_part_1_url','course_part_2_url','course_part_3_url','course_part_4_url','course_part_5_url'])">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="course_part_1_url">Part 1 — Embed URL</label>
+                                        <input type="text" class="form-control" id="course_part_1_url" name="course_part_1_url"
+                                               placeholder="https://iframe.mediadelivery.net/embed/…" autocomplete="off">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="course_part_2_url">Part 2 — Embed URL</label>
+                                        <input type="text" class="form-control" id="course_part_2_url" name="course_part_2_url"
+                                               placeholder="https://iframe.mediadelivery.net/embed/…" autocomplete="off">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="course_part_3_url">Part 3 — Embed URL</label>
+                                        <input type="text" class="form-control" id="course_part_3_url" name="course_part_3_url"
+                                               placeholder="https://iframe.mediadelivery.net/embed/…" autocomplete="off">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="course_part_4_url">Part 4 — Embed URL</label>
+                                        <input type="text" class="form-control" id="course_part_4_url" name="course_part_4_url"
+                                               placeholder="https://iframe.mediadelivery.net/embed/…" autocomplete="off">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="course_part_5_url">Part 5 — Embed URL</label>
+                                        <input type="text" class="form-control" id="course_part_5_url" name="course_part_5_url"
+                                               placeholder="https://iframe.mediadelivery.net/embed/…" autocomplete="off">
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3 mb-2">
+                                        <button type="submit" class="btn btn-primary btn-sm" id="btn-course-parts">Save Course Videos</button>
+                                        <div class="save-result" id="result-course-parts"></div>
+                                    </div>
+                                </form>
+
+                                <!-- PRICING & BUY BUTTON -->
+                                <span class="section-label">&#128176; Pricing &amp; Buy Button</span>
+                                <form id="form-course-price" onsubmit="saveSection(event,'course-price',['course_price','course_buy_text','course_buy_url'])">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label" for="course_price">Display Price</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="text" class="form-control" id="course_price" name="course_price" placeholder="99">
+                                            </div>
+                                            <div class="form-text">Price shown on page. Update actual charge in Payment Gateway.</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label" for="course_buy_text">Buy Button Text</label>
+                                            <input type="text" class="form-control" id="course_buy_text" name="course_buy_text" placeholder="Buy Now">
+                                        </div>
+                                        <div class="col-md-5">
+                                            <label class="form-label" for="course_buy_url">Buy Button URL</label>
+                                            <input type="text" class="form-control" id="course_buy_url" name="course_buy_url" placeholder="#">
+                                            <div class="form-text">Use <code>#</code> for payment modal, or a full URL to redirect.</div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3 mb-2">
+                                        <button type="submit" class="btn btn-primary btn-sm" id="btn-course-price">Save Pricing</button>
+                                        <div class="save-result" id="result-course-price"></div>
+                                    </div>
+                                </form>
+
+                                <!-- IMAGES -->
+                                <span class="section-label">&#128247; Course Page Images</span>
+                                <div id="img-status-course" class="img-upload-status"></div>
+                                <div id="img-gallery-course"><p class="text-muted small py-2">Loading…</p></div>
+
+                            </div>
+                        </div>
+                    </div><!-- /course -->
+
+                    <!-- ────────── ONSET EXPERIENCE ────────── -->
+                    <div class="page-panel" id="panel-onset">
+                        <div class="card">
+                            <div class="card-header d-flex align-items-center justify-content-between">
+                                <h5 class="mb-0">Onset Experience Page</h5>
+                                <a href="https://pierreazar.com/onset-experience.html" target="_blank" class="preview-link">&#128279; Preview live page</a>
+                            </div>
+                            <div class="card-body">
+                                <span class="section-label">&#128247; Page Images</span>
+                                <p class="text-muted small">Replace any image used on the Onset Experience page.</p>
+                                <div id="img-status-onset" class="img-upload-status"></div>
+                                <div id="img-gallery-onset"><p class="text-muted small py-2">Loading…</p></div>
+                            </div>
+                        </div>
+                    </div><!-- /onset -->
+
+                    <!-- ────────── CONTACT ────────── -->
+                    <div class="page-panel" id="panel-contact">
+                        <div class="card">
+                            <div class="card-header d-flex align-items-center justify-content-between">
+                                <h5 class="mb-0">Get In Touch Page</h5>
+                                <a href="https://pierreazar.com/get-in-touch.html" target="_blank" class="preview-link">&#128279; Preview live page</a>
+                            </div>
+                            <div class="card-body">
+                                <span class="section-label">&#128247; Page Images</span>
+                                <p class="text-muted small">Replace any image used on the Contact page.</p>
+                                <div id="img-status-contact" class="img-upload-status"></div>
+                                <div id="img-gallery-contact"><p class="text-muted small py-2">Loading…</p></div>
+                            </div>
+                        </div>
+                    </div><!-- /contact -->
+
+                </div>
+            </div><!-- /row panels -->
+
         </div>
     </div>
     <!-- End Content Body -->
@@ -299,34 +504,64 @@
 <script src="assets/js/custom.js"></script>
 
 <script>
-// ── Load all current content on page load ─────────────────────────────────
+// ── Page → server HTML file mapping ──────────────────────────────────────
+var PAGE_FILES = {
+    homepage:  'index.html',
+    portfolio: 'portfolio.html',
+    course:    'cinematography-course.html',
+    onset:     'onset-experience.html',
+    contact:   'get-in-touch.html'
+};
+
+// ── Switch page panel ─────────────────────────────────────────────────────
+var _loadedImages = {};   // cache: page → loaded flag
+
+function switchPage(page) {
+    document.querySelectorAll('.page-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('.page-panel').forEach(function(p){ p.classList.remove('active'); });
+    document.querySelector('[data-page="' + page + '"]').classList.add('active');
+    document.getElementById('panel-' + page).classList.add('active');
+
+    // Lazy-load images for this panel
+    if (!_loadedImages[page]) {
+        _loadedImages[page] = true;
+        loadPageImages(page);
+    }
+}
+
+// ── Load all content fields on startup ───────────────────────────────────
 document.addEventListener('DOMContentLoaded', function () {
     fetch('/api/content', { credentials: 'include' })
-        .then(function (r) {
-            if (r.status === 401) { window.location.href = 'login.html'; return null; }
-            return r.json();
-        })
-        .then(function (d) {
+        .then(function(r){ if (r.status===401){ window.location.href='login.html'; return null; } return r.json(); })
+        .then(function(d){
             if (!d || !d.ok) return;
             var c = d.content;
-
-            // Course fields
-            setVal('course_vimeo_id',           c.course_vimeo_id);
-            setVal('course_price',               c.course_price);
-            setVal('course_buy_text',            c.course_buy_text);
-            setVal('course_buy_url',             c.course_buy_url);
-
-            // Homepage fields
-            setVal('homepage_reel_vimeo_id',     c.homepage_reel_vimeo_id);
-            setVal('homepage_quote',             c.homepage_quote);
-            setVal('homepage_about',             c.homepage_about);
-
-            // Social fields
-            setVal('social_facebook',            c.social_facebook);
-            setVal('social_instagram',           c.social_instagram);
-            setVal('social_vimeo',               c.social_vimeo);
+            // Homepage
+            setVal('homepage_reel_vimeo_id',      c.homepage_reel_vimeo_id);
+            setVal('homepage_selected_video_1',   c.homepage_selected_video_1);
+            setVal('homepage_selected_video_2',   c.homepage_selected_video_2);
+            setVal('homepage_selected_video_3',   c.homepage_selected_video_3);
+            setVal('homepage_course_vimeo_id',    c.homepage_course_vimeo_id);
+            setVal('homepage_quote',              c.homepage_quote);
+            setVal('homepage_about',              c.homepage_about);
+            setVal('social_facebook',        c.social_facebook);
+            setVal('social_instagram',       c.social_instagram);
+            setVal('social_vimeo',           c.social_vimeo);
+            // Portfolio videos
+            for (var i = 0; i <= 8; i++) setVal('portfolio_video_' + i, c['portfolio_video_' + i]);
+            // Course
+            setVal('course_vimeo_id',  c.course_vimeo_id);
+            setVal('course_price',     c.course_price);
+            setVal('course_buy_text',  c.course_buy_text);
+            setVal('course_buy_url',   c.course_buy_url);
+            // Course section videos
+            for (var p = 1; p <= 5; p++) setVal('course_part_' + p + '_url', c['course_part_' + p + '_url'] || '');
         })
-        .catch(function () {});
+        .catch(function(){});
+
+    // Load images for the default page (homepage)
+    _loadedImages['homepage'] = true;
+    loadPageImages('homepage');
 });
 
 function setVal(id, val) {
@@ -334,19 +569,21 @@ function setVal(id, val) {
     if (el && val !== undefined && val !== null) el.value = val;
 }
 
-// ── Save a section ─────────────────────────────────────────────────────────
-function saveSection(e, section) {
+// ── Save a section ────────────────────────────────────────────────────────
+// sectionId  = 'homepage-video' → btn-homepage-video, result-homepage-video, form-homepage-video
+// fieldNames = array of input names to collect
+function saveSection(e, sectionId, fieldNames) {
     e.preventDefault();
-    var form   = document.getElementById('form-' + section);
-    var btn    = document.getElementById('btn-' + section);
-    var result = document.getElementById('result-' + section);
+    var btn    = document.getElementById('btn-' + sectionId);
+    var result = document.getElementById('result-' + sectionId);
     var data   = {};
-
-    Array.from(form.elements).forEach(function (el) {
-        if (el.name) data[el.name] = el.value;
+    fieldNames.forEach(function(name){
+        var el = document.getElementById(name) || document.querySelector('[name="' + name + '"]');
+        if (el) data[name] = el.value;
     });
 
     btn.disabled = true;
+    var origText = btn.textContent;
     btn.textContent = 'Saving…';
     result.style.display = 'none';
 
@@ -356,11 +593,8 @@ function saveSection(e, section) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     })
-    .then(function (r) {
-        if (r.status === 401) { window.location.href = 'login.html'; return null; }
-        return r.json();
-    })
-    .then(function (d) {
+    .then(function(r){ if(r.status===401){ window.location.href='login.html'; return null; } return r.json(); })
+    .then(function(d){
         if (!d) return;
         result.className = 'save-result ' + (d.ok ? 'ok' : 'err');
         result.textContent = d.ok
@@ -368,16 +602,97 @@ function saveSection(e, section) {
             : '✗ Error: ' + (d.error || (d.errors || []).join(', '));
         result.style.display = 'inline-block';
     })
-    .catch(function () {
+    .catch(function(){
         result.className = 'save-result err';
         result.textContent = '✗ Network error — please try again.';
         result.style.display = 'inline-block';
     })
-    .finally(function () {
-        var labels = { course: 'Save Course Page', homepage: 'Save Homepage', social: 'Save Social Links' };
-        btn.disabled = false;
-        btn.textContent = labels[section] || 'Save';
+    .finally(function(){ btn.disabled = false; btn.textContent = origText; });
+}
+
+// ── Image gallery per page ────────────────────────────────────────────────
+function loadPageImages(page) {
+    var pageFile  = PAGE_FILES[page];
+    var container = document.getElementById('img-gallery-' + page);
+    if (!container) return;
+
+    fetch('/api/page-images?page=' + encodeURIComponent(pageFile), { credentials: 'include' })
+        .then(function(r){ if(r.status===401){ window.location.href='login.html'; return null; } return r.json(); })
+        .then(function(d){
+            if (!d || !d.ok || !d.images || d.images.length === 0) {
+                container.innerHTML = '<p class="text-muted small">No images found for this page.</p>';
+                return;
+            }
+            var html = '<div class="img-grid">';
+            d.images.forEach(function(imgPath){
+                // imgPath like "images/photos/img_001.jpg"
+                var parts    = imgPath.split('/');
+                var folder   = parts[1];           // "photos"
+                var filename = parts[parts.length-1];
+                var key      = folder + '/' + filename;
+                var url      = '/' + imgPath;
+                var safeId   = 'imgcard-' + page + '-' + key.replace(/[^a-zA-Z0-9]/g,'-');
+                html += '<div class="img-card" id="' + escH(safeId) + '">';
+                html += '<img src="' + escH(url) + '?t=' + Date.now() + '" alt="' + escH(filename) + '" loading="lazy">';
+                html += '<div class="img-name" title="' + escH(filename) + '">' + escH(filename) + '</div>';
+                html += '<button type="button" class="replace-btn" onclick="triggerReplace(' + JSON.stringify(key) + ',' + JSON.stringify(safeId) + ',' + JSON.stringify(page) + ')">Replace</button>';
+                html += '</div>';
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        })
+        .catch(function(){ container.innerHTML = '<p class="text-danger small">Failed to load images.</p>'; });
+}
+
+function escH(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+var _fileInput = null;
+function triggerReplace(key, safeId, page) {
+    if (_fileInput) _fileInput.remove();
+    _fileInput = document.createElement('input');
+    _fileInput.type = 'file';
+    _fileInput.accept = 'image/jpeg,image/png,image/webp,image/gif';
+    _fileInput.style.display = 'none';
+    _fileInput.addEventListener('change', function(){
+        if (_fileInput.files && _fileInput.files[0]) uploadReplace(key, safeId, page, _fileInput.files[0]);
     });
+    document.body.appendChild(_fileInput);
+    _fileInput.click();
+}
+
+function uploadReplace(key, safeId, page, file) {
+    var statusEl = document.getElementById('img-status-' + page);
+    statusEl.className = 'img-upload-status';
+    statusEl.textContent = 'Uploading ' + key + '…';
+    statusEl.style.display = 'block';
+
+    var fd = new FormData();
+    fd.append('filename', key);
+    fd.append('file', file);
+
+    fetch('/api/images', { method:'POST', credentials:'include', body:fd })
+        .then(function(r){ if(r.status===401){ window.location.href='login.html'; return null; } return r.json(); })
+        .then(function(d){
+            if (!d) return;
+            if (d.ok) {
+                statusEl.className = 'img-upload-status ok';
+                statusEl.textContent = '✓ ' + key + ' replaced — live on site.';
+                var card = document.getElementById(safeId);
+                if (card) {
+                    var imgEl = card.querySelector('img');
+                    if (imgEl) { var b = imgEl.src.split('?')[0]; imgEl.src = b + '?t=' + Date.now(); }
+                }
+            } else {
+                statusEl.className = 'img-upload-status err';
+                statusEl.textContent = '✗ ' + (d.error || 'Upload failed');
+            }
+        })
+        .catch(function(){
+            statusEl.className = 'img-upload-status err';
+            statusEl.textContent = '✗ Network error during upload.';
+        });
 }
 </script>
 

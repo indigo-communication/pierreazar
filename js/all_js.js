@@ -1757,14 +1757,12 @@ menu_layout.applyLayout = function(container,items,paramsFromRealTime){
 };
 
 menu_layout.forceRedraw = function(elements){
-	elements.each(function(){
-		var element = $(this)[0];
-		  var disp = element.style.display;
-		  element.style.display = 'none';
-		  var trick = element.offsetHeight;
-		  element.style.display = disp;
-	});
-	
+	// Batch reads first, then batch writes — avoids one forced reflow per element
+	var displayValues = [];
+	elements.each(function(i){ displayValues[i] = this.style.display; });
+	elements.each(function(){ this.style.display = 'none'; });
+	void document.body.offsetHeight; // single reflow
+	elements.each(function(i){ this.style.display = displayValues[i]; });
 };
 
 menu_layout.adjustMenuScrolling = function(stripe){
@@ -2336,15 +2334,14 @@ multi_layout.applyLayout = function(container,items,paramsFromRealTime){
 multi_layout.forceRedraw = function(elements){
 	if(typeof window["EditorHelper"] == "undefined"){
 		//setting body height to prevent jitter 
-		$("body").css("height",$("body").height())
-		elements.each(function(){
-			var element = $(this)[0];
-			var disp = element.style.display;
-			element.style.display = 'none';
-			var trick = element.offsetHeight;
-			element.style.display = disp;
-		});
-		$("body").css("height","")
+		$("body").css("height",$("body").height());
+		// Batch reads first, then batch writes — avoids one forced reflow per element
+		var displayValues = [];
+		elements.each(function(i){ displayValues[i] = this.style.display; });
+		elements.each(function(){ this.style.display = 'none'; });
+		void document.body.offsetHeight; // single reflow
+		elements.each(function(i){ this.style.display = displayValues[i]; });
+		$("body").css("height","");
 	}
 };
 

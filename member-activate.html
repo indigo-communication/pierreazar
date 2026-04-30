@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Activate Your Access — Pierre Azar</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:#0d0d0d;color:#f0f0f0;font-family:Arial,sans-serif;
+      min-height:100vh;display:flex;flex-direction:column;}
+    header{display:flex;align-items:center;justify-content:space-between;
+      padding:18px 5%;border-bottom:1px solid #1e1e1e;}
+    .logo{font-size:13px;font-weight:700;letter-spacing:.12em;color:#fff;
+      text-decoration:none;}
+    .logo span{font-size:18px;letter-spacing:.15em;}
+    main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 5%;}
+    .card{background:#111;border:1px solid #1e1e1e;border-radius:8px;
+      padding:40px 32px;width:100%;max-width:420px;text-align:center;}
+    .icon{font-size:38px;margin-bottom:18px;}
+    h2{font-size:17px;font-weight:700;letter-spacing:.08em;margin-bottom:10px;}
+    .sub{font-size:13px;color:#666;margin-bottom:30px;line-height:1.7;}
+    .field{margin-bottom:20px;text-align:left;}
+    label{display:block;font-size:12px;color:#888;letter-spacing:.06em;
+      text-transform:uppercase;margin-bottom:8px;}
+    .code-input{
+      width:100%;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:4px;
+      padding:14px;font-size:22px;font-weight:700;color:#f0f0f0;outline:none;
+      text-align:center;letter-spacing:.25em;text-transform:uppercase;
+      transition:border-color .2s;
+    }
+    .code-input:focus{border-color:#555;}
+    .code-input::placeholder{color:#333;letter-spacing:.1em;font-size:18px;}
+    .btn{width:100%;background:#fff;color:#000;font-weight:700;font-size:14px;
+      padding:13px;border:none;border-radius:4px;cursor:pointer;letter-spacing:.06em;
+      transition:opacity .2s;text-transform:uppercase;}
+    .btn:hover{opacity:.85;}
+    .btn:disabled{opacity:.5;cursor:default;}
+    .msg{margin-top:14px;font-size:13px;line-height:1.5;padding:10px 14px;
+      border-radius:4px;display:none;}
+    .msg.error{background:#1a1210;border:1px solid #4a2c1a;color:#c87941;}
+    .msg.success{background:#0d1a10;border:1px solid #1a4a2c;color:#5ab87e;}
+    .hint{margin-top:18px;font-size:12px;color:#444;line-height:1.6;}
+    footer{text-align:center;padding:20px;font-size:12px;color:#444;
+      border-top:1px solid #1a1a1a;}
+    footer a{color:#555;}
+    .btn-logout{background:none;border:1px solid #333;color:#666;font-size:12px;
+      font-weight:700;letter-spacing:.08em;padding:7px 14px;border-radius:4px;
+      cursor:pointer;text-transform:uppercase;transition:border-color .2s,color .2s;}
+    .btn-logout:hover{border-color:#666;color:#aaa;}
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo">PA <span>PIERRE AZAR</span></a>
+  <button class="btn-logout" onclick="doLogout()">LOG OUT</button>
+</header>
+
+<main>
+  <div class="card">
+    <div class="icon">🔑</div>
+    <h2>ACTIVATE YOUR ACCESS</h2>
+    <p class="sub">Enter the activation code from your purchase confirmation email. This is a one-time code that will lock your access to this device.</p>
+
+    <div class="field">
+      <label>Activation Code</label>
+      <input
+        type="text"
+        id="code-input"
+        class="code-input"
+        placeholder="XXXX-XXXX"
+        maxlength="9"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="characters"
+        spellcheck="false"
+        oninput="formatCode(this)"
+        onkeydown="if(event.key==='Enter') doActivate()"
+      >
+    </div>
+
+    <button class="btn" id="btn-activate" onclick="doActivate()">ACTIVATE</button>
+    <div class="msg" id="msg-activate"></div>
+    <p class="hint">Didn't receive the email? Check your spam folder or contact <a href="mailto:pierre@pierreazar.com" style="color:#666;">pierre@pierreazar.com</a></p>
+    <div id="login-notice" style="display:none;margin-top:18px;padding:12px 14px;background:#1a1a1a;border:1px solid #333;border-radius:6px;font-size:13px;color:#888;">
+      You must be logged in to activate. <a href="/member-login.html?next=/member/activate" style="color:#fff;font-weight:700;">Log in here →</a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <a href="/">← Back to pierreazar.com</a>
+</footer>
+
+<script>
+  function doLogout() {
+    fetch('/member/logout', {method:'POST'}).finally(function(){
+      location.href = '/member-login.html';
+    });
+  }
+
+  // Require login
+  fetch('/member/me').then(function(r){ return r.json(); }).then(function(d){
+    if (!d.ok) {
+      // Show login notice instead of immediately redirecting
+      document.getElementById('login-notice').style.display = 'block';
+      document.getElementById('btn-activate').disabled = true;
+    } else if (d.premium) {
+      location.href = '/course';
+    }
+  }).catch(function(){
+    document.getElementById('login-notice').style.display = 'block';
+    document.getElementById('btn-activate').disabled = true;
+  });
+
+  function formatCode(input) {
+    var val = input.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8);
+    if (val.length > 4) val = val.slice(0, 4) + '-' + val.slice(4);
+    input.value = val;
+  }
+
+  function showMsg(text, type) {
+    var el = document.getElementById('msg-activate');
+    el.textContent = text;
+    el.className = 'msg ' + type;
+    el.style.display = 'block';
+  }
+
+  function doActivate() {
+    var code = document.getElementById('code-input').value.trim();
+    var btn  = document.getElementById('btn-activate');
+    if (!code || code.replace('-','').length < 8) {
+      showMsg('Please enter your 8-character activation code.', 'error');
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Activating…';
+
+    fetch('/member/activate', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({code: code})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.ok) {
+        showMsg('Access activated! Redirecting to the course…', 'success');
+        setTimeout(function(){ location.href = '/course'; }, 1200);
+      } else {
+        showMsg(d.error || 'Activation failed. Please check your code and try again.', 'error');
+        btn.disabled = false;
+        btn.textContent = 'ACTIVATE';
+      }
+    })
+    .catch(function(){
+      showMsg('Network error. Please try again.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'ACTIVATE';
+    });
+  }
+</script>
+</body>
+</html>

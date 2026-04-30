@@ -12,6 +12,11 @@
     .logo{font-size:13px;font-weight:700;letter-spacing:.12em;color:#fff;}
     .logo span{font-size:18px;letter-spacing:.15em;}
     .access-badge{font-size:12px;color:#888;background:#1a1a1a;border:1px solid #333;padding:5px 12px;border-radius:20px;}
+    .header-right{display:flex;align-items:center;gap:12px;}
+    .member-email{font-size:12px;color:#555;}
+    .btn-logout{font-size:12px;color:#888;background:none;border:1px solid #333;
+      padding:5px 12px;border-radius:20px;cursor:pointer;transition:color .2s,border-color .2s;}
+    .btn-logout:hover{color:#fff;border-color:#666;}
     .hero{padding:50px 5% 30px;max-width:900px;margin:0 auto;}
     .hero h1{font-size:clamp(22px,4vw,36px);font-weight:700;letter-spacing:.08em;margin-bottom:10px;}
     .hero p{color:#888;font-size:14px;line-height:1.7;}
@@ -43,8 +48,43 @@
 
 <header>
   <div class="logo">PA <span>PIERRE AZAR</span></div>
-  <div class="access-badge">&#128274; Personal Access</div>
+  <div class="header-right">
+    <span class="member-email" id="member-email-display"></span>
+    <span class="member-email" id="member-since-display" style="font-size:11px;color:#444;margin-right:8px;"></span>
+    <button class="btn-logout" onclick="doLogout()">LOG OUT</button>
+  </div>
 </header>
+
+<script>
+  // Check member session — redirect to login if not authenticated
+  fetch('/member/me').then(function(r){ return r.json(); }).then(function(d){
+    if (!d.ok) {
+      location.href = '/member-login?next=/course';
+    } else if (!d.premium) {
+      location.href = '/member/upgrade';
+    } else {
+      var el = document.getElementById('member-email-display');
+      if (el) el.textContent = d.email;
+      // Show membership since date
+      if (d.premium_since) {
+        var since = new Date(d.premium_since);
+        var formatted = since.toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+        var sd = document.getElementById('member-since-display');
+        if (sd) sd.textContent = 'Member since ' + formatted;
+      }
+    }
+  }).catch(function(){
+    location.href = '/member-login?next=/course';
+  });
+
+  function doLogout() {
+    fetch('/member/logout', {method:'POST'}).then(function(){
+      location.href = '/';
+    }).catch(function(){
+      location.href = '/';
+    });
+  }
+</script>
 
 <div class="hero">
   <h1>CINEMATOGRAPHY COURSE</h1>
@@ -55,7 +95,7 @@
 <div class="course-body">
 
   <div class="access-warning">
-    <strong>Important:</strong> This access link is personal and non-transferable. It can only be used from up to 3 different devices. Sharing this link will lock your access permanently.
+    <strong>Important:</strong> This access link is personal and non-transferable. It can only be used from up to 2 different devices. Sharing this link will lock your access permanently.
   </div>
 
   <p class="section-title">Currently Playing</p>

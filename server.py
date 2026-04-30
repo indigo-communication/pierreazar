@@ -18,9 +18,11 @@ SALES_FILE          = os.path.join(DATA_DIR, 'sales.json')
 PAYMENT_CONFIG_FILE = os.path.join(DATA_DIR, 'payment_config.json')
 ORDERS_FILE         = os.path.join(DATA_DIR, 'orders.json')
 COURSE_TOKENS_FILE  = os.path.join(DATA_DIR, 'course_tokens.json')
+MEMBERS_FILE        = os.path.join(DATA_DIR, 'members.json')
+ACTIVATION_CODES_FILE = os.path.join(DATA_DIR, 'activation_codes.json')
 
 # ── Course access: max distinct IPs before token is locked ──────────────────
-COURSE_MAX_IPS = 3
+COURSE_MAX_IPS = 2
 
 def _read_json(path):
     if not os.path.exists(path):
@@ -35,6 +37,7 @@ def _write_json(path, data):
 # ── Payment config helpers ───────────────────────────────────────────────────
 _DEFAULT_PAYMENT_CONFIG = {
     'enabled':      False,
+    'demo_mode':    False,
     'merchant_id':  '',
     'api_key':      '',
     'secret_key':   '',
@@ -62,6 +65,8 @@ def save_payment_config(data):
         clean['course_price'] = float(clean['course_price'])
     if 'enabled' in clean:
         clean['enabled'] = bool(clean['enabled'])
+    if 'demo_mode' in clean:
+        clean['demo_mode'] = bool(clean['demo_mode'])
     with open(PAYMENT_CONFIG_FILE, 'w', encoding='utf-8') as f:
         json.dump(clean, f, indent=2, ensure_ascii=False)
 
@@ -149,7 +154,8 @@ def _areeba_verify_signature(cfg_data, params):
     return hmac.compare_digest(expected, received)
 
 # ── Session store (in-memory; resets on server restart) ─────────────────────
-_sessions = {}   # token -> username
+_sessions        = {}   # token -> username  (admin)
+_member_sessions = {}   # token -> email     (members)
 
 def _check_session(cookie_header):
     """Return True if the request carries a valid admin session cookie."""
@@ -161,6 +167,94 @@ def _check_session(cookie_header):
             token = part[len('pa_admin='):]
             return token in _sessions
     return False
+
+def _get_member_session(cookie_header):
+    """Return member email if valid member cookie, else None."""
+    if not cookie_header:
+        return None
+    for part in cookie_header.split(';'):
+        part = part.strip()
+        if part.startswith('pa_member='):
+            token = part[len('pa_member='):]
+            return _member_sessions.get(token)
+    return None
+
+# ── Member helpers ──────────────────────────────────────────────────────────
+
+_EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+
+def _hash_password(password):
+    salt = secrets.token_hex(16)
+    h = hashlib.pbkdf2_hmac('sha256', password.encode(), salt.encode(), 200_000)
+    return salt + ':' + h.hex()
+
+def _verify_password(password, stored):
+    try:
+        salt, h = stored.split(':', 1)
+        expected = hashlib.pbkdf2_hmac('sha256', password.encode(), salt.encode(), 200_000).hex()
+        return secrets.compare_digest(expected, h)
+    except Exception:
+        return False
+
+# ── Activation code helpers ──────────────────────────────────────────────────
+
+def _generate_activation_code(email):
+    """Generate a one-time activation code tied to email and persist it."""
+    alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'  # no 0/O/1/I
+    code = ''.join(secrets.choice(alphabet) for _ in range(4)) + '-' + \
+           ''.join(secrets.choice(alphabet) for _ in range(4))
+    codes = _read_json(ACTIVATION_CODES_FILE)
+    codes.append({
+        'code':       code,
+        'email':      email,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'used':       False,
+    })
+    _write_json(ACTIVATION_CODES_FILE, codes)
+    return code
+
+def _send_activation_email(name, email, code, base_url):
+    """Send the one-time activation code to the buyer."""
+    activate_url = f"{base_url.rstrip('/')}/member/activate"
+    subject = "Your Cinematography Course — Activation Code"
+    body_text = (
+        f"Hi {name or email},\n\n"
+        f"Thank you for your purchase! Use the code below to activate your full course access:\n\n"
+        f"    {code}\n\n"
+        f"Go to: {activate_url}\n"
+        f"Log in if prompted, then enter the code above.\n\n"
+        f"This code is one-time use only. It will bind your access to the device you activate from.\n\n"
+        f"Pierre Azar"
+    )
+    body_html = (
+        '<html><body style="font-family:Arial,sans-serif;color:#222;max-width:600px;">'
+        f'<p>Hi {name or email},</p>'
+        f'<p>Thank you for your purchase! Use the code below to activate your full course access:</p>'
+        f'<div style="background:#f5f5f5;border:2px dashed #ccc;border-radius:8px;'
+        f'padding:20px;text-align:center;margin:24px 0;">'
+        f'<p style="font-size:11px;color:#888;letter-spacing:.1em;margin-bottom:8px;">ACTIVATION CODE</p>'
+        f'<p style="font-size:36px;font-weight:700;letter-spacing:.15em;color:#111;">'
+        f'{code}</p></div>'
+        f'<p><a href="{activate_url}" style="background:#222;color:#fff;padding:12px 24px;'
+        f'text-decoration:none;border-radius:4px;display:inline-block;">Activate My Access</a></p>'
+        f'<p style="color:#888;font-size:13px;">Or visit: {activate_url}</p>'
+        f'<hr style="border:none;border-top:1px solid #eee;">'
+        f'<p style="color:#888;font-size:12px;">This code is one-time use only. '
+        f'It will bind your course access to the device you activate from.</p>'
+        f'<p>Pierre Azar</p>'
+        '</body></html>'
+    )
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From']    = f'Pierre Azar <{cfg.SMTP_USER}>'
+    msg['To']      = email
+    msg.attach(MIMEText(body_text, 'plain'))
+    msg.attach(MIMEText(body_html, 'html'))
+    with smtplib.SMTP(cfg.SMTP_HOST, cfg.SMTP_PORT) as s:
+        s.ehlo()
+        s.starttls()
+        s.login(cfg.SMTP_USER, cfg.SMTP_PASS)
+        s.sendmail(cfg.SMTP_USER, email, msg.as_string())
 
 # ── Course access token helpers ──────────────────────────────────────────────
 
@@ -316,7 +410,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 '</div>'
             )
             cta_label = 'Get Access — Enroll Now'
-            cta_href  = '/cinematography-course.html'
+            cfg_data  = get_payment_config()
+            cta_href  = '/cinematography-course.html#checkout' if cfg_data.get('enabled') else '/cinematography-course.html'
         html = (
             '<!DOCTYPE html><html lang="en"><head>'
             '<meta charset="utf-8">'
@@ -424,6 +519,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json_response({'ok': True, 'images': cm.list_images()})
             return
 
+        if path == '/api/page-images':
+            if not self._require_auth():
+                return
+            qs = dict(urllib.parse.parse_qsl(urllib.parse.urlparse(self.path).query))
+            page = qs.get('page', '')
+            allowed = ['index.html', 'portfolio.html', 'onset-experience.html',
+                       'get-in-touch.html', 'cinematography-course.html']
+            if page not in allowed:
+                self._json_response({'ok': False, 'error': 'Invalid page'}, status=400)
+                return
+            imgs = cm.get_page_images(page)
+            self._json_response({'ok': True, 'page': page, 'images': imgs})
+            return
+
         if path == '/api/payment-config':
             if not self._require_auth():
                 return
@@ -466,25 +575,239 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     if o.get('order_id') == order_id:
                         o['status'] = 'paid'
                 _write_json(ORDERS_FILE, orders)
-                # Generate course access token and email it to the buyer
-                course_token = _generate_course_token(order.get('email', ''), order_id)
-                base_url = cfg_data.get('return_base_url', 'https://pierreazar.com')
-                try:
-                    _send_course_access_email(order.get('name', ''), order.get('email', ''), course_token, base_url)
-                except Exception:
-                    pass  # Don't block redirect if email fails
-                # Redirect to success page with token so buyer can bookmark it immediately
-                self.send_response(302)
-                self.send_header('Location', f'/payment-success.html?token={course_token}')
-                self.end_headers()
+                # Generate activation code for member, or course token for non-member
+                buyer_email = order.get('email', '').strip().lower()
+                buyer_name  = order.get('name', '')
+                base_url    = cfg_data.get('return_base_url', 'https://pierreazar.com')
+                members     = _read_json(MEMBERS_FILE)
+                is_member   = any(m.get('email') == buyer_email for m in members)
+
+                if is_member:
+                    # Member flow: generate one-time activation code
+                    act_code = _generate_activation_code(buyer_email)
+                    try:
+                        _send_activation_email(buyer_name, buyer_email, act_code, base_url)
+                    except Exception:
+                        pass
+                    self.send_response(302)
+                    self.send_header('Location', '/member/activate')
+                    self.end_headers()
+                else:
+                    # Non-member flow: send course token link by email
+                    course_token = _generate_course_token(buyer_email, order_id)
+                    try:
+                        _send_course_access_email(buyer_name, buyer_email, course_token, base_url)
+                    except Exception:
+                        pass
+                    self.send_response(302)
+                    self.send_header('Location', f'/payment-success.html?token={course_token}')
+                    self.end_headers()
             else:
                 self.send_response(302)
                 self.send_header('Location', '/payment-failed.html')
                 self.end_headers()
             return
 
-        # ---- Course access (token-gated) ----
+        # ---- Demo payment page ----
+        if path == '/payment-demo':
+            qs     = dict(urllib.parse.parse_qsl(urllib.parse.urlparse(self.path).query))
+            order  = qs.get('order', 'DEMO')
+            name   = qs.get('name', 'Test User')
+            amount = qs.get('amount', '99')
+            html = (
+                '<!DOCTYPE html><html lang="en"><head>'
+                '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+                '<title>Secure Payment — Areeba</title>'
+                '<style>'
+                '*{box-sizing:border-box;margin:0;padding:0;}'
+                'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;'
+                'background:#f4f6f9;min-height:100vh;display:flex;align-items:center;'
+                'justify-content:center;padding:20px;}'
+                '.card{background:#fff;border-radius:10px;box-shadow:0 4px 24px rgba(0,0,0,.1);'
+                'max-width:420px;width:100%;overflow:hidden;}'
+                '.header{background:#1a1a2e;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;}'
+                '.header-brand{color:#fff;font-size:18px;font-weight:700;letter-spacing:.02em;}'
+                '.header-secure{display:flex;align-items:center;gap:6px;color:#8892b0;font-size:12px;}'
+                '.demo-banner{background:#fff8e1;border-bottom:1px solid #ffe082;padding:8px 24px;'
+                'font-size:12px;color:#795548;display:flex;align-items:center;gap:6px;}'
+                '.body{padding:24px;}'
+                '.merchant-row{display:flex;align-items:center;gap:12px;margin-bottom:20px;'
+                'padding-bottom:16px;border-bottom:1px solid #eee;}'
+                '.merchant-icon{width:40px;height:40px;background:#1a1a2e;border-radius:8px;'
+                'display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;}'
+                '.merchant-name{font-weight:700;font-size:15px;color:#1a1a2e;}'
+                '.merchant-sub{font-size:12px;color:#888;margin-top:2px;}'
+                '.amount-row{text-align:center;margin-bottom:22px;}'
+                '.amount-label{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}'
+                '.amount-val{font-size:32px;font-weight:700;color:#1a1a2e;}'
+                '.amount-currency{font-size:16px;font-weight:400;color:#888;margin-left:4px;}'
+                'label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:6px;margin-top:14px;}'
+                'input[type=text],input[type=tel]{width:100%;border:1.5px solid #ddd;border-radius:6px;'
+                'padding:11px 14px;font-size:15px;color:#1a1a2e;outline:none;transition:border-color .2s;}'
+                'input[type=text]:focus,input[type=tel]:focus{border-color:#1a1a2e;}'
+                '.row-2{display:flex;gap:12px;}'
+                '.row-2>div{flex:1;}'
+                '.pay-btn{display:block;width:100%;margin-top:22px;padding:14px;'
+                'background:#1a1a2e;color:#fff;font-weight:700;font-size:15px;'
+                'border:none;border-radius:6px;cursor:pointer;transition:background .2s;}'
+                '.pay-btn:hover{background:#2d2d4e;}'
+                '.fail-link{display:block;text-align:center;margin-top:12px;font-size:13px;'
+                'color:#e74c3c;cursor:pointer;background:none;border:none;width:100%;}'
+                '.footer{padding:14px 24px;border-top:1px solid #eee;display:flex;align-items:center;'
+                'justify-content:center;gap:8px;color:#aaa;font-size:11px;}'
+                '.card-icons{display:flex;gap:6px;margin-top:8px;}'
+                '.card-icon{background:#f4f6f9;border:1px solid #ddd;border-radius:4px;'
+                'padding:3px 8px;font-size:11px;font-weight:700;color:#555;}'
+                '</style></head><body>'
+                '<div class="card">'
+                '<div class="header">'
+                '<span class="header-brand">areeba</span>'
+                '<span class="header-secure">'
+                '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
+                'Secure Payment'
+                '</span>'
+                '</div>'
+                '<div class="demo-banner">'
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+                'DEMO MODE — No real charge will be made'
+                '</div>'
+                '<div class="body">'
+                '<div class="merchant-row">'
+                '<div class="merchant-icon">P</div>'
+                '<div><div class="merchant-name">Pierre Azar</div>'
+                '<div class="merchant-sub">pierreazar.com</div></div>'
+                '</div>'
+                '<div class="amount-row">'
+                '<div class="amount-label">Amount Due</div>'
+                f'<div class="amount-val">${amount}<span class="amount-currency">USD</span></div>'
+                '</div>'
+                '<div class="card-icons">'
+                '<span class="card-icon">VISA</span>'
+                '<span class="card-icon">MC</span>'
+                '<span class="card-icon">AMEX</span>'
+                '</div>'
+                '<label>Card Number</label>'
+                '<input type="tel" id="cn" placeholder="0000 0000 0000 0000" maxlength="19" '
+                'oninput="var v=this.value.replace(/\D/g,\'\').substring(0,16);this.value=v.replace(/(.{4})/g,\'$1 \').trim();">'
+                '<label>Name on Card</label>'
+                f'<input type="text" id="ch" value="{name}" placeholder="Name as on card">'
+                '<div class="row-2">'
+                '<div><label>Expiry Date</label>'
+                '<input type="tel" id="exp" placeholder="MM / YY" maxlength="7" '
+                'oninput="var v=this.value.replace(/\D/g,\'\').substring(0,4);if(v.length>=2)v=v.substring(0,2)+\' / \'+v.substring(2);this.value=v;"></div>'
+                '<div><label>CVV</label>'
+                '<input type="tel" id="cvv" placeholder="•••" maxlength="4" '
+                'oninput="this.value=this.value.replace(/\D/g,\'\')"></div>'
+                '</div>'
+                f'<button class="pay-btn" onclick="doPay()">Pay ${amount} USD</button>'
+                '<button class="fail-link" onclick="doFail()">Decline / Cancel</button>'
+                '</div>'
+                '<div class="footer">'
+                '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>'
+                'Payments secured by Areeba MPGS'
+                '</div>'
+                '</div>'
+                '<script>'
+                'function doPay(){'
+                '  var cn=document.getElementById("cn").value.replace(/\s/g,"");'
+                '  var exp=document.getElementById("exp").value;'
+                '  var cvv=document.getElementById("cvv").value;'
+                '  if(cn.length<15||!exp||cvv.length<3){'
+                '    alert("Please fill in all card details.");return;}'
+                f'  window.location.href="/payment-success.html?demo=1&order={order}";'
+                '}'
+                f'function doFail(){{window.location.href="/payment-failed.html?demo=1";}}'
+                '</script>'
+                '</body></html>'
+            ).encode()
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.send_header('Content-Length', str(len(html)))
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            self.wfile.write(html)
+            return
+
+        # ---- Member: who am I ----
+        if path == '/member/me':
+            email = _get_member_session(self.headers.get('Cookie', ''))
+            if email:
+                members = _read_json(MEMBERS_FILE)
+                member  = next((m for m in members if m.get('email') == email), {})
+                self._json_response({
+                    'ok':           True,
+                    'email':        email,
+                    'name':         member.get('name', ''),
+                    'premium':      member.get('premium', False),
+                    'premium_since': member.get('premium_since', ''),
+                })
+            else:
+                self._json_response({'ok': False}, status=401)
+            return
+
+        # ---- Member: upgrade page ----
+        if path == '/member/upgrade':
+            upgrade_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'member-upgrade.html')
+            try:
+                with open(upgrade_file, 'rb') as f:
+                    content = f.read()
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html; charset=utf-8')
+                self.send_header('Content-Length', str(len(content)))
+                self.send_header('Cache-Control', 'no-store')
+                self.end_headers()
+                self.wfile.write(content)
+            except FileNotFoundError:
+                self.send_response(404)
+                self.end_headers()
+            return
+
+        # ---- Member: activate page ----
+        if path == '/member/activate':
+            activate_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'member-activate.html')
+            try:
+                with open(activate_file, 'rb') as f:
+                    content = f.read()
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html; charset=utf-8')
+                self.send_header('Content-Length', str(len(content)))
+                self.send_header('Cache-Control', 'no-store')
+                self.end_headers()
+                self.wfile.write(content)
+            except FileNotFoundError:
+                self.send_response(404)
+                self.end_headers()
+            return
+
+        # ---- Course access (token-gated OR member session) ----
         if path == '/course':
+            # Allow access via member session cookie — only if premium
+            member_email = _get_member_session(self.headers.get('Cookie', ''))
+            if member_email:
+                members = _read_json(MEMBERS_FILE)
+                member  = next((m for m in members if m.get('email') == member_email), {})
+                if not member.get('premium', False):
+                    # Not premium yet — redirect to upgrade page
+                    self.send_response(302)
+                    self.send_header('Location', '/member/upgrade')
+                    self.end_headers()
+                    return
+                course_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'course-player.html')
+                try:
+                    with open(course_file, 'rb') as f:
+                        content = f.read()
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'text/html; charset=utf-8')
+                    self.send_header('Content-Length', str(len(content)))
+                    self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                    self.send_header('X-Robots-Tag', 'noindex, nofollow')
+                    self.end_headers()
+                    self.wfile.write(content)
+                except FileNotFoundError:
+                    self.send_response(503)
+                    self.end_headers()
+                return
+
             qs    = dict(urllib.parse.parse_qsl(urllib.parse.urlparse(self.path).query))
             token = qs.get('token', '').strip()
             # Get real client IP (behind Apache proxy)
@@ -518,6 +841,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             except FileNotFoundError:
                 self.send_response(503)
                 self.end_headers()
+            return
+
+        # ---- Admin: list members ----
+        if path == '/api/admin/members':
+            if not self._require_auth():
+                return
+            members = _read_json(MEMBERS_FILE)
+            safe = [
+                {
+                    'email':         m.get('email'),
+                    'name':          m.get('name', ''),
+                    'created_at':    m.get('created_at'),
+                    'last_login':    m.get('last_login', ''),
+                    'active':        m.get('active', True),
+                    'premium':       m.get('premium', False),
+                    'premium_since': m.get('premium_since', ''),
+                }
+                for m in members
+            ]
+            self._json_response({'ok': True, 'members': safe})
             return
 
         if path == '/api/admin/course-tokens':
@@ -584,6 +927,140 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response({'ok': False, 'error': str(e)})
             return
 
+        # ---- Member: register ----
+        if path == '/member/register':
+            body = self._read_body()
+            try:
+                data     = json.loads(body)
+                email    = str(data.get('email', '')).strip().lower()[:200]
+                password = str(data.get('password', ''))
+                name     = str(data.get('name', '')).strip()[:200]
+                if not email or not _EMAIL_RE.match(email):
+                    raise ValueError('Valid email is required')
+                if len(password) < 8:
+                    raise ValueError('Password must be at least 8 characters')
+                members = _read_json(MEMBERS_FILE)
+                if any(m.get('email') == email for m in members):
+                    self._json_response({'ok': False, 'error': 'Email already registered'}, status=409)
+                    return
+                members.append({
+                    'email':        email,
+                    'name':         name,
+                    'password':     _hash_password(password),
+                    'created_at':   datetime.now(timezone.utc).isoformat(),
+                    'last_login':   '',
+                    'active':       True,
+                    'premium':      False,
+                    'premium_since': '',
+                })
+                _write_json(MEMBERS_FILE, members)
+                # Auto-login after registration
+                token = secrets.token_hex(32)
+                _member_sessions[token] = email
+                self._json_response(
+                    {'ok': True},
+                    extra_headers={
+                        'Set-Cookie': f'pa_member={token}; Path=/; HttpOnly; SameSite=Strict'
+                    }
+                )
+            except ValueError as e:
+                self._json_response({'ok': False, 'error': str(e)}, status=400)
+            except Exception as e:
+                self._json_response({'ok': False, 'error': str(e)}, status=500)
+            return
+
+        # ---- Member: activate (redeem one-time code) ----
+        if path == '/member/activate':
+            member_email = _get_member_session(self.headers.get('Cookie', ''))
+            if not member_email:
+                self._json_response({'ok': False, 'error': 'Not logged in'}, status=401)
+                return
+            body = self._read_body()
+            try:
+                data = json.loads(body)
+                raw  = str(data.get('code', '')).strip().upper().replace(' ', '')
+                # Accept with or without dash
+                if len(raw) == 8:
+                    raw = raw[:4] + '-' + raw[4:]
+                codes = _read_json(ACTIVATION_CODES_FILE)
+                entry = next((c for c in codes
+                              if c.get('code') == raw
+                              and c.get('email') == member_email
+                              and not c.get('used')), None)
+                if not entry:
+                    self._json_response({'ok': False, 'error': 'Invalid or already used code.'}, status=400)
+                    return
+                # Mark code used
+                entry['used']    = True
+                entry['used_at'] = datetime.now(timezone.utc).isoformat()
+                _write_json(ACTIVATION_CODES_FILE, codes)
+                # Get client IP and mark member premium
+                client_ip = (
+                    self.headers.get('X-Forwarded-For', '').split(',')[0].strip()
+                    or self.headers.get('X-Real-IP', '')
+                    or self.client_address[0]
+                )
+                paid_at = entry.get('created_at', datetime.now(timezone.utc).isoformat())
+                members = _read_json(MEMBERS_FILE)
+                for m in members:
+                    if m.get('email') == member_email:
+                        m['premium']        = True
+                        m['premium_since']  = paid_at
+                        m['activated_ip']   = client_ip
+                _write_json(MEMBERS_FILE, members)
+                self._json_response({'ok': True})
+            except Exception as e:
+                self._json_response({'ok': False, 'error': str(e)}, status=500)
+            return
+
+        # ---- Member: login ----
+        if path == '/member/login':
+            body = self._read_body()
+            try:
+                data     = json.loads(body)
+                email    = str(data.get('email', '')).strip().lower()[:200]
+                password = str(data.get('password', ''))
+                members  = _read_json(MEMBERS_FILE)
+                member   = next((m for m in members if m.get('email') == email), None)
+                if not member or not _verify_password(password, member.get('password', '')):
+                    self._json_response({'ok': False, 'error': 'Invalid email or password'}, status=401)
+                    return
+                if not member.get('active', True):
+                    self._json_response({'ok': False, 'error': 'Account is disabled'}, status=403)
+                    return
+                # Update last_login
+                for m in members:
+                    if m.get('email') == email:
+                        m['last_login'] = datetime.now(timezone.utc).isoformat()
+                _write_json(MEMBERS_FILE, members)
+                token = secrets.token_hex(32)
+                _member_sessions[token] = email
+                self._json_response(
+                    {'ok': True},
+                    extra_headers={
+                        'Set-Cookie': f'pa_member={token}; Path=/; HttpOnly; SameSite=Strict'
+                    }
+                )
+            except Exception as e:
+                self._json_response({'ok': False, 'error': str(e)}, status=500)
+            return
+
+        # ---- Member: logout ----
+        if path == '/member/logout':
+            cookie = self.headers.get('Cookie', '')
+            for part in cookie.split(';'):
+                part = part.strip()
+                if part.startswith('pa_member='):
+                    token = part[len('pa_member='):]
+                    _member_sessions.pop(token, None)
+            self._json_response(
+                {'ok': True},
+                extra_headers={
+                    'Set-Cookie': 'pa_member=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0'
+                }
+            )
+            return
+
         # ---- Admin login ----
         if path == '/admin/login':
             body = self._read_body()
@@ -610,6 +1087,47 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self._json_response({'ok': False, 'error': 'Invalid credentials'}, status=401)
             except Exception as e:
                 self._json_response({'ok': False, 'error': str(e)}, status=400)
+            return
+
+        # ---- Admin change password ----
+        if path == '/admin/change-password':
+            if not self._require_auth():
+                return
+            body = self._read_body()
+            try:
+                data         = json.loads(body)
+                current_pass = str(data.get('current_password', ''))
+                new_pass     = str(data.get('new_password', ''))
+                # Validate current password
+                ok_pass = secrets.compare_digest(
+                    hashlib.sha256(current_pass.encode()).hexdigest(),
+                    hashlib.sha256(cfg.ADMIN_PASS.encode()).hexdigest()
+                )
+                if not ok_pass:
+                    self._json_response({'ok': False, 'error': 'Current password is incorrect'}, status=403)
+                    return
+                if len(new_pass) < 8:
+                    self._json_response({'ok': False, 'error': 'New password must be at least 8 characters'}, status=400)
+                    return
+                # Write new password to mail_config.py
+                cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'mail_config.py')
+                with open(cfg_path, 'r', encoding='utf-8') as f:
+                    cfg_text = f.read()
+                # Replace ADMIN_PASS line
+                import re as _re
+                cfg_text = _re.sub(
+                    r'^(ADMIN_PASS\s*=\s*)["\'].*?["\']',
+                    lambda m: m.group(1) + json.dumps(new_pass),
+                    cfg_text, flags=_re.MULTILINE
+                )
+                with open(cfg_path, 'w', encoding='utf-8') as f:
+                    f.write(cfg_text)
+                # Reload cfg module so new password takes effect immediately
+                import importlib
+                importlib.reload(cfg)
+                self._json_response({'ok': True})
+            except Exception as e:
+                self._json_response({'ok': False, 'error': str(e)}, status=500)
             return
 
         # ---- Sales (add) ----
@@ -686,10 +1204,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     raise ValueError("Valid name and email are required")
 
                 cfg_data = get_payment_config()
-                if not cfg_data.get('enabled'):
+                # Demo mode bypasses the enabled requirement
+                if not cfg_data.get('enabled') and not cfg_data.get('demo_mode'):
                     raise ValueError("Payment gateway is not enabled")
-                if not cfg_data.get('merchant_id') or not cfg_data.get('api_key'):
-                    raise ValueError("Payment gateway is not configured")
 
                 order_id = 'PA-' + secrets.token_hex(8).upper()
                 amount   = float(cfg_data.get('course_price', 99))
@@ -707,6 +1224,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 }
                 orders.append(pending)
                 _write_json(ORDERS_FILE, orders)
+
+                # Demo mode — skip Areeba, redirect to demo page
+                if cfg_data.get('demo_mode'):
+                    demo_url = '/payment-demo?order=' + order_id + '&name=' + urllib.parse.quote(name) + '&amount=' + str(int(amount))
+                    self._json_response({'ok': True, 'checkout_url': demo_url})
+                    return
+
+                if not cfg_data.get('merchant_id') or not cfg_data.get('api_key'):
+                    raise ValueError("Payment gateway is not configured")
 
                 session_id, success_indicator, checkout_url = _areeba_create_session(
                     cfg_data, order_id, amount, name, email

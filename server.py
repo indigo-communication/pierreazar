@@ -1,4 +1,4 @@
-import http.server, ssl, os, re, json, smtplib, urllib.parse, hashlib, secrets, io, hmac, base64
+import http.server, ssl, os, re, json, smtplib, urllib.parse, hashlib, secrets, io, hmac, base64, time
 import urllib.request
 from datetime import datetime, timezone
 from email.mime.text import MIMEText
@@ -20,6 +20,10 @@ ORDERS_FILE         = os.path.join(DATA_DIR, 'orders.json')
 COURSE_TOKENS_FILE  = os.path.join(DATA_DIR, 'course_tokens.json')
 MEMBERS_FILE        = os.path.join(DATA_DIR, 'members.json')
 ACTIVATION_CODES_FILE = os.path.join(DATA_DIR, 'activation_codes.json')
+COUPONS_FILE          = os.path.join(DATA_DIR, 'coupons.json')
+BUNNY_STREAM_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'bunny-stream')
+BUNNY_TOKEN_KEY_FILE = os.path.join(BUNNY_STREAM_DIR, 'token_auth_key.txt')
+BUNNY_COURSE_LINK_FILE = os.path.join(BUNNY_STREAM_DIR, 'course_link.txt')
 
 # ── Course access: max distinct IPs before token is locked ──────────────────
 COURSE_MAX_IPS = 2
@@ -34,6 +38,52 @@ def _write_json(path, data):
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
+def _read_text_file(path):
+    if not os.path.exists(path):
+        return ''
+    with open(path, 'r', encoding='utf-8') as f:
+        return f.read()
+
+def _parse_bunny_course_config():
+    """
+    Parse bunny-stream/course_link.txt lines:
+    - library id line contains digits (first match)
+    - video lines contain a UUID + title text
+    """
+    raw = _read_text_file(BUNNY_COURSE_LINK_FILE)
+    library_id = ''
+    videos = []
+    for line in raw.splitlines():
+        s = line.strip()
+        if not s or s.startswith('#'):
+            continue
+        if not library_id:
+            m_lib = re.search(r'\b(\d{3,})\b', s)
+            if m_lib:
+                library_id = m_lib.group(1)
+                continue
+        m_vid = re.search(r'\b([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})\b', s)
+        if m_vid:
+            vid = m_vid.group(1)
+            title = re.sub(re.escape(vid), '', s, count=1).strip(' -\t')
+            videos.append({'video_id': vid, 'title': title or 'Course chapter'})
+    return library_id, videos
+
+def _read_bunny_token_key():
+    for line in _read_text_file(BUNNY_TOKEN_KEY_FILE).splitlines():
+        s = line.strip()
+        if s and not s.startswith('#'):
+            return s
+    return ''
+
+def _build_bunny_embed_url(library_id, video_id, token_key, expires):
+    token_input = f'{token_key}{video_id}{expires}'.encode('utf-8')
+    token = hashlib.sha256(token_input).hexdigest()
+    return (
+        f'https://iframe.mediadelivery.net/embed/{library_id}/{video_id}'
+        f'?token={token}&expires={expires}'
+    )
+
 # ── Payment config helpers ───────────────────────────────────────────────────
 _DEFAULT_PAYMENT_CONFIG = {
     'enabled':      False,
@@ -44,7 +94,7 @@ _DEFAULT_PAYMENT_CONFIG = {
     'gateway_url':  'https://gateway.areeba.com',
     'currency':     'USD',
     'course_price': 99.00,
-    'course_name':  'Cinematography Course',
+    'course_name':  'Cinematography Workshop',
     'return_base_url': 'https://pierreazar.com',
 }
 
@@ -103,7 +153,7 @@ def _areeba_create_session(cfg_data, order_id, amount, name, email):
             "id":          order_id,
             "amount":      f"{amount:.2f}",
             "currency":    currency,
-            "description": cfg_data.get('course_name', 'Cinematography Course'),
+            "description": cfg_data.get('course_name', 'Cinematography Workshop'),
         },
         "interaction": {
             "operation": "PURCHASE",
@@ -153,9 +203,29 @@ def _areeba_verify_signature(cfg_data, params):
     expected = hmac.new(secret.encode(), to_sign.encode(), hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, received)
 
-# ── Session store (in-memory; resets on server restart) ─────────────────────
-_sessions        = {}   # token -> username  (admin)
-_member_sessions = {}   # token -> email     (members)
+# ── Session store (persisted to disk; survives restarts) ────────────────────
+ADMIN_SESSIONS_FILE  = os.path.join(DATA_DIR, 'admin_sessions.json')
+MEMBER_SESSIONS_FILE = os.path.join(DATA_DIR, 'member_sessions.json')
+SESSION_TTL_DAYS     = 30   # sessions expire after 30 days
+
+def _load_sessions(path):
+    """Load session dict from disk, pruning expired entries."""
+    raw = _read_json(path)  # list of {token, value, expires}
+    cutoff = datetime.now(timezone.utc).isoformat()
+    valid  = {e['token']: e['value'] for e in raw
+              if isinstance(e, dict) and e.get('expires', '') > cutoff}
+    return valid
+
+def _save_sessions(path, sessions_dict):
+    """Persist sessions dict to disk with expiry timestamps."""
+    from datetime import timedelta
+    expires = (datetime.now(timezone.utc) + timedelta(days=SESSION_TTL_DAYS)).isoformat()
+    raw = [{'token': t, 'value': v, 'expires': expires} for t, v in sessions_dict.items()]
+    _write_json(path, raw)
+
+# Load persisted sessions on startup
+_sessions        = _load_sessions(ADMIN_SESSIONS_FILE)   # token -> username
+_member_sessions = _load_sessions(MEMBER_SESSIONS_FILE)  # token -> email
 
 def _check_session(cookie_header):
     """Return True if the request carries a valid admin session cookie."""
@@ -216,7 +286,7 @@ def _generate_activation_code(email):
 def _send_activation_email(name, email, code, base_url):
     """Send the one-time activation code to the buyer."""
     activate_url = f"{base_url.rstrip('/')}/member/activate"
-    subject = "Your Cinematography Course — Activation Code"
+    subject = "Your Cinematography Workshop — Activation Code"
     body_text = (
         f"Hi {name or email},\n\n"
         f"Thank you for your purchase! Use the code below to activate your full course access:\n\n"
@@ -301,7 +371,7 @@ def _validate_course_token(token, client_ip):
 def _send_course_access_email(name, email, token, base_url):
     """Send the course access link to the buyer."""
     link = f"{base_url.rstrip('/')}/course?token={token}"
-    subject = "Your Cinematography Course Access"
+    subject = "Your Cinematography Workshop Access"
     body_text = (
         f"Hi {name},\n\n"
         f"Thank you for your purchase! Here is your personal access link:\n\n"
@@ -336,6 +406,52 @@ def _send_course_access_email(name, email, token, base_url):
         s.starttls()
         s.login(cfg.SMTP_USER, cfg.SMTP_PASS)
         s.sendmail(cfg.SMTP_USER, email, msg.as_string())
+
+# ── Coupon helpers ───────────────────────────────────────────────────────────
+def _generate_coupon_code():
+    """Generate a branded coupon code like INDIGO-A3F9K2."""
+    chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    suffix = ''.join(secrets.choice(chars) for _ in range(6))
+    return f'INDIGO-{suffix}'
+
+def _find_coupon(code):
+    """Return the coupon dict if active, not expired, and has uses remaining, else None."""
+    from datetime import date, timedelta
+    coupons = _read_json(COUPONS_FILE)
+    code = code.strip().upper()
+    today = date.today()
+    for c in coupons:
+        if c.get('code', '').upper() != code:
+            continue
+        if not c.get('active', True):
+            return None
+        # Expiry: 30 days after creation date
+        created_str = c.get('created', '')
+        if created_str:
+            try:
+                created_date = date.fromisoformat(created_str[:10])
+                if today > created_date + timedelta(days=30):
+                    return None  # expired
+            except ValueError:
+                pass
+        max_uses = c.get('max_uses', 1)
+        uses     = c.get('uses', 0)
+        if max_uses == 0 or uses < max_uses:
+            return c
+    return None
+
+def _use_coupon(code):
+    """Increment usage counter for the coupon. Call after payment confirmed."""
+    coupons = _read_json(COUPONS_FILE)
+    code = code.strip().upper()
+    for c in coupons:
+        if c.get('code', '').upper() == code:
+            c['uses'] = c.get('uses', 0) + 1
+            max_uses  = c.get('max_uses', 1)
+            if max_uses > 0 and c['uses'] >= max_uses:
+                c['active'] = False
+            break
+    _write_json(COUPONS_FILE, coupons)
 
 # ── Email sender ─────────────────────────────────────────────────────────────
 def send_email(name, sender_email, message):
@@ -458,7 +574,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             '</style></head><body>'
             '<header><div class="logo">PA <span>PIERRE AZAR</span></div></header>'
             '<main><div class="box">'
-            '<h1>Cinematography Course</h1>'
+            '<h1>Cinematography Workshop</h1>'
             '<p class="sub">This is a paid course. To watch the videos you need a personal access link, '
             'which is sent to your email after purchase.</p>'
             + note +
@@ -533,10 +649,45 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json_response({'ok': True, 'page': page, 'images': imgs})
             return
 
+        if path == '/api/page-videos':
+            if not self._require_auth():
+                return
+            qs = dict(urllib.parse.parse_qsl(urllib.parse.urlparse(self.path).query))
+            page = qs.get('page', '')
+            allowed = ['index.html', 'portfolio.html', 'onset-experience.html',
+                       'get-in-touch.html', 'cinematography-course.html']
+            if page not in allowed:
+                self._json_response({'ok': False, 'error': 'Invalid page'}, status=400)
+                return
+            vids = cm.get_page_videos(page)
+            self._json_response({'ok': True, 'page': page, 'videos': vids})
+            return
+
         if path == '/api/payment-config':
             if not self._require_auth():
                 return
             self._json_response({'ok': True, 'config': _masked_config(get_payment_config())})
+            return
+
+        # ---- Admin: list coupons ----
+        if path == '/api/coupons':
+            if not self._require_auth():
+                return
+            self._json_response({'ok': True, 'coupons': _read_json(COUPONS_FILE)})
+            return
+
+        # ---- Public: validate a coupon ----
+        if path == '/api/validate-coupon':
+            qs   = dict(urllib.parse.parse_qsl(urllib.parse.urlparse(self.path).query))
+            code = qs.get('code', '').strip().upper()
+            if not code:
+                self._json_response({'ok': False, 'error': 'No code provided'}, status=400)
+                return
+            coupon = _find_coupon(code)
+            if coupon:
+                self._json_response({'ok': True, 'discount_pct': coupon.get('discount_pct', 50), 'code': coupon['code']})
+            else:
+                self._json_response({'ok': False, 'error': 'Invalid or expired coupon'}, status=404)
             return
 
         # ---- Payment return callback (from Areeba) ----
@@ -563,7 +714,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     'date':     datetime.now(timezone.utc).isoformat(),
                     'name':     order.get('name', ''),
                     'email':    order.get('email', ''),
-                    'course':   cfg_data.get('course_name', 'Cinematography Course'),
+                    'course':   cfg_data.get('course_name', 'Cinematography Workshop'),
                     'amount':   order.get('amount', cfg_data.get('course_price', 99)),
                     'status':   'paid',
                     'order_id': order_id,
@@ -575,6 +726,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     if o.get('order_id') == order_id:
                         o['status'] = 'paid'
                 _write_json(ORDERS_FILE, orders)
+                # Use coupon if one was applied
+                coupon_used = order.get('coupon_code', '').strip()
+                if coupon_used:
+                    _use_coupon(coupon_used)
                 # Generate activation code for member, or course token for non-member
                 buyer_email = order.get('email', '').strip().lower()
                 buyer_name  = order.get('name', '')
@@ -742,7 +897,55 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     'premium_since': member.get('premium_since', ''),
                 })
             else:
-                self._json_response({'ok': False}, status=401)
+                # Keep guest checks quiet in browser Network panel.
+                self._json_response({'ok': False})
+            return
+
+        # ---- Course: signed Bunny chapter URLs ----
+        if path == '/api/course-videos':
+            # Access allowed for premium member session or valid token query.
+            member_email = _get_member_session(self.headers.get('Cookie', ''))
+            has_access = False
+            if member_email:
+                members = _read_json(MEMBERS_FILE)
+                member = next((m for m in members if m.get('email') == member_email), {})
+                has_access = bool(member.get('premium', False))
+            else:
+                qs = dict(urllib.parse.parse_qsl(urllib.parse.urlparse(self.path).query))
+                token = qs.get('token', '').strip()
+                client_ip = (
+                    self.headers.get('X-Forwarded-For', '').split(',')[0].strip()
+                    or self.headers.get('X-Real-IP', '')
+                    or self.client_address[0]
+                )
+                if token:
+                    ok, _ = _validate_course_token(token, client_ip)
+                    has_access = ok
+            if not has_access:
+                self._json_response({'ok': False, 'error': 'Unauthorized'}, status=401)
+                return
+
+            library_id, videos = _parse_bunny_course_config()
+            token_key = _read_bunny_token_key()
+            if not library_id or not videos:
+                self._json_response({'ok': False, 'error': 'Bunny course is not configured'})
+                return
+            if not token_key:
+                self._json_response({'ok': False, 'error': 'Bunny token key is missing'})
+                return
+
+            expires  = int(time.time()) + (60 * 60 * 6)  # 6-hour signed URL
+            chapters = []
+            for idx, v in enumerate(videos):
+                embed_url = _build_bunny_embed_url(library_id, v['video_id'], token_key, expires)
+                embed_url += '&autoplay=true&preload=true'
+                chapters.append({
+                    'title': v.get('title') or f'Chapter {idx + 1}',
+                    'video_id': v['video_id'],
+                    'embed_url': embed_url,
+                    'duration': ''
+                })
+            self._json_response({'ok': True, 'library_id': library_id, 'chapters': chapters})
             return
 
         # ---- Member: upgrade page ----
@@ -957,10 +1160,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 # Auto-login after registration
                 token = secrets.token_hex(32)
                 _member_sessions[token] = email
+                _save_sessions(MEMBER_SESSIONS_FILE, _member_sessions)
                 self._json_response(
                     {'ok': True},
                     extra_headers={
-                        'Set-Cookie': f'pa_member={token}; Path=/; HttpOnly; SameSite=Strict'
+                        'Set-Cookie': f'pa_member={token}; Path=/; HttpOnly; SameSite=Strict; Secure; Max-Age=2592000'
                     }
                 )
             except ValueError as e:
@@ -1035,10 +1239,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 _write_json(MEMBERS_FILE, members)
                 token = secrets.token_hex(32)
                 _member_sessions[token] = email
+                _save_sessions(MEMBER_SESSIONS_FILE, _member_sessions)
                 self._json_response(
                     {'ok': True},
                     extra_headers={
-                        'Set-Cookie': f'pa_member={token}; Path=/; HttpOnly; SameSite=Strict'
+                        'Set-Cookie': f'pa_member={token}; Path=/; HttpOnly; SameSite=Strict; Secure; Max-Age=2592000'
                     }
                 )
             except Exception as e:
@@ -1056,7 +1261,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json_response(
                 {'ok': True},
                 extra_headers={
-                    'Set-Cookie': 'pa_member=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0'
+                    'Set-Cookie': 'pa_member=; Path=/; HttpOnly; SameSite=Strict; Secure; Max-Age=0'
                 }
             )
             return
@@ -1077,10 +1282,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if ok_user and ok_pass:
                     token = secrets.token_hex(32)
                     _sessions[token] = username
+                    _save_sessions(ADMIN_SESSIONS_FILE, _sessions)
                     self._json_response(
                         {'ok': True},
                         extra_headers={
-                            'Set-Cookie': f'pa_admin={token}; Path=/; HttpOnly; SameSite=Strict'
+                            'Set-Cookie': f'pa_admin={token}; Path=/; HttpOnly; SameSite=Strict; Secure; Max-Age=2592000'
                         }
                     )
                 else:
@@ -1139,7 +1345,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 data   = json.loads(body)
                 name   = str(data.get('name', '')).strip()[:200]
                 email  = str(data.get('email', '')).strip()[:200]
-                course = str(data.get('course', 'Cinematography Course')).strip()[:200]
+                course = str(data.get('course', 'Cinematography Workshop')).strip()[:200]
                 amount = float(data.get('amount', 99))
                 status = str(data.get('status', 'paid')).strip()
                 if not name or not email:
@@ -1193,13 +1399,93 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response({'ok': False, 'error': str(e)}, status=400)
             return
 
+        # ---- Admin: add portfolio video ----
+        if path == '/api/portfolio/add-video':
+            if not self._require_auth():
+                return
+            body = self._read_body()
+            try:
+                data = json.loads(body) if body else {}
+                video_url = data.get('video_url', '').strip()
+                if not video_url:
+                    self._json_response({'ok': False, 'error': 'video_url required'}, status=400)
+                    return
+                field = content_manager.add_portfolio_video(video_url)
+                self._json_response({'ok': True, 'field': field})
+            except Exception as e:
+                self._json_response({'ok': False, 'error': str(e)}, status=400)
+            return
+
+        # ---- Admin: delete portfolio video ----
+        if path == '/api/portfolio/delete-video':
+            if not self._require_auth():
+                return
+            body = self._read_body()
+            try:
+                data = json.loads(body) if body else {}
+                index = int(data.get('index', -1))
+                content_manager.delete_portfolio_video(index)
+                self._json_response({'ok': True})
+            except Exception as e:
+                self._json_response({'ok': False, 'error': str(e)}, status=400)
+            return
+
+        # ---- Admin: create coupon ----
+        if path == '/api/coupons':
+            if not self._require_auth():
+                return
+            body = self._read_body()
+            try:
+                data        = json.loads(body) if body else {}
+                action      = data.get('action', 'create')
+                if action == 'delete':
+                    code = data.get('code', '').strip().upper()
+                    coupons = _read_json(COUPONS_FILE)
+                    coupons = [c for c in coupons if c.get('code','').upper() != code]
+                    _write_json(COUPONS_FILE, coupons)
+                    self._json_response({'ok': True})
+                elif action == 'toggle':
+                    code    = data.get('code', '').strip().upper()
+                    coupons = _read_json(COUPONS_FILE)
+                    for c in coupons:
+                        if c.get('code','').upper() == code:
+                            c['active'] = not c.get('active', True)
+                    _write_json(COUPONS_FILE, coupons)
+                    self._json_response({'ok': True})
+                else:
+                    from datetime import date, timedelta
+                    code         = _generate_coupon_code()
+                    discount_pct = int(data.get('discount_pct', 50))
+                    max_uses     = int(data.get('max_uses', 1))
+                    note         = str(data.get('note', '')).strip()[:200]
+                    created_date = date.today()
+                    expires_date = created_date + timedelta(days=30)
+                    coupon = {
+                        'code':         code,
+                        'discount_pct': discount_pct,
+                        'max_uses':     max_uses,
+                        'uses':         0,
+                        'active':       True,
+                        'created':      created_date.isoformat(),
+                        'expires':      expires_date.isoformat(),
+                        'note':         note,
+                    }
+                    coupons = _read_json(COUPONS_FILE)
+                    coupons.append(coupon)
+                    _write_json(COUPONS_FILE, coupons)
+                    self._json_response({'ok': True, 'coupon': coupon})
+            except Exception as e:
+                self._json_response({'ok': False, 'error': str(e)}, status=400)
+            return
+
         # ---- Initiate payment (public) ----
         if path == '/api/initiate-payment':
             body = self._read_body()
             try:
-                data     = json.loads(body)
-                name     = str(data.get('name', '')).strip()[:200]
-                email    = str(data.get('email', '')).strip()[:200]
+                data        = json.loads(body)
+                name        = str(data.get('name', '')).strip()[:200]
+                email       = str(data.get('email', '')).strip()[:200]
+                coupon_code = str(data.get('coupon_code', '')).strip().upper()
                 if not name or not email or '@' not in email:
                     raise ValueError("Valid name and email are required")
 
@@ -1211,6 +1497,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 order_id = 'PA-' + secrets.token_hex(8).upper()
                 amount   = float(cfg_data.get('course_price', 99))
 
+                # Apply coupon discount
+                applied_coupon = None
+                if coupon_code:
+                    applied_coupon = _find_coupon(coupon_code)
+                    if not applied_coupon:
+                        raise ValueError("Invalid or expired coupon code")
+                    discount_pct = applied_coupon.get('discount_pct', 50)
+                    amount = round(amount * (1 - discount_pct / 100), 2)
+
                 # Save pending order
                 orders = _read_json(ORDERS_FILE)
                 pending = {
@@ -1221,6 +1516,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     'amount':            amount,
                     'status':            'pending',
                     'success_indicator': '',
+                    'coupon_code':       coupon_code if applied_coupon else '',
                 }
                 orders.append(pending)
                 _write_json(ORDERS_FILE, orders)
@@ -1250,7 +1546,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
 
         # ---- Image upload ----
-        if path == '/api/upload-image':
+        if path in ('/api/upload-image', '/api/images'):
             if not self._require_auth():
                 return
             ct = self.headers.get('Content-Type', '')

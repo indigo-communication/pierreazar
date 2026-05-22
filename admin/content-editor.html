@@ -44,6 +44,16 @@
         .img-upload-status { font-size:.82rem; margin-top:8px; padding:5px 10px; border-radius:5px; display:none; }
         .img-upload-status.ok  { background:rgba(46,204,113,.14); color:#2ecc71; display:block; }
         .img-upload-status.err { background:rgba(231,76,60,.14);  color:#e74c3c; display:block; }
+        .video-upload-status { font-size:.82rem; margin-top:8px; padding:5px 10px; border-radius:5px; display:none; }
+        .video-upload-status.ok  { background:rgba(46,204,113,.14); color:#2ecc71; display:block; }
+        .video-upload-status.err { background:rgba(231,76,60,.14);  color:#e74c3c; display:block; }
+        .video-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; margin-top:10px; }
+        .video-item { border:1px solid rgba(255,255,255,.07); border-radius:8px; background:rgba(255,255,255,.03); padding:10px; }
+        .video-item h6 { margin:0 0 8px; font-size:.84rem; font-weight:600; color:#ddd; }
+        .video-item img { width:100%; height:120px; object-fit:cover; border-radius:6px; border:1px solid rgba(255,255,255,.08); margin-bottom:8px; background:#111; }
+        .video-meta { font-size:.72rem; color:#888; margin-top:6px; }
+        .video-meta.warn { color:#ffb74d; }
+        .section-card { border:1px solid rgba(255,255,255,.07); border-radius:8px; background:rgba(255,255,255,.03); padding:12px; margin-bottom:14px; }
         .preview-link { font-size:.78rem; color:#777; text-decoration:none; }
         .preview-link:hover { color:#fff; }
         textarea.form-control { font-family:monospace; font-size:.84rem; }
@@ -100,7 +110,13 @@
                     <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="7" r="4" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
                     <span class="nav-text">Members</span>
                 </a></li>
-                <li><a href="finance.html" aria-expanded="false">
+                                <li>
+                    <a href="coupons.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M20.59 13.41L13.42 20.58A2 2 0 0 1 11 20.58L3 12.59V3H12.58L20.59 11A2 2 0 0 1 20.59 13.41Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><line x1="7" y1="7" x2="7.01" y2="7" stroke="#888" stroke-width="2" stroke-linecap="round"/></svg></div>
+                        <span class="nav-text">Coupons</span>
+                    </a>
+                </li>
+<li><a href="finance.html" aria-expanded="false">
                     <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><line x1="12" y1="1" x2="12" y2="23" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 5H9.5C8.57 5 7.68 5.37 7.02 6.02C6.37 6.68 6 7.57 6 8.5C6 9.43 6.37 10.32 7.02 10.98C7.68 11.63 8.57 12 9.5 12H14.5C15.43 12 16.32 12.37 16.98 13.02C17.63 13.68 18 14.57 18 15.5C18 16.43 17.63 17.32 16.98 17.98C16.32 18.63 15.43 19 14.5 19H6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
                     <span class="nav-text">Finance</span>
                 </a></li>
@@ -202,39 +218,41 @@
 
                                 <!-- VIDEO -->
                                 <span class="section-label">&#127916; Videos</span>
-                                <form id="form-homepage-video" onsubmit="saveSection(event,'homepage-video',['homepage_reel_vimeo_id','homepage_selected_video_1','homepage_selected_video_2','homepage_selected_video_3','homepage_course_vimeo_id'])">
+                                <form id="form-homepage-video" onsubmit="saveSection(event,'homepage-video',['homepage_reel_video_link','homepage_selected_video_1','homepage_selected_video_2','homepage_selected_video_3','homepage_course_video_link'])">
                                     <div class="mb-3">
-                                        <label class="form-label" for="homepage_reel_vimeo_id">Hero Background Reel</label>
-                                        <input type="text" class="form-control" id="homepage_reel_vimeo_id" name="homepage_reel_vimeo_id"
-                                               placeholder="e.g. 1000452483" autocomplete="off" style="max-width:280px;">
-                                        <div class="form-text">Full-screen background video behind the headline. Vimeo ID only.</div>
+                                        <label class="form-label" for="homepage_reel_video_link">Hero Background Reel</label>
+                                        <input type="text" class="form-control" id="homepage_reel_video_link" name="homepage_reel_video_link"
+                                               placeholder="YouTube or Vimeo URL / ID" autocomplete="off">
+                                        <div class="form-text">Uses YouTube for marketing/public videos. Use Bunny Stream fields below for protected lessons.</div>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label" for="homepage_selected_video_1">Selected Works — Video 1</label>
                                         <input type="text" class="form-control" id="homepage_selected_video_1" name="homepage_selected_video_1"
-                                               placeholder="e.g. 1000452483" autocomplete="off" style="max-width:280px;">
+                                               placeholder="YouTube or Vimeo URL / ID" autocomplete="off">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label" for="homepage_selected_video_2">Selected Works — Video 2</label>
                                         <input type="text" class="form-control" id="homepage_selected_video_2" name="homepage_selected_video_2"
-                                               placeholder="e.g. 1000452483" autocomplete="off" style="max-width:280px;">
+                                               placeholder="YouTube or Vimeo URL / ID" autocomplete="off">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label" for="homepage_selected_video_3">Selected Works — Video 3</label>
                                         <input type="text" class="form-control" id="homepage_selected_video_3" name="homepage_selected_video_3"
-                                               placeholder="e.g. 471331461" autocomplete="off" style="max-width:280px;">
+                                               placeholder="YouTube or Vimeo URL / ID" autocomplete="off">
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label" for="homepage_course_vimeo_id">Course Promo on Homepage <span class="badge bg-secondary fw-normal">also updates Course page</span></label>
-                                        <input type="text" class="form-control" id="homepage_course_vimeo_id" name="homepage_course_vimeo_id"
-                                               placeholder="e.g. 291044785" autocomplete="off" style="max-width:280px;">
-                                        <div class="form-text">Video shown in the "Cinematography Course" section on the homepage. Saving this also updates the Course page.</div>
+                                        <label class="form-label" for="homepage_course_video_link">Course Promo on Homepage <span class="badge bg-secondary fw-normal">also updates Course page</span></label>
+                                        <input type="text" class="form-control" id="homepage_course_video_link" name="homepage_course_video_link"
+                                               placeholder="YouTube or Vimeo URL / ID" autocomplete="off">
+                                        <div class="form-text">Video shown in the "Cinematography Workshop" section on the homepage. Saving this also updates the Course page.</div>
                                     </div>
                                     <div class="d-flex align-items-center gap-3 mb-2">
                                         <button type="submit" class="btn btn-primary btn-sm" id="btn-homepage-video">Save Videos</button>
                                         <div class="save-result" id="result-homepage-video"></div>
                                     </div>
                                 </form>
+                                <div id="video-status-homepage" class="video-upload-status"></div>
+                                <div id="video-gallery-homepage"><p class="text-muted small py-2">Loading video thumbnails…</p></div>
 
                                 <!-- TEXT -->
                                 <span class="section-label">&#9998; Text Content</span>
@@ -257,6 +275,18 @@
                                     </div>
                                 </form>
 
+                                <span class="section-label">&#128240; Header &amp; Titles</span>
+                                <form id="form-homepage-headings" onsubmit="saveSection(event,'homepage-headings',['site_header_title','site_header_subtitle','homepage_selected_works_title','homepage_selected_works_subtitle','homepage_page_title'])">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6"><label class="form-label" for="site_header_title">Top Header Title</label><input type="text" class="form-control" id="site_header_title" name="site_header_title"></div>
+                                        <div class="col-md-6"><label class="form-label" for="site_header_subtitle">Top Header Subtitle</label><input type="text" class="form-control" id="site_header_subtitle" name="site_header_subtitle"></div>
+                                        <div class="col-md-6"><label class="form-label" for="homepage_selected_works_title">Selected Works Title</label><input type="text" class="form-control" id="homepage_selected_works_title" name="homepage_selected_works_title"></div>
+                                        <div class="col-md-6"><label class="form-label" for="homepage_selected_works_subtitle">Selected Works Subtitle</label><input type="text" class="form-control" id="homepage_selected_works_subtitle" name="homepage_selected_works_subtitle"></div>
+                                        <div class="col-md-6"><label class="form-label" for="homepage_page_title">Browser Page Title (&lt;title&gt;)</label><input type="text" class="form-control" id="homepage_page_title" name="homepage_page_title"></div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3 mb-2"><button type="submit" class="btn btn-primary btn-sm" id="btn-homepage-headings">Save Header &amp; Titles</button><div class="save-result" id="result-homepage-headings"></div></div>
+                                </form>
+
                                 <!-- SOCIAL LINKS -->
                                 <span class="section-label">&#128279; Social Links (appear on all pages)</span>
                                 <form id="form-homepage-social" onsubmit="saveSection(event,'homepage-social',['social_facebook','social_instagram','social_vimeo'])">
@@ -270,8 +300,8 @@
                                             <input type="url" class="form-control" id="social_instagram" name="social_instagram" placeholder="https://www.instagram.com/…">
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label" for="social_vimeo">Vimeo URL</label>
-                                            <input type="url" class="form-control" id="social_vimeo" name="social_vimeo" placeholder="https://vimeo.com/…">
+                                            <label class="form-label" for="social_vimeo">Video Platform URL</label>
+                                            <input type="url" class="form-control" id="social_vimeo" name="social_vimeo" placeholder="https://youtube.com/@... or your platform URL">
                                         </div>
                                     </div>
                                     <div class="d-flex align-items-center gap-3 mb-2">
@@ -300,50 +330,46 @@
 
                                 <!-- VIDEOS -->
                                 <span class="section-label">&#127916; Portfolio Videos</span>
-                                <p class="text-muted small">Enter the Vimeo video ID for each portfolio item. Copy the number from the video URL on Vimeo: vimeo.com/<strong>996151610</strong></p>
-                                <form id="form-portfolio-video" onsubmit="saveSection(event,'portfolio-video',['portfolio_video_0','portfolio_video_1','portfolio_video_2','portfolio_video_3','portfolio_video_4','portfolio_video_5','portfolio_video_6','portfolio_video_7','portfolio_video_8'])">
-                                    <div class="row g-3 mb-3">
-                                        <div class="col-md-6 col-lg-4">
-                                            <label class="form-label" for="portfolio_video_0">Film / Promo Reel</label>
-                                            <input type="text" class="form-control" id="portfolio_video_0" name="portfolio_video_0" placeholder="Vimeo ID" autocomplete="off">
-                                        </div>
-                                        <div class="col-md-6 col-lg-4">
-                                            <label class="form-label" for="portfolio_video_1">Portfolio Video 1</label>
-                                            <input type="text" class="form-control" id="portfolio_video_1" name="portfolio_video_1" placeholder="Vimeo ID" autocomplete="off">
-                                        </div>
-                                        <div class="col-md-6 col-lg-4">
-                                            <label class="form-label" for="portfolio_video_2">Portfolio Video 2</label>
-                                            <input type="text" class="form-control" id="portfolio_video_2" name="portfolio_video_2" placeholder="Vimeo ID" autocomplete="off">
-                                        </div>
-                                        <div class="col-md-6 col-lg-4">
-                                            <label class="form-label" for="portfolio_video_3">Portfolio Video 3</label>
-                                            <input type="text" class="form-control" id="portfolio_video_3" name="portfolio_video_3" placeholder="Vimeo ID" autocomplete="off">
-                                        </div>
-                                        <div class="col-md-6 col-lg-4">
-                                            <label class="form-label" for="portfolio_video_4">Portfolio Video 4</label>
-                                            <input type="text" class="form-control" id="portfolio_video_4" name="portfolio_video_4" placeholder="Vimeo ID" autocomplete="off">
-                                        </div>
-                                        <div class="col-md-6 col-lg-4">
-                                            <label class="form-label" for="portfolio_video_5">Portfolio Video 5</label>
-                                            <input type="text" class="form-control" id="portfolio_video_5" name="portfolio_video_5" placeholder="Vimeo ID" autocomplete="off">
-                                        </div>
-                                        <div class="col-md-6 col-lg-4">
-                                            <label class="form-label" for="portfolio_video_6">Portfolio Video 6</label>
-                                            <input type="text" class="form-control" id="portfolio_video_6" name="portfolio_video_6" placeholder="Vimeo ID" autocomplete="off">
-                                        </div>
-                                        <div class="col-md-6 col-lg-4">
-                                            <label class="form-label" for="portfolio_video_7">Portfolio Video 7</label>
-                                            <input type="text" class="form-control" id="portfolio_video_7" name="portfolio_video_7" placeholder="Vimeo ID" autocomplete="off">
-                                        </div>
-                                        <div class="col-md-6 col-lg-4">
-                                            <label class="form-label" for="portfolio_video_8">Portfolio Video 8</label>
-                                            <input type="text" class="form-control" id="portfolio_video_8" name="portfolio_video_8" placeholder="Vimeo ID" autocomplete="off">
-                                        </div>
+                                <p class="text-muted small">Paste a YouTube or Vimeo URL (or just the video ID) — auto-detected. New videos are added at the top-left of the portfolio.</p>
+
+                                <!-- Add Video inline form -->
+                                <div id="add-video-bar" class="mb-3">
+                                  <button type="button" class="btn btn-success btn-sm" onclick="toggleAddVideoForm()">&#43; Add New Video</button>
+                                  <div id="add-video-form" style="display:none;" class="mt-2 p-3 border rounded bg-light">
+                                    <div class="row g-2 align-items-end">
+                                      <div class="col">
+                                        <label class="form-label mb-1 small">YouTube or Vimeo URL / ID</label>
+                                        <input type="text" id="new-video-url" class="form-control form-control-sm" placeholder="https://youtu.be/… or https://vimeo.com/…" autocomplete="off">
+                                      </div>
+                                      <div class="col-auto">
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="addPortfolioVideo()">&#128190; Save &amp; Add</button>
+                                        <button type="button" class="btn btn-secondary btn-sm ms-1" onclick="toggleAddVideoForm()">Cancel</button>
+                                      </div>
+                                    </div>
+                                    <div id="add-video-result" class="save-result mt-2"></div>
+                                  </div>
+                                </div>
+
+                                <!-- Dynamic video list (populated by JS) -->
+                                <form id="form-portfolio-video" onsubmit="savePortfolioVideos(event)">
+                                    <div class="row g-3 mb-3" id="portfolio-video-rows">
+                                        <!-- Rows injected by buildPortfolioVideoRows() -->
                                     </div>
                                     <div class="d-flex align-items-center gap-3 mb-2">
                                         <button type="submit" class="btn btn-primary btn-sm" id="btn-portfolio-video">Save Videos</button>
                                         <div class="save-result" id="result-portfolio-video"></div>
                                     </div>
+                                </form>
+                                <div id="video-status-portfolio" class="video-upload-status"></div>
+                                <div id="video-gallery-portfolio"><p class="text-muted small py-2">Loading video thumbnails…</p></div>
+
+                                <span class="section-label">&#128240; Header &amp; Titles</span>
+                                <form id="form-portfolio-headings" onsubmit="saveSection(event,'portfolio-headings',['portfolio_featured_projects_title','portfolio_page_title'])">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6"><label class="form-label" for="portfolio_featured_projects_title">Featured Projects Title</label><input type="text" class="form-control" id="portfolio_featured_projects_title" name="portfolio_featured_projects_title"></div>
+                                        <div class="col-md-6"><label class="form-label" for="portfolio_page_title">Browser Page Title (&lt;title&gt;)</label><input type="text" class="form-control" id="portfolio_page_title" name="portfolio_page_title"></div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3 mb-2"><button type="submit" class="btn btn-primary btn-sm" id="btn-portfolio-headings">Save Header &amp; Titles</button><div class="save-result" id="result-portfolio-headings"></div></div>
                                 </form>
 
                                 <!-- IMAGES -->
@@ -367,18 +393,20 @@
 
                                 <!-- VIDEO -->
                                 <span class="section-label">&#127916; Promo Video</span>
-                                <form id="form-course-video" onsubmit="saveSection(event,'course-video',['course_vimeo_id'])">
+                                <form id="form-course-video" onsubmit="saveSection(event,'course-video',['course_video_link'])">
                                     <div class="mb-3">
-                                        <label class="form-label" for="course_vimeo_id">Vimeo Video ID <span class="badge bg-secondary fw-normal">also updates homepage course promo</span></label>
-                                        <input type="text" class="form-control" id="course_vimeo_id" name="course_vimeo_id"
-                                               placeholder="e.g. 291044785" autocomplete="off" style="max-width:280px;">
-                                        <div class="form-text">The promo video shown on the course sales page AND the homepage course section. Copy the number from vimeo.com/<strong>291044785</strong></div>
+                                        <label class="form-label" for="course_video_link">Promo Video Link <span class="badge bg-secondary fw-normal">also updates homepage course promo</span></label>
+                                        <input type="text" class="form-control" id="course_video_link" name="course_video_link"
+                                               placeholder="YouTube or Vimeo URL / ID" autocomplete="off">
+                                        <div class="form-text">Uses YouTube for promo/public videos. Use Bunny Stream below for paid course parts.</div>
                                     </div>
                                     <div class="d-flex align-items-center gap-3 mb-2">
                                         <button type="submit" class="btn btn-primary btn-sm" id="btn-course-video">Save Video</button>
                                         <div class="save-result" id="result-course-video"></div>
                                     </div>
                                 </form>
+                                <div id="video-status-course" class="video-upload-status"></div>
+                                <div id="video-gallery-course"><p class="text-muted small py-2">Loading video thumbnails…</p></div>
 
                                 <!-- COURSE SECTION VIDEOS -->
                                 <span class="section-label">&#127916; Course Section Videos (Bunny Stream)</span>
@@ -443,6 +471,16 @@
                                     </div>
                                 </form>
 
+                                <span class="section-label">&#128240; Header &amp; Titles</span>
+                                <form id="form-course-headings" onsubmit="saveSection(event,'course-headings',['course_hero_title','course_section_title','course_page_title'])">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6"><label class="form-label" for="course_hero_title">Course Hero Title</label><input type="text" class="form-control" id="course_hero_title" name="course_hero_title"></div>
+                                        <div class="col-md-6"><label class="form-label" for="course_section_title">Course Section Title</label><input type="text" class="form-control" id="course_section_title" name="course_section_title"></div>
+                                        <div class="col-md-6"><label class="form-label" for="course_page_title">Browser Page Title (&lt;title&gt;)</label><input type="text" class="form-control" id="course_page_title" name="course_page_title"></div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3 mb-2"><button type="submit" class="btn btn-primary btn-sm" id="btn-course-headings">Save Header &amp; Titles</button><div class="save-result" id="result-course-headings"></div></div>
+                                </form>
+
                                 <!-- IMAGES -->
                                 <span class="section-label">&#128247; Course Page Images</span>
                                 <div id="img-status-course" class="img-upload-status"></div>
@@ -464,6 +502,14 @@
                                 <p class="text-muted small">Replace any image used on the Onset Experience page.</p>
                                 <div id="img-status-onset" class="img-upload-status"></div>
                                 <div id="img-gallery-onset"><p class="text-muted small py-2">Loading…</p></div>
+                                <span class="section-label">&#128240; Header &amp; Titles</span>
+                                <form id="form-onset-headings" onsubmit="saveSection(event,'onset-headings',['onset_hero_title','onset_page_title'])">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6"><label class="form-label" for="onset_hero_title">Onset Hero Title</label><input type="text" class="form-control" id="onset_hero_title" name="onset_hero_title"></div>
+                                        <div class="col-md-6"><label class="form-label" for="onset_page_title">Browser Page Title (&lt;title&gt;)</label><input type="text" class="form-control" id="onset_page_title" name="onset_page_title"></div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3 mb-2"><button type="submit" class="btn btn-primary btn-sm" id="btn-onset-headings">Save Header &amp; Titles</button><div class="save-result" id="result-onset-headings"></div></div>
+                                </form>
                             </div>
                         </div>
                     </div><!-- /onset -->
@@ -480,6 +526,15 @@
                                 <p class="text-muted small">Replace any image used on the Contact page.</p>
                                 <div id="img-status-contact" class="img-upload-status"></div>
                                 <div id="img-gallery-contact"><p class="text-muted small py-2">Loading…</p></div>
+                                <span class="section-label">&#128240; Header &amp; Titles</span>
+                                <form id="form-contact-headings" onsubmit="saveSection(event,'contact-headings',['contact_hero_title','contact_form_title','contact_page_title'])">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6"><label class="form-label" for="contact_hero_title">Contact Hero Title</label><input type="text" class="form-control" id="contact_hero_title" name="contact_hero_title"></div>
+                                        <div class="col-md-6"><label class="form-label" for="contact_form_title">Contact Form Title</label><input type="text" class="form-control" id="contact_form_title" name="contact_form_title"></div>
+                                        <div class="col-md-6"><label class="form-label" for="contact_page_title">Browser Page Title (&lt;title&gt;)</label><input type="text" class="form-control" id="contact_page_title" name="contact_page_title"></div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3 mb-2"><button type="submit" class="btn btn-primary btn-sm" id="btn-contact-headings">Save Header &amp; Titles</button><div class="save-result" id="result-contact-headings"></div></div>
+                                </form>
                             </div>
                         </div>
                     </div><!-- /contact -->
@@ -512,6 +567,112 @@ var PAGE_FILES = {
     onset:     'onset-experience.html',
     contact:   'get-in-touch.html'
 };
+var PAGE_VIDEO_FIELDS = {
+    homepage: ['homepage_reel_video_link','homepage_selected_video_1','homepage_selected_video_2','homepage_selected_video_3','homepage_course_video_link'],
+    portfolio: ['portfolio_video_0','portfolio_video_1','portfolio_video_2','portfolio_video_3','portfolio_video_4','portfolio_video_5','portfolio_video_6','portfolio_video_7','portfolio_video_8'],
+    course: ['course_video_link'],
+    onset: [],
+    contact: []
+};
+
+// Tracks which portfolio indices are dynamic (deletable)
+var _dynamicPortfolioIndices = [];
+
+// ── Portfolio video helpers ───────────────────────────────────────────────
+function buildPortfolioVideoRows(content) {
+    var container = document.getElementById('portfolio-video-rows');
+    if (!container) return;
+    container.innerHTML = '';
+
+    _dynamicPortfolioIndices = content['_dynamic_portfolio_indices'] || [];
+
+    // Dynamic (new) videos first — labelled "New Video N" with delete button
+    _dynamicPortfolioIndices.forEach(function(idx) {
+        var field = 'portfolio_video_' + idx;
+        var row = document.createElement('div');
+        row.className = 'col-md-6 col-lg-4';
+        var num = idx - 8; // display number (1,2,3…)
+        row.innerHTML =
+            '<label class="form-label d-flex justify-content-between align-items-center">' +
+            '<span>&#127381; New Video ' + num + '</span>' +
+            '<button type="button" class="btn btn-outline-danger btn-sm py-0 px-1" ' +
+            'onclick="deletePortfolioVideo(' + idx + ')" title="Remove this video">&#128465;</button>' +
+            '</label>' +
+            '<input type="text" class="form-control" id="' + field + '" name="' + field + '" ' +
+            'value="' + escHtml(content[field] || '') + '" ' +
+            'placeholder="YouTube or Vimeo URL / ID" autocomplete="off">';
+        container.appendChild(row);
+    });
+
+    // Static originals (0-8)
+    var staticLabels = ['Film / Promo Reel','Portfolio Video 1','Portfolio Video 2','Portfolio Video 3',
+                        'Portfolio Video 4','Portfolio Video 5','Portfolio Video 6','Portfolio Video 7','Portfolio Video 8'];
+    for (var i = 0; i <= 8; i++) {
+        var f = 'portfolio_video_' + i;
+        var row = document.createElement('div');
+        row.className = 'col-md-6 col-lg-4';
+        row.innerHTML =
+            '<label class="form-label" for="' + f + '">' + staticLabels[i] + '</label>' +
+            '<input type="text" class="form-control" id="' + f + '" name="' + f + '" ' +
+            'value="' + escHtml(content[f] || '') + '" ' +
+            'placeholder="YouTube or Vimeo URL / ID" autocomplete="off">';
+        container.appendChild(row);
+    }
+
+    // Update PAGE_VIDEO_FIELDS.portfolio to include dynamic indices
+    PAGE_VIDEO_FIELDS.portfolio = [];
+    _dynamicPortfolioIndices.forEach(function(idx){ PAGE_VIDEO_FIELDS.portfolio.push('portfolio_video_' + idx); });
+    for (var i = 0; i <= 8; i++) PAGE_VIDEO_FIELDS.portfolio.push('portfolio_video_' + i);
+}
+
+function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function savePortfolioVideos(e) {
+    e.preventDefault();
+    saveSection(e, 'portfolio-video', PAGE_VIDEO_FIELDS.portfolio);
+}
+
+function toggleAddVideoForm() {
+    var f = document.getElementById('add-video-form');
+    f.style.display = f.style.display === 'none' ? '' : 'none';
+    if (f.style.display !== 'none') document.getElementById('new-video-url').focus();
+}
+
+function addPortfolioVideo() {
+    var url = (document.getElementById('new-video-url').value || '').trim();
+    var res = document.getElementById('add-video-result');
+    if (!url) { res.textContent = 'Please enter a URL.'; res.style.color = 'red'; return; }
+    res.textContent = 'Adding…'; res.style.color = '';
+    fetch('/api/portfolio/add-video', {
+        method: 'POST', credentials: 'include',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({video_url: url})
+    }).then(function(r){ return r.json(); }).then(function(d){
+        if (d.ok) {
+            res.textContent = '✓ Added! Reloading…'; res.style.color = 'green';
+            setTimeout(function(){ window.location.reload(); }, 800);
+        } else {
+            res.textContent = '✗ ' + (d.error || 'Failed'); res.style.color = 'red';
+        }
+    }).catch(function(){ res.textContent = '✗ Network error'; res.style.color = 'red'; });
+}
+
+function deletePortfolioVideo(index) {
+    if (!confirm('Remove this video from the portfolio? This cannot be undone.')) return;
+    fetch('/api/portfolio/delete-video', {
+        method: 'POST', credentials: 'include',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({index: index})
+    }).then(function(r){ return r.json(); }).then(function(d){
+        if (d.ok) {
+            var result = document.getElementById('result-portfolio-video');
+            result.textContent = '✓ Video removed. Reloading…'; result.style.color = 'green';
+            setTimeout(function(){ window.location.reload(); }, 800);
+        } else { alert('Error: ' + (d.error || 'Failed to delete')); }
+    }).catch(function(){ alert('Network error'); });
+}
 
 // ── Switch page panel ─────────────────────────────────────────────────────
 var _loadedImages = {};   // cache: page → loaded flag
@@ -526,6 +687,7 @@ function switchPage(page) {
     if (!_loadedImages[page]) {
         _loadedImages[page] = true;
         loadPageImages(page);
+        loadPageVideos(page);
     }
 }
 
@@ -537,31 +699,48 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!d || !d.ok) return;
             var c = d.content;
             // Homepage
-            setVal('homepage_reel_vimeo_id',      c.homepage_reel_vimeo_id);
+            setVal('homepage_reel_video_link',    c.homepage_reel_video_link || c.homepage_reel_vimeo_id);
             setVal('homepage_selected_video_1',   c.homepage_selected_video_1);
             setVal('homepage_selected_video_2',   c.homepage_selected_video_2);
             setVal('homepage_selected_video_3',   c.homepage_selected_video_3);
-            setVal('homepage_course_vimeo_id',    c.homepage_course_vimeo_id);
+            setVal('homepage_course_video_link',  c.homepage_course_video_link || c.homepage_course_vimeo_id);
             setVal('homepage_quote',              c.homepage_quote);
             setVal('homepage_about',              c.homepage_about);
             setVal('social_facebook',        c.social_facebook);
             setVal('social_instagram',       c.social_instagram);
             setVal('social_vimeo',           c.social_vimeo);
-            // Portfolio videos
-            for (var i = 0; i <= 8; i++) setVal('portfolio_video_' + i, c['portfolio_video_' + i]);
+            // Portfolio videos (static + dynamic)
+            buildPortfolioVideoRows(c);
             // Course
-            setVal('course_vimeo_id',  c.course_vimeo_id);
+            setVal('course_video_link',  c.course_video_link || c.course_vimeo_id);
             setVal('course_price',     c.course_price);
             setVal('course_buy_text',  c.course_buy_text);
             setVal('course_buy_url',   c.course_buy_url);
             // Course section videos
             for (var p = 1; p <= 5; p++) setVal('course_part_' + p + '_url', c['course_part_' + p + '_url'] || '');
+            // headings + titles
+            setVal('site_header_title', c.site_header_title);
+            setVal('site_header_subtitle', c.site_header_subtitle);
+            setVal('homepage_selected_works_title', c.homepage_selected_works_title);
+            setVal('homepage_selected_works_subtitle', c.homepage_selected_works_subtitle);
+            setVal('portfolio_featured_projects_title', c.portfolio_featured_projects_title);
+            setVal('course_hero_title', c.course_hero_title);
+            setVal('course_section_title', c.course_section_title);
+            setVal('onset_hero_title', c.onset_hero_title);
+            setVal('contact_hero_title', c.contact_hero_title);
+            setVal('contact_form_title', c.contact_form_title);
+            setVal('homepage_page_title', c.homepage_page_title);
+            setVal('portfolio_page_title', c.portfolio_page_title);
+            setVal('course_page_title', c.course_page_title);
+            setVal('onset_page_title', c.onset_page_title);
+            setVal('contact_page_title', c.contact_page_title);
         })
         .catch(function(){});
 
     // Load images for the default page (homepage)
     _loadedImages['homepage'] = true;
     loadPageImages('homepage');
+    loadPageVideos('homepage');
 });
 
 function setVal(id, val) {
@@ -635,13 +814,48 @@ function loadPageImages(page) {
                 html += '<div class="img-card" id="' + escH(safeId) + '">';
                 html += '<img src="' + escH(url) + '?t=' + Date.now() + '" alt="' + escH(filename) + '" loading="lazy">';
                 html += '<div class="img-name" title="' + escH(filename) + '">' + escH(filename) + '</div>';
-                html += '<button type="button" class="replace-btn" onclick="triggerReplace(' + JSON.stringify(key) + ',' + JSON.stringify(safeId) + ',' + JSON.stringify(page) + ')">Replace</button>';
+                html += '<button type="button" class="replace-btn" onclick="triggerReplace(' + escH(JSON.stringify(key)) + ',' + escH(JSON.stringify(safeId)) + ',' + escH(JSON.stringify(page)) + ')">Replace</button>';
                 html += '</div>';
             });
             html += '</div>';
             container.innerHTML = html;
         })
         .catch(function(){ container.innerHTML = '<p class="text-danger small">Failed to load images.</p>'; });
+}
+
+function loadPageVideos(page) {
+    var pageFile = PAGE_FILES[page];
+    var container = document.getElementById('video-gallery-' + page);
+    if (!container) return;
+    fetch('/api/page-videos?page=' + encodeURIComponent(pageFile), { credentials: 'include' })
+        .then(function(r){ if(r.status===401){ window.location.href='login.html'; return null; } return r.json(); })
+        .then(function(d){
+            if (!d || !d.ok || !d.videos || d.videos.length === 0) {
+                container.innerHTML = '<p class="text-muted small">No videos found for this page.</p>';
+                return;
+            }
+            var html = '<div class="video-list">';
+            d.videos.forEach(function(v){
+                var label = (v.field || '').replace(/_/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+                var thumb = v.thumbnail ? '/' + String(v.thumbnail).replace(/^\/+/, '') : '';
+                var thumbField = v.thumbnail_field || '';
+                html += '<div class="video-item">';
+                html += '<h6>' + escH(label) + '</h6>';
+                html += '<img src="' + escH(thumb || '/images/backgrounds/1.jpg') + '?t=' + Date.now() + '" alt="' + escH(label) + ' thumbnail">';
+                html += '<div class="video-meta">Video link: ' + escH(v.value || 'Not set') + '</div>';
+                html += '<div class="input-group input-group-sm">';
+                html += '<input type="text" class="form-control" id="' + escH(thumbField) + '" value="' + escH(v.thumbnail || '') + '" placeholder="images/photos/your-thumb.jpg">';
+                html += '<button class="btn btn-outline-light" type="button" onclick="triggerVideoThumbReplace(' + escH(JSON.stringify(thumbField)) + ',' + escH(JSON.stringify(page)) + ')">Replace Thumb</button>';
+                html += '</div>';
+                if (!v.thumbnail) html += '<div class="video-meta warn">No thumbnail set. Add one now.</div>';
+                else if (v.thumbnail_conflict) html += '<div class="video-meta warn">Thumbnail is shared by multiple videos. Replacing it affects all of them.</div>';
+                else html += '<div class="video-meta">Thumbnail: ' + escH(v.thumbnail) + '</div>';
+                html += '</div>';
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        })
+        .catch(function(){ container.innerHTML = '<p class="text-danger small">Failed to load videos.</p>'; });
 }
 
 function escH(str) {
@@ -672,7 +886,7 @@ function uploadReplace(key, safeId, page, file) {
     fd.append('filename', key);
     fd.append('file', file);
 
-    fetch('/api/images', { method:'POST', credentials:'include', body:fd })
+    fetch('/api/upload-image', { method:'POST', credentials:'include', body:fd })
         .then(function(r){ if(r.status===401){ window.location.href='login.html'; return null; } return r.json(); })
         .then(function(d){
             if (!d) return;
@@ -693,6 +907,64 @@ function uploadReplace(key, safeId, page, file) {
             statusEl.className = 'img-upload-status err';
             statusEl.textContent = '✗ Network error during upload.';
         });
+}
+
+function triggerVideoThumbReplace(thumbField, page) {
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp,image/gif';
+    input.style.display = 'none';
+    input.addEventListener('change', function(){
+        if (!input.files || !input.files[0]) return;
+        var targetPath = document.getElementById(thumbField) ? document.getElementById(thumbField).value : '';
+        if (!targetPath) {
+            showVideoStatus(page, false, 'Set thumbnail path first (e.g. images/photos/new-thumb.jpg).');
+            return;
+        }
+        uploadVideoThumb(targetPath, page, input.files[0], thumbField);
+    });
+    document.body.appendChild(input);
+    input.click();
+}
+
+function uploadVideoThumb(targetPath, page, file, thumbField) {
+    showVideoStatus(page, true, 'Uploading thumbnail...');
+    var fd = new FormData();
+    fd.append('filename', targetPath);
+    fd.append('file', file);
+    fetch('/api/upload-image', { method:'POST', credentials:'include', body:fd })
+        .then(function(r){ if(r.status===401){ window.location.href='login.html'; return null; } return r.json(); })
+        .then(function(d){
+            if (!d) return;
+            if (!d.ok) {
+                showVideoStatus(page, false, d.error || 'Upload failed');
+                return;
+            }
+            var payload = {};
+            payload[thumbField] = targetPath;
+            return fetch('/api/content', {
+                method:'POST',
+                credentials:'include',
+                headers:{ 'Content-Type':'application/json' },
+                body: JSON.stringify(payload)
+            }).then(function(r){ return r.json(); }).then(function(s){
+                if (s && s.ok) {
+                    showVideoStatus(page, true, 'Thumbnail saved and linked.');
+                    loadPageVideos(page);
+                } else {
+                    showVideoStatus(page, false, (s && (s.error || (s.errors || []).join(', '))) || 'Save failed');
+                }
+            });
+        })
+        .catch(function(){ showVideoStatus(page, false, 'Network error during upload'); });
+}
+
+function showVideoStatus(page, ok, msg) {
+    var el = document.getElementById('video-status-' + page);
+    if (!el) return;
+    el.className = 'video-upload-status ' + (ok ? 'ok' : 'err');
+    el.textContent = (ok ? '✓ ' : '✗ ') + msg;
+    el.style.display = 'block';
 }
 </script>
 

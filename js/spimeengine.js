@@ -260,11 +260,11 @@ SpimeEngine.UpdateDeviceClass = function(){
 	var currentWinWidth = $("body").width();
 	var deviceClass = "desktop-mode";
 	var disableScrollEffects = false;
-	if(currentWinWidth < 800){
+	if(currentWinWidth < 1024){
 		deviceClass = "tablet-mode desktop-mode";
 		disableScrollEffects = true;
 	}
-	if (currentWinWidth < 500){
+	if (currentWinWidth < 768){
 		deviceClass = "phone-mode tablet-mode desktop-mode";
 	}
 	var xprsHolder = $("#xprs");
@@ -277,6 +277,27 @@ SpimeEngine.UpdateDeviceClass = function(){
 	}
 	if (!mainPage.hasClass("disable_effects") && disableScrollEffects){
 		mainPage.addClass("disable_effects");
+	}
+	// Force burger menu on tablet and mobile (screens ≤ 1024px)
+	if (currentWinWidth <= 1024 && typeof menu_layout !== 'undefined') {
+		setTimeout(function(){
+			$(".master.item-box.header-box").each(function(){
+				var stripe = $(this);
+				var container = stripe.find('.right-div').first();
+				var linksHolder = container.find('.preview-item-links').first();
+				if (container.length && linksHolder.length && !stripe.hasClass('menufied')) {
+					menu_layout.menufyLinks(container, linksHolder);
+				}
+			});
+		}, 50);
+	} else if (currentWinWidth > 1024 && typeof menu_layout !== 'undefined') {
+		$(".master.item-box.header-box").each(function(){
+			var stripe = $(this);
+			if (stripe.hasClass('menufied')) {
+				var container = stripe.find('.right-div').first();
+				menu_layout.unmenufyLinks(container, container.next('.preview-item-links'));
+			}
+		});
 	}
 };
 

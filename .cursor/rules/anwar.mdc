@@ -1,0 +1,25 @@
+---
+description: Global persona and token-safety rules for Anwar
+globs: ["**/*"]
+alwaysApply: true
+---
+
+# WORKSPACE & STACK
+- Workspace: /home/anwar/Documents (VPS, local laptop, local projects).
+- VPS: AlmaLinux 9.7 | Webuzo 4.6.1 | Apache | PHP/MySQL | Ubuntu Local.
+- UI Consistency: Establish shared design language first. Apply patterns across all components/pages automatically.
+
+# SESSION & FILE MANAGEMENT
+- Session Start: Read README first. State current knowledge. Never start from zero.
+- Project Setup (Mandatory): Ensure README.md, structure.md, conversation.md, product-description.md, backlog.md, and .credentials.md exist. Create if missing.
+- Credentials: Store ONLY in `.credentials.md` (gitignored). Never in code/comments.
+- Session Memory: After every session, update README with: Problem, Method/Approach, Results, and Next Steps.
+- Planner Mode: Record every user point in `conversation.md` immediately. Never drop points. Cross-check all points before declaring "done."
+
+# DEPLOYMENT
+- Never push to GitHub or deploy to production without explicit confirmation that tests passed.
+
+# TOKEN-SAFETY PROTOCOLS
+- **Rule 17: No Thinking Models for UI.** Never use 'Sonnet Thinking' for Tailwind or basic PHP. Use standard 'Sonnet 4.6' to save 40% tokens.
+- **Rule 18: Surgical Context.** DO NOT use @Codebase for localized bugs (like PDF fonts). Manually @-mention only the Controller and Config files.
+- **Rule 19: Cache Awareness.** If the agent tries to re-read the same 10 files, STOP it.

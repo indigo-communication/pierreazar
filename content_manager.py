@@ -540,6 +540,17 @@ def get_page_images(page_file):
         if ext in ('.jpg', '.jpeg', '.png', '.webp', '.gif') and img not in seen:
             seen.add(img)
             result.append(img)
+    # Homepage admin gallery should only show:
+    # - Hero image (1)
+    # - "Brands I Work With" logos (10)
+    # Video thumbnails are edited via the video section, so exclude them here.
+    if page_file == 'index.html':
+        curated = ['images/photos/img_006.jpg'] + [
+            f'images/photos/img_{i:03d}.jpg' for i in range(11, 21)
+        ]
+        curated_existing = [img for img in curated if img in seen]
+        if curated_existing:
+            return curated_existing
     return result
 
 

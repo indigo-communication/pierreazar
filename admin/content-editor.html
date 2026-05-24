@@ -312,6 +312,7 @@
 
                                 <!-- IMAGES -->
                                 <span class="section-label">&#128247; Images</span>
+                                <p class="text-muted small mb-2">This section shows only homepage visual images: 1 Hero image and 10 Brand I Work With images. Video thumbnails are managed in the Videos section above.</p>
                                 <div id="img-status-homepage" class="img-upload-status"></div>
                                 <div id="img-gallery-homepage"><p class="text-muted small py-2">Loading…</p></div>
 
@@ -576,6 +577,19 @@ var PAGE_VIDEO_FIELDS = {
     onset: [],
     contact: []
 };
+var HOMEPAGE_IMAGE_LABELS = {
+    'photos/img_006.jpg': 'Hero Image',
+    'photos/img_011.jpg': 'Brand I Work With #1',
+    'photos/img_012.jpg': 'Brand I Work With #2',
+    'photos/img_013.jpg': 'Brand I Work With #3',
+    'photos/img_014.jpg': 'Brand I Work With #4',
+    'photos/img_015.jpg': 'Brand I Work With #5',
+    'photos/img_016.jpg': 'Brand I Work With #6',
+    'photos/img_017.jpg': 'Brand I Work With #7',
+    'photos/img_018.jpg': 'Brand I Work With #8',
+    'photos/img_019.jpg': 'Brand I Work With #9',
+    'photos/img_020.jpg': 'Brand I Work With #10'
+};
 
 // Tracks which portfolio indices are dynamic (deletable)
 var _dynamicPortfolioIndices = [];
@@ -813,9 +827,16 @@ function loadPageImages(page) {
                 var key      = folder + '/' + filename;
                 var url      = '/' + imgPath;
                 var safeId   = 'imgcard-' + page + '-' + key.replace(/[^a-zA-Z0-9]/g,'-');
+                var label    = filename;
+                if (page === 'homepage' && HOMEPAGE_IMAGE_LABELS[key]) {
+                    label = HOMEPAGE_IMAGE_LABELS[key];
+                }
                 html += '<div class="img-card" id="' + escH(safeId) + '">';
-                html += '<img src="' + escH(url) + '?t=' + Date.now() + '" alt="' + escH(filename) + '" loading="lazy">';
-                html += '<div class="img-name" title="' + escH(filename) + '">' + escH(filename) + '</div>';
+                html += '<img src="' + escH(url) + '?t=' + Date.now() + '" alt="' + escH(label) + '" loading="lazy">';
+                html += '<div class="img-name" title="' + escH(filename) + '">' + escH(label) + '</div>';
+                if (label !== filename) {
+                    html += '<div class="video-meta">' + escH(filename) + '</div>';
+                }
                 html += '<button type="button" class="replace-btn" onclick="triggerReplace(' + escH(JSON.stringify(key)) + ',' + escH(JSON.stringify(safeId)) + ',' + escH(JSON.stringify(page)) + ')">Replace</button>';
                 html += '</div>';
             });

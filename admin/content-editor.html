@@ -53,6 +53,8 @@
         .video-item img { width:100%; height:120px; object-fit:cover; border-radius:6px; border:1px solid rgba(255,255,255,.08); margin-bottom:8px; background:#111; }
         .video-meta { font-size:.72rem; color:#888; margin-top:6px; }
         .video-meta.warn { color:#ffb74d; }
+        .thumb-placeholder { width:100%; height:120px; border-radius:6px; border:1.5px dashed rgba(255,255,255,.15); background:rgba(255,255,255,.03); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; margin-bottom:8px; color:rgba(255,255,255,.25); }
+        .thumb-placeholder span { font-size:.72rem; letter-spacing:.05em; }
         .section-card { border:1px solid rgba(255,255,255,.07); border-radius:8px; background:rgba(255,255,255,.03); padding:12px; margin-bottom:14px; }
         .preview-link { font-size:.78rem; color:#777; text-decoration:none; }
         .preview-link:hover { color:#fff; }
@@ -187,7 +189,7 @@
 
                         <div class="page-btn" data-page="onset" onclick="switchPage('onset')">
                             <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="8" x2="12" y2="16" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"/><line x1="8" y1="12" x2="16" y2="12" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            <span class="page-name">Onset Experience</span>
+                            <span class="page-name">Cinematography Workshop</span>
                             <span class="page-url">/onset-experience</span>
                         </div>
 
@@ -493,16 +495,16 @@
                         </div>
                     </div><!-- /course -->
 
-                    <!-- ────────── ONSET EXPERIENCE ────────── -->
+                    <!-- ────────── CINEMATOGRAPHY WORKSHOP (ONSET URL) ────────── -->
                     <div class="page-panel" id="panel-onset">
                         <div class="card">
                             <div class="card-header d-flex align-items-center justify-content-between">
-                                <h5 class="mb-0">Onset Experience Page</h5>
+                                <h5 class="mb-0">Cinematography Workshop Page</h5>
                                 <a href="https://pierreazar.com/onset-experience.html" target="_blank" class="preview-link">&#128279; Preview live page</a>
                             </div>
                             <div class="card-body">
                                 <span class="section-label">&#128247; Page Images</span>
-                                <p class="text-muted small">Replace any image used on the Onset Experience page.</p>
+                                <p class="text-muted small">Replace the workshop hero image.</p>
                                 <div id="img-status-onset" class="img-upload-status"></div>
                                 <div id="img-gallery-onset"><p class="text-muted small py-2">Loading…</p></div>
                                 <span class="section-label">&#128240; Header &amp; Titles</span>
@@ -526,7 +528,7 @@
                             </div>
                             <div class="card-body">
                                 <span class="section-label">&#128247; Page Images</span>
-                                <p class="text-muted small">Replace any image used on the Contact page.</p>
+                                <p class="text-muted small">No standalone replaceable image on this page.</p>
                                 <div id="img-status-contact" class="img-upload-status"></div>
                                 <div id="img-gallery-contact"><p class="text-muted small py-2">Loading…</p></div>
                                 <span class="section-label">&#128240; Header &amp; Titles</span>
@@ -589,6 +591,45 @@ var HOMEPAGE_IMAGE_LABELS = {
     'photos/img_018.jpg': 'Brand I Work With #8',
     'photos/img_019.jpg': 'Brand I Work With #9',
     'photos/img_020.jpg': 'Brand I Work With #10'
+};
+var PAGE_IMAGE_LABELS = {
+    homepage: HOMEPAGE_IMAGE_LABELS,
+    portfolio: {
+        'photos/img_028.jpg': 'Hero Image'
+    },
+    course: {
+        'photos/img_040.jpg': 'Icon #1',
+        'photos/img_041.jpg': 'Icon #2',
+        'photos/img_042.jpg': 'Icon #3',
+        'photos/img_043.jpg': 'Icon #4'
+    },
+    onset: {
+        'photos/img_030.jpg': 'Hero Image'
+    }
+};
+var PAGE_IMAGE_FILES = {
+    homepage: [
+        'images/photos/img_006.jpg',
+        'images/photos/img_011.jpg',
+        'images/photos/img_012.jpg',
+        'images/photos/img_013.jpg',
+        'images/photos/img_014.jpg',
+        'images/photos/img_015.jpg',
+        'images/photos/img_016.jpg',
+        'images/photos/img_017.jpg',
+        'images/photos/img_018.jpg',
+        'images/photos/img_019.jpg',
+        'images/photos/img_020.jpg'
+    ],
+    portfolio: ['images/photos/img_028.jpg'],
+    course: [
+        'images/photos/img_040.jpg',
+        'images/photos/img_041.jpg',
+        'images/photos/img_042.jpg',
+        'images/photos/img_043.jpg'
+    ],
+    onset: ['images/photos/img_030.jpg'],
+    contact: []
 };
 
 // Tracks which portfolio indices are dynamic (deletable)
@@ -814,12 +855,32 @@ function loadPageImages(page) {
     fetch('/api/page-images?page=' + encodeURIComponent(pageFile), { credentials: 'include' })
         .then(function(r){ if(r.status===401){ window.location.href='login.html'; return null; } return r.json(); })
         .then(function(d){
-            if (!d || !d.ok || !d.images || d.images.length === 0) {
+            if (!d || !d.ok) {
+                container.innerHTML = '<p class="text-danger small">Failed to load images.</p>';
+                return;
+            }
+
+            var images = Array.isArray(d.images) ? d.images.slice() : [];
+
+            // Enforce exact per-page image cards in admin UI (prevents stale/extra API
+            // results from showing wrong replace targets).
+            if (Object.prototype.hasOwnProperty.call(PAGE_IMAGE_FILES, page)) {
+                var fixed = PAGE_IMAGE_FILES[page];
+                if (fixed.length === 0) {
+                    container.innerHTML = '<p class="text-muted small">No images found for this page.</p>';
+                    return;
+                }
+                // Always enforce the exact curated list for this page.
+                // Do not rely on API image discovery to avoid missing hero/assets.
+                images = fixed.slice();
+            }
+
+            if (images.length === 0) {
                 container.innerHTML = '<p class="text-muted small">No images found for this page.</p>';
                 return;
             }
             var html = '<div class="img-grid">';
-            d.images.forEach(function(imgPath){
+            images.forEach(function(imgPath){
                 // imgPath like "images/photos/img_001.jpg"
                 var parts    = imgPath.split('/');
                 var folder   = parts[1];           // "photos"
@@ -827,10 +888,8 @@ function loadPageImages(page) {
                 var key      = folder + '/' + filename;
                 var url      = '/' + imgPath;
                 var safeId   = 'imgcard-' + page + '-' + key.replace(/[^a-zA-Z0-9]/g,'-');
-                var label    = filename;
-                if (page === 'homepage' && HOMEPAGE_IMAGE_LABELS[key]) {
-                    label = HOMEPAGE_IMAGE_LABELS[key];
-                }
+                var labelMap = PAGE_IMAGE_LABELS[page] || {};
+                var label    = labelMap[key] || filename;
                 html += '<div class="img-card" id="' + escH(safeId) + '">';
                 html += '<img src="' + escH(url) + '?t=' + Date.now() + '" alt="' + escH(label) + '" loading="lazy">';
                 html += '<div class="img-name" title="' + escH(filename) + '">' + escH(label) + '</div>';
@@ -864,12 +923,17 @@ function loadPageVideos(page) {
                 var thumbField = v.thumbnail_field || '';
                 html += '<div class="video-item">';
                 html += '<h6>' + escH(label) + '</h6>';
-                html += '<img src="' + escH(thumb || '/images/backgrounds/1.jpg') + '?t=' + Date.now() + '" alt="' + escH(label) + ' thumbnail">';
+                if (thumb) {
+                    html += '<img src="' + escH(thumb) + '?t=' + Date.now() + '" alt="' + escH(label) + ' thumbnail">';
+                } else {
+                    html += '<div class="thumb-placeholder"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7h2l2-3h10l2 3h2a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5" stroke-linecap="round"/></svg><span>No thumbnail</span></div>';
+                }
                 html += '<div class="video-meta">Video link: ' + escH(v.value || 'Not set') + '</div>';
                 html += '<div class="input-group input-group-sm">';
                 var uploadPath = v.upload_path || v.thumbnail || '';
                 html += '<input type="text" class="form-control" id="' + escH(thumbField) + '" value="' + escH(v.thumbnail || '') + '" data-upload-path="' + escH(uploadPath) + '" placeholder="images/photos/your-thumb.jpg">';
                 html += '<button class="btn btn-outline-light" type="button" onclick="triggerVideoThumbReplace(' + escH(JSON.stringify(thumbField)) + ',' + escH(JSON.stringify(page)) + ')">Replace Thumb</button>';
+                html += '<button class="btn btn-outline-danger" type="button" onclick="deleteVideoThumb(' + escH(JSON.stringify(thumbField)) + ',' + escH(JSON.stringify(page)) + ')">Delete Thumb</button>';
                 html += '</div>';
                 if (!v.thumbnail) html += '<div class="video-meta warn">No thumbnail set. Add one now.</div>';
                 else if (v.thumbnail_conflict) html += '<div class="video-meta warn">Thumbnail is shared by multiple videos. Upload uses a dedicated file automatically.</div>';
@@ -989,6 +1053,37 @@ function uploadVideoThumb(targetPath, page, file, thumbField) {
             });
         })
         .catch(function(){ showVideoStatus(page, false, 'Network error during upload'); });
+}
+
+function deleteVideoThumb(thumbField, page) {
+    if (!confirm('Delete this thumbnail from the video card?')) return;
+    var payload = {};
+    payload[thumbField] = '';
+    showVideoStatus(page, true, 'Deleting thumbnail...');
+    fetch('/api/content', {
+        method:'POST',
+        credentials:'include',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(function(r){ if(r.status===401){ window.location.href='login.html'; return null; } return r.json(); })
+    .then(function(d){
+        if (!d) return;
+        if (d.ok) {
+            var inputEl = document.getElementById(thumbField);
+            if (inputEl) {
+                inputEl.value = '';
+                inputEl.setAttribute('data-upload-path', '');
+            }
+            showVideoStatus(page, true, 'Thumbnail deleted.');
+            loadPageVideos(page);
+        } else {
+            showVideoStatus(page, false, (d.error || (d.errors || []).join(', ')) || 'Delete failed');
+        }
+    })
+    .catch(function(){
+        showVideoStatus(page, false, 'Network error during delete');
+    });
 }
 
 function showVideoStatus(page, ok, msg) {

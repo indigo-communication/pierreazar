@@ -540,18 +540,38 @@ def get_page_images(page_file):
         if ext in ('.jpg', '.jpeg', '.png', '.webp', '.gif') and img not in seen:
             seen.add(img)
             result.append(img)
-    # Homepage admin gallery should only show:
-    # - Hero image (1)
-    # - "Brands I Work With" logos (10)
-    # Video thumbnails are edited via the video section, so exclude them here.
-    if page_file == 'index.html':
-        curated = ['images/photos/img_006.jpg'] + [
+    # Strict per-page curation for admin image galleries.
+    # This keeps only intentionally editable visual assets and avoids
+    # showing lightbox/ui helper images as "extra" replace items.
+    curated_by_page = {
+        # Homepage: 1 hero + 10 "Brands I Work With" logos.
+        'index.html': ['images/photos/img_006.jpg'] + [
             f'images/photos/img_{i:03d}.jpg' for i in range(11, 21)
-        ]
-        curated_existing = [img for img in curated if img in seen]
-        if curated_existing:
-            return curated_existing
-    return result
+        ],
+        # Portfolio: page hero image only (video thumbnails handled in Videos).
+        'portfolio.html': ['images/photos/img_028.jpg'],
+        # Cinematography course setup panel: 4 feature icons only.
+        'cinematography-course.html': [
+            'images/photos/img_040.jpg',
+            'images/photos/img_041.jpg',
+            'images/photos/img_042.jpg',
+            'images/photos/img_043.jpg',
+        ],
+        # Onset experience page: hero image only.
+        'onset-experience.html': ['images/photos/img_030.jpg'],
+        # Contact page: no standalone replaceable images.
+        'get-in-touch.html': [],
+    }
+    if page_file in curated_by_page:
+        curated = curated_by_page[page_file]
+        return [img for img in curated if img in seen]
+
+    # Fallback for any future page: exclude video thumbs from image gallery.
+    video_thumbs = {
+        v.get('thumbnail') for v in get_page_videos(page_file)
+        if v.get('thumbnail')
+    }
+    return [img for img in result if img not in video_thumbs]
 
 
 def get_page_videos(page_file):
@@ -658,6 +678,18 @@ def _set_inline_image_path(content, element_id, img_path):
     return replaced if count else content
 
 
+def _clear_inline_image_path(content, element_id):
+    tag_pattern = r'<div id="' + re.escape(element_id) + r'"[^>]*>'
+
+    def rebuild_tag(match):
+        tag = match.group(0)
+        cleaned = re.sub(r'\s+style="[^"]*"', '', tag.rstrip('>'))
+        return cleaned + ' style="">'
+
+    replaced, count = re.subn(tag_pattern, rebuild_tag, content, count=1, flags=re.DOTALL)
+    return replaced if count else content
+
+
 def _set_video_thumbnail_paths(content, element_id, img_path):
     """Update inline preview image and the nearest data-bgimg on the same portfolio item."""
     if not img_path:
@@ -679,6 +711,26 @@ def _set_video_thumbnail_paths(content, element_id, img_path):
     abs_start = chunk_start + last.start(1)
     abs_end = chunk_start + last.end(1)
     return content[:abs_start] + normalized + content[abs_end:]
+
+
+def _clear_video_thumbnail_paths(content, element_id):
+    """Clear inline preview image and nearest data-bgimg value for a video card."""
+    content = _clear_inline_image_path(content, element_id)
+
+    marker = f'id="{element_id}"'
+    pos = content.find(marker)
+    if pos == -1:
+        return content
+
+    chunk_start = max(0, pos - 4000)
+    chunk = content[chunk_start:pos]
+    bgimg_matches = list(re.finditer(r'data-bgimg="([^"]*)"', chunk))
+    if not bgimg_matches:
+        return content
+    last = bgimg_matches[-1]
+    abs_start = chunk_start + last.start(1)
+    abs_end = chunk_start + last.end(1)
+    return content[:abs_start] + '' + content[abs_end:]
 
 
 def _extract_video_src(content, element_id):
@@ -987,13 +1039,17 @@ def save_content(data):
             )
 
     for thumb_field, (page, thumb_id) in THUMBNAIL_FIELDS.items():
-        if thumb_field in data and str(data[thumb_field]).strip():
+        if thumb_field in data:
             requested = str(data[thumb_field]).strip()
-            thumb_path = resolve_video_thumbnail_save(
-                thumb_field, requested, pages[page], page,
-            )
-            pages[page] = _set_video_thumbnail_paths(pages[page], thumb_id, thumb_path)
-            _update_dynamic_item_thumb(thumb_field, thumb_path)
+            if requested:
+                thumb_path = resolve_video_thumbnail_save(
+                    thumb_field, requested, pages[page], page,
+                )
+                pages[page] = _set_video_thumbnail_paths(pages[page], thumb_id, thumb_path)
+                _update_dynamic_item_thumb(thumb_field, thumb_path)
+            else:
+                pages[page] = _clear_video_thumbnail_paths(pages[page], thumb_id)
+                _update_dynamic_item_thumb(thumb_field, '')
 
     # ── Course page ──────────────────────────────────────────────────────────
     if 'course_price' in data:

@@ -6,6 +6,7 @@ import json
 import os
 import re
 import random
+import shutil
 import string
 
 BASE = os.path.dirname(os.path.abspath(__file__))
@@ -42,46 +43,186 @@ THUMBNAIL_FIELDS = {
     for field, (page, _video_id, thumb_id) in VIDEO_FIELDS.items()
 }
 
-# ── Dynamic portfolio items (added via admin "Add Video") ──────────────────
+# First item in the main portfolio video grid (do NOT use the generic #items-holder —
+# portfolio.html contains three of those; only this anchor is the featured grid).
+PORTFOLIO_GRID_ANCHOR = 'vbid-5582618c-fadru3ag'
 PORTFOLIO_DYNAMIC_FILE = os.path.join(BASE, 'data', 'portfolio_dynamic.json')
 
-# Minimal HTML template for a dynamically-added portfolio item.
-# Uses the same style classes as existing items so it inherits all CSS.
-_PORTFOLIO_ITEM_TPL = (
-    '<div id="{WRAPPER_ID}" class="sub item-box  page-box style-5582618c-u4ta6ilj" '
-    'data-holder-type="page" data-child-type="STYLE" data-styleid="style-5582618c-u4ta6ilj" '
-    'data-preview-styleid="style-5582618c-u4ta6ilj" data-preset-type-id="UNRESOLVED">'
-    '<div class="page-wrapper item-wrapper">'
-    '<div class="item-content leaf multi_layout page content -container" '
-    'data-self="{WRAPPER_ID}" data-preview-style="style-5582618c-u4ta6ilj" '
-    'data-style="style-ed018-yjvbvfoyx6" data-orig-thumb-height="344" '
-    'data-orig-thumb-width="489" data-vbid="{WRAPPER_ID}" data-bgimg="{THUMB}">'
-    '<div class="multi-container preview image-cover">'
-    '<div class="Picture item-preview"><div class="preview-image-holder">'
-    '<div id="no-image" class="background-image-div preview-element image-source '
-    'magic-circle-holder unfold-left load-high-res" data-menu-name="BACKGROUND_IMAGE" style=""></div>'
-    '<div class="helper-div bottom-center"><div class="pic-side"><div class="vertical-aligner">'
-    '<div id="{IMG_ID}-holder" class="preview-image-holder inner-pic-holder" '
-    'data-menu-name="PREVIEW_INLINE_IMAGE_HOLDER">'
-    '<a class="image-link top-layer not-wrapping" href="#{WRAPPER_ID}" '
-    'data-link-type="LIGHTBOX" target="_self"></a>'
-    '<div id="{IMG_ID}" class="inner-pic preview-element magic-circle-holder load-high-res" '
-    'data-menu-name="PREVIEW_INLINE_IMAGE" '
-    'style="background-image:url({THUMB});" data-orig-width="489" data-orig-height="344">'
-    '<div class="preview-video-holder removable-parent">'
-    '<div id="{VIDEO_ID}" class="preview-element preview-video-source magic-circle-holder '
-    'vid-cover allow-mobile-hide" data-menu-name="PREVIEW_VIDEO" data-json-name="PREVIEW_VIDEO" '
-    'data-spimeTEXT=\'{VID}\' data-spimeVIDEO_ID=\'{VID}\' data-spimeVID_COVER=\'True\' '
-    'data-spimeSOURCE=\'{SOURCE}\' data-spimeCONTEXT=\'PREVIEW\' data-spimeVBID=\'{VIDEO_ID}\'>'
-    '<iframe class="{IFRAME_CLASS} preview video-frame" id="{VIDEO_ID}-vidframe" '
-    'src="{IFRAME_SRC}" frameborder="0" width="100%" height="100%"></iframe>'
-    '</div></div></div></div></div></div></div></div></div>'
-    '<div class="text-side shrinker-parent"><div class="vertical-aligner">'
-    '<div class="item-details preview-content-wrapper multi" style="position:relative;">'
-    '<div class="preview-content-holder shrinker-content"></div></div></div></div>'
-    '</div></div></div></div>'
-    '<div class="layout-settings" style="display:none;" data-type="multi"></div>'
-)
+def _build_portfolio_item_html(wrapper_id, video_id, img_id, source, vid,
+                               iframe_src, iframe_class, thumb_path):
+    """Build portfolio grid item HTML — nesting must match static items for matrix layout."""
+    return (
+        f'<div id="{wrapper_id}" class="sub item-box  page-box style-5582618c-u4ta6ilj" '
+        f'data-holder-type="page" data-child-type="STYLE" data-styleid="style-5582618c-u4ta6ilj" '
+        f'data-preview-styleid="style-5582618c-u4ta6ilj" data-preset-type-id="UNRESOLVED">\n'
+        f'\t\t\t<div class="page-wrapper item-wrapper">\n'
+        f'\t\t\t\t\t<div class="item-content leaf multi_layout page content -container" '
+        f'data-self="{wrapper_id}" data-preview-style="style-5582618c-u4ta6ilj" '
+        f'data-style="style-ed018-yjvbvfoyx6" data-orig-thumb-height="344" '
+        f'data-orig-thumb-width="489" data-vbid="{wrapper_id}" data-bgimg="{thumb_path}">\n'
+        f'<div class="multi-container preview image-cover">\n'
+        f'\t<div class="Picture item-preview">\n'
+        f'\t\t<div class="preview-image-holder">\n'
+        f'\t\t\t<div id="no-image" class="background-image-div preview-element image-source '
+        f'magic-circle-holder unfold-left load-high-res" data-menu-name="BACKGROUND_IMAGE" style=""></div>\n'
+        f'\t\t\t<div class="helper-div bottom-center">\n'
+        f'\t\t\t<div class="pic-side">\n'
+        f'\t\t\t\t<div class="vertical-aligner">\n'
+        f'\t\t\t\t\t<div id="{img_id}-holder" class="preview-image-holder inner-pic-holder" '
+        f'data-menu-name="PREVIEW_INLINE_IMAGE_HOLDER">\n'
+        f'    <a class="image-link top-layer not-wrapping" href="#{wrapper_id}" '
+        f'data-link-type="LIGHTBOX" target="_self"></a>\n'
+        f'    <div id="{img_id}" class="inner-pic preview-element magic-circle-holder load-high-res" '
+        f'data-menu-name="PREVIEW_INLINE_IMAGE" style="background-image:url({thumb_path});" '
+        f'data-orig-width="489" data-orig-height="344">\n'
+        f'<div class="preview-video-holder removable-parent">\n'
+        f'\t<div id="{video_id}" class="preview-element preview-video-source magic-circle-holder '
+        f'vid-cover allow-mobile-hide" data-menu-name="PREVIEW_VIDEO" data-json-name="PREVIEW_VIDEO" '
+        f'data-spimeTEXT=\'{vid}\' data-spimeVIDEO_ID=\'{vid}\' data-spimeVID_COVER=\'True\' '
+        f'data-spimeSOURCE=\'{source}\' data-spimeCONTEXT=\'PREVIEW\' data-spimeVBID=\'{video_id}\'>\n'
+        f'\t\t<iframe class="{iframe_class} preview video-frame" id="{video_id}-vidframe" '
+        f'src="{iframe_src}" frameborder="0" width="100%" height="100%"></iframe>\n'
+        f'\t</div>\n'
+        f'</div>\n'
+        f'    </div>\n'
+        f'</div>\n'
+        f'\t\t\t\t</div>\n'
+        f'\t\t\t</div>\n'
+        f'\t\t\t\t<div class="text-side shrinker-parent">\n'
+        f'\t\t\t\t\t<div class="vertical-aligner">\n'
+        f'\t\t\t\t\t\t<div class="item-details preview-content-wrapper multi" style="position:relative;">\n'
+        f'\t\t\t\t\t\t\t<div class="preview-content-holder shrinker-content"></div>\n'
+        f'\t\t\t\t\t\t</div>\n'
+        f'\t\t\t\t\t</div>\n'
+        f'\t\t\t\t</div>\n'
+        f'\t\t\t</div>\n'
+        f'\t\t</div>\n'
+        f'\t</div>\n'
+        f'</div>\n'
+        f'</div>\n'
+        f'\n'
+        f'<div class="layout-settings" style="display:none;" data-type="multi"></div>\n'
+        f'\t\t\t\t\t\n'
+        f'\t\t\t</div>\n'
+        f'\t\t</div>\n'
+    )
+
+
+def _iframe_parts(source, video_id, vid):
+    if source == 'youtube':
+        params = 'enablejsapi=1&rel=0&modestbranding=1&playsinline=1&autoplay=0&mute=0&loop=0&controls=1'
+        return (
+            f'https://www.youtube.com/embed/{vid}?{params}',
+            'ytplayer',
+        )
+    return (
+        f'https://player.vimeo.com/video/{vid}?api=1&player_id={video_id}-vidframe',
+        'vimplayer',
+    )
+
+
+def _remove_portfolio_block(portfolio, wrapper_id):
+    wid = re.escape(wrapper_id)
+    patterns = [
+        # Full block — always remove wrapper + page-wrapper closing tags
+        (
+            r'<div id="' + wid + r'"[^>]*>.*?'
+            r'<div class="layout-settings"[^>]*data-type="multi"[^>]*></div>\s*'
+            r'(?:\t*\n)?\t*\t*\t*\t*\n?\t*\t*\t*</div>\s*'
+            r'(?:\t*\n)?\t*\t*</div>'
+        ),
+        # Legacy one-line blocks (malformed nesting)
+        (
+            r'<div id="' + wid + r'"[^>]*>.*?'
+            r'<div class="layout-settings"[^>]*data-type="multi"[^>]*></div>'
+        ),
+    ]
+    for pattern in patterns:
+        new_portfolio, n = re.subn(pattern, '', portfolio, count=1, flags=re.DOTALL)
+        if n:
+            return repair_portfolio_featured_grid_structure(new_portfolio)
+    raise RuntimeError(f'Could not find wrapper block for {wrapper_id} in portfolio.html')
+
+
+def repair_portfolio_featured_grid_structure(portfolio=None):
+    """
+    Fix featured portfolio grid when #items-holder was closed early (after a bad delete).
+    Removes orphan closes between items-holder open and the first static grid item.
+    """
+    if portfolio is None:
+        portfolio = _read('portfolio.html')
+        write_back = True
+    else:
+        write_back = False
+
+    anchor_markers = (
+        f'<div  id="{PORTFOLIO_GRID_ANCHOR}"',
+        f'<div id="{PORTFOLIO_GRID_ANCHOR}"',
+    )
+    anchor_pos = -1
+    for marker in anchor_markers:
+        pos = portfolio.find(marker)
+        if pos != -1:
+            anchor_pos = pos
+            break
+    if anchor_pos == -1:
+        if write_back:
+            return False
+        return portfolio
+
+    holder_open = '<div id="items-holder">'
+    holder_pos = portfolio.rfind(holder_open, 0, anchor_pos)
+    if holder_pos == -1:
+        if write_back:
+            return False
+        return portfolio
+
+    head = holder_pos + len(holder_open)
+    between = portfolio[head:anchor_pos]
+    cleaned = re.sub(
+        r'^\s*(?:</div>\s*){1,4}',
+        '',
+        between,
+        count=1,
+        flags=re.DOTALL,
+    )
+    if cleaned == between:
+        if write_back:
+            return False
+        return portfolio
+
+    portfolio = portfolio[:head] + cleaned + portfolio[anchor_pos:]
+    if write_back:
+        _write('portfolio.html', portfolio)
+    return portfolio
+
+
+def repair_portfolio_dynamic_blocks():
+    """Rebuild all dynamic portfolio items with correct HTML structure."""
+    items = _load_dynamic_items()
+    if not items:
+        return 0
+    portfolio = _read('portfolio.html')
+    thumbs = {}
+    for item in items:
+        thumbs[item['wrapper_id']] = (
+            item.get('thumb')
+            or _extract_inline_image_path(portfolio, item['img_id'])
+            or 'images/photos/img_028.jpg'
+        )
+        portfolio = _remove_portfolio_block(portfolio, item['wrapper_id'])
+    blocks = []
+    for item in sorted(items, key=lambda x: x['index'], reverse=True):
+        thumb = thumbs[item['wrapper_id']]
+        iframe_src, iframe_class = _iframe_parts(item['source'], item['video_id'], item['vid'])
+        blocks.append(_build_portfolio_item_html(
+            item['wrapper_id'], item['video_id'], item['img_id'],
+            item['source'], item['vid'], iframe_src, iframe_class, thumb,
+        ))
+    insert = '\n'.join(blocks)
+    portfolio = _insert_portfolio_block(portfolio, insert)
+    _write('portfolio.html', portfolio)
+    return len(items)
 
 
 def _new_uid():
@@ -90,6 +231,117 @@ def _new_uid():
     a = ''.join(random.choices(chars, k=8))
     b = ''.join(random.choices(chars, k=8))
     return f'{a}-{b}'
+
+
+def _unique_portfolio_thumbnail(source_path='images/photos/img_028.jpg'):
+    """Copy source thumb to a new unique path so each video has its own thumbnail file."""
+    src = os.path.join(BASE, source_path.lstrip('/'))
+    while True:
+        name = f'images/photos/pa_dyn_{"".join(random.choices(string.ascii_lowercase + string.digits, k=8))}.jpg'
+        dst = os.path.join(BASE, name)
+        if not os.path.exists(dst):
+            break
+    if os.path.isfile(src):
+        shutil.copy2(src, dst)
+    return name
+
+
+def _count_video_thumb_usage(thumb_path, page_file=None, page_content=None):
+    """How many video slots on a page reference the same thumbnail path."""
+    if not thumb_path:
+        return 0
+    count = 0
+    for _field, (page, _video_id, thumb_id) in VIDEO_FIELDS.items():
+        if page_file and page != page_file:
+            continue
+        content = page_content if (page_content is not None and page == page_file) else _read(page)
+        if _extract_inline_image_path(content, thumb_id) == thumb_path:
+            count += 1
+    return count
+
+
+def dedicated_video_thumbnail_path(thumbnail_field, ext='.jpg'):
+    slug = thumbnail_field.replace('_thumbnail', '').replace('_', '-')
+    return f'images/photos/{slug}{ext}'
+
+
+def recommended_video_thumbnail_path(thumbnail_field):
+    """
+    Safe path for the next thumbnail upload.
+    If the current thumb file is shared by multiple videos, return a dedicated path
+    so uploading does not overwrite other videos' images.
+    """
+    if thumbnail_field not in THUMBNAIL_FIELDS:
+        return ''
+    page, thumb_id = THUMBNAIL_FIELDS[thumbnail_field]
+    content = _read(page)
+    current = _extract_inline_image_path(content, thumb_id)
+    if current and _count_video_thumb_usage(current, page, content) <= 1:
+        return current
+    ext = os.path.splitext(current or '.jpg')[1] or '.jpg'
+    return dedicated_video_thumbnail_path(thumbnail_field, ext)
+
+
+def _copy_image_if_exists(src_rel, dst_rel):
+    src = os.path.join(BASE, src_rel.lstrip('/'))
+    dst = os.path.join(BASE, dst_rel.lstrip('/'))
+    if src == dst or not os.path.isfile(src):
+        return dst_rel
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    shutil.copy2(src, dst)
+    return dst_rel
+
+
+def resolve_video_thumbnail_save(thumbnail_field, requested_path, page_content, page_file):
+    """Pick a non-shared thumbnail path; copy uploaded bytes if we had to fork."""
+    requested = str(requested_path or '').strip()
+    if not requested:
+        return requested
+    if _count_video_thumb_usage(requested, page_file, page_content) <= 1:
+        return requested
+    dedicated = recommended_video_thumbnail_path(thumbnail_field)
+    return _copy_image_if_exists(requested, dedicated)
+
+
+def _update_dynamic_item_thumb(thumbnail_field, thumb_path):
+    m = re.match(r'portfolio_video_(\d+)_thumbnail$', thumbnail_field)
+    if not m:
+        return
+    index = int(m.group(1))
+    if index < 9:
+        return
+    items = _load_dynamic_items()
+    updated = False
+    for item in items:
+        if item.get('index') == index:
+            item['thumb'] = thumb_path
+            updated = True
+            break
+    if updated:
+        _save_dynamic_items(items)
+
+
+def assign_unique_thumbnails_for_dynamic_items():
+    """Give each dynamic portfolio video its own thumbnail file (fixes shared-thumb warning)."""
+    items = _load_dynamic_items()
+    if not items:
+        return 0
+    portfolio = _read('portfolio.html')
+    changed = 0
+    for item in items:
+        field = f'portfolio_video_{item["index"]}_thumbnail'
+        dedicated = dedicated_video_thumbnail_path(field)
+        current = _extract_inline_image_path(portfolio, item['img_id'])
+        src = current or item.get('thumb') or 'images/photos/img_028.jpg'
+        if not os.path.isfile(os.path.join(BASE, dedicated.lstrip('/'))):
+            _copy_image_if_exists(src, dedicated)
+        portfolio = _set_video_thumbnail_paths(portfolio, item['img_id'], dedicated)
+        item['thumb'] = dedicated
+        changed += 1
+    if changed:
+        _write('portfolio.html', portfolio)
+        _save_dynamic_items(items)
+    return changed
 
 
 def _load_dynamic_items():
@@ -119,7 +371,20 @@ def _extend_video_fields():
 _extend_video_fields()
 
 
-def add_portfolio_video(video_url, thumb_path='images/photos/img_028.jpg'):
+def _insert_portfolio_block(portfolio, html_block):
+    """Insert a new portfolio item at the top-left of the featured video grid."""
+    for anchor in (
+        f'<div  id="{PORTFOLIO_GRID_ANCHOR}"',
+        f'<div id="{PORTFOLIO_GRID_ANCHOR}"',
+    ):
+        if anchor in portfolio:
+            return portfolio.replace(anchor, html_block + '\n\t\t' + anchor, 1)
+    raise RuntimeError(
+        f'Could not locate portfolio grid anchor "{PORTFOLIO_GRID_ANCHOR}" in portfolio.html'
+    )
+
+
+def add_portfolio_video(video_url, thumb_path=None):
     """
     Insert a new portfolio video at the TOP of portfolio.html.
     Returns the new field name (e.g. 'portfolio_video_9').
@@ -135,29 +400,20 @@ def add_portfolio_video(video_url, thumb_path='images/photos/img_028.jpg'):
     video_id   = f'pa-vid-{_new_uid()}'
     img_id     = f'pa-img-{_new_uid()}'
 
-    if source == 'youtube':
-        params = 'enablejsapi=1&rel=0&modestbranding=1&playsinline=1&autoplay=0&mute=0&loop=0&controls=1'
-        iframe_src   = f'https://www.youtube.com/embed/{vid}?{params}'
-        iframe_class = 'ytplayer'
-    else:
-        iframe_src   = f'https://player.vimeo.com/video/{vid}?api=1&player_id={video_id}-vidframe'
-        iframe_class = 'vimplayer'
+    if not thumb_path:
+        thumb_path = dedicated_video_thumbnail_path(f'portfolio_video_{next_index}_thumbnail')
+        _copy_image_if_exists('images/photos/img_028.jpg', thumb_path)
 
-    html_block = _PORTFOLIO_ITEM_TPL.format(
-        WRAPPER_ID=wrapper_id, VIDEO_ID=video_id, IMG_ID=img_id,
-        VID=vid, SOURCE=source, IFRAME_CLASS=iframe_class,
-        IFRAME_SRC=iframe_src, THUMB=thumb_path,
+    iframe_src, iframe_class = _iframe_parts(source, video_id, vid)
+
+    html_block = _build_portfolio_item_html(
+        wrapper_id, video_id, img_id, source, vid,
+        iframe_src, iframe_class, thumb_path,
     )
 
-    # Insert right after opening of #items-holder
+    # Insert at top of the featured portfolio grid (not the first #items-holder on the page)
     portfolio = _read('portfolio.html')
-    if '<div id="items-holder">' not in portfolio:
-        raise RuntimeError('Could not locate #items-holder in portfolio.html')
-    portfolio = portfolio.replace(
-        '<div id="items-holder">',
-        '<div id="items-holder">\n' + html_block,
-        1
-    )
+    portfolio = _insert_portfolio_block(portfolio, html_block)
     _write('portfolio.html', portfolio)
 
     # Persist the new item (newest first in list → appears first in HTML)
@@ -168,6 +424,7 @@ def add_portfolio_video(video_url, thumb_path='images/photos/img_028.jpg'):
         'wrapper_id': wrapper_id,
         'source': source,
         'vid': vid,
+        'thumb': thumb_path,
     }
     items.append(new_item)
     _save_dynamic_items(items)
@@ -195,20 +452,15 @@ def delete_portfolio_video(index):
 
     # Remove HTML block by wrapper_id
     portfolio = _read('portfolio.html')
-    wrapper_id = target['wrapper_id']
-    # Match from the wrapper div to its paired layout-settings closing tag
-    pattern = (
-        r'<div id="' + re.escape(wrapper_id) + r'"[^>]*>.*?'
-        r'<div class="layout-settings"[^>]*data-type="multi"[^>]*></div>'
-    )
-    new_portfolio, n = re.subn(pattern, '', portfolio, count=1, flags=re.DOTALL)
-    if n == 0:
-        raise RuntimeError(f'Could not find wrapper block for {wrapper_id} in portfolio.html')
-    _write('portfolio.html', new_portfolio)
+    portfolio = _remove_portfolio_block(portfolio, target['wrapper_id'])
+    _write('portfolio.html', portfolio)
 
     # Remove from dynamic list
     items = [it for it in items if it['index'] != index]
     _save_dynamic_items(items)
+
+    # Fix grid nesting if delete left orphan closing tags
+    repair_portfolio_featured_grid_structure()
 
     # Unregister from runtime dicts
     field = f'portfolio_video_{index}'
@@ -319,6 +571,7 @@ def get_page_videos(page_file):
     for v in out:
         t = v.get('thumbnail') or ''
         v['thumbnail_conflict'] = bool(t and thumb_count.get(t, 0) > 1)
+        v['upload_path'] = recommended_video_thumbnail_path(v['thumbnail_field'])
     return out
 
 
@@ -383,17 +636,38 @@ def _set_inline_image_path(content, element_id, img_path):
     if not img_path:
         return content
     normalized = _normalize_image_path(img_path)
-    pattern = r'(<div id="' + re.escape(element_id) + r'"[^>]*style="[^"]*background-image:url\()([^)]+)(\)[^"]*")'
-    replaced = re.sub(pattern, lambda m: m.group(1) + normalized + m.group(3), content, flags=re.DOTALL)
-    if replaced != content:
-        return replaced
-    # if style missing, inject style attr
-    return re.sub(
-        r'(<div id="' + re.escape(element_id) + r'"[^>]*)(>)',
-        lambda m: m.group(1) + f' style="background-image:url({normalized});"' + m.group(2),
-        content,
-        count=1
-    )
+    tag_pattern = r'<div id="' + re.escape(element_id) + r'"[^>]*>'
+
+    def rebuild_tag(match):
+        tag = match.group(0)
+        cleaned = re.sub(r'\s+style="[^"]*"', '', tag.rstrip('>'))
+        return cleaned + f' style="background-image:url({normalized});">'
+
+    replaced, count = re.subn(tag_pattern, rebuild_tag, content, count=1, flags=re.DOTALL)
+    return replaced if count else content
+
+
+def _set_video_thumbnail_paths(content, element_id, img_path):
+    """Update inline preview image and the nearest data-bgimg on the same portfolio item."""
+    if not img_path:
+        return content
+    normalized = _normalize_image_path(img_path)
+    content = _set_inline_image_path(content, element_id, normalized)
+
+    marker = f'id="{element_id}"'
+    pos = content.find(marker)
+    if pos == -1:
+        return content
+
+    chunk_start = max(0, pos - 4000)
+    chunk = content[chunk_start:pos]
+    bgimg_matches = list(re.finditer(r'data-bgimg="([^"]*)"', chunk))
+    if not bgimg_matches:
+        return content
+    last = bgimg_matches[-1]
+    abs_start = chunk_start + last.start(1)
+    abs_end = chunk_start + last.end(1)
+    return content[:abs_start] + normalized + content[abs_end:]
 
 
 def _extract_video_src(content, element_id):
@@ -703,7 +977,12 @@ def save_content(data):
 
     for thumb_field, (page, thumb_id) in THUMBNAIL_FIELDS.items():
         if thumb_field in data and str(data[thumb_field]).strip():
-            pages[page] = _set_inline_image_path(pages[page], thumb_id, str(data[thumb_field]))
+            requested = str(data[thumb_field]).strip()
+            thumb_path = resolve_video_thumbnail_save(
+                thumb_field, requested, pages[page], page,
+            )
+            pages[page] = _set_video_thumbnail_paths(pages[page], thumb_id, thumb_path)
+            _update_dynamic_item_thumb(thumb_field, thumb_path)
 
     # ── Course page ──────────────────────────────────────────────────────────
     if 'course_price' in data:

@@ -10,7 +10,6 @@ CINEMATOGRAPHY WORKSHOP - Pierre_Azar</title>
 	
 	
 	
-		<script src="https://www.youtube.com/iframe_api"></script>
 		<!-- CSS -->
 		<style class='common-css'>
 
@@ -4730,19 +4729,79 @@ if(window.location.protocol != 'https:')
 
 /* Our injected YouTube column */
 #pa-video-col {
-    flex: 0 0 50%;
-    width: 50%;
-    height: 600px;
-    overflow: hidden;
-    position: relative;
-    order: 0;
-    margin-top: 40px;
+    flex: 0 0 50% !important;
+    width: 50% !important;
+    height: 600px !important;
+    overflow: visible !important;
+    position: relative !important;
+    order: 0 !important;
+    margin-top: 0 !important;
+    display: block !important;
+    transform: translateY(-25px);
 }
 #pa-video-col iframe {
+    position: absolute !important;
+    top: 0 !important; left: 0 !important;
+    width: 100% !important; height: 100% !important;
+    border: none !important;
+}
+#pa-course-iframe {
+    top: -32px !important;
+    height: calc(100% + 32px) !important;
+}
+#pa-video-col .pa-course-controls {
     position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    border: none;
+    right: 14px;
+    left: auto;
+    bottom: 14px;
+    z-index: 2147483647;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: flex-end;
+    max-width: calc(100% - 28px);
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 999px;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    padding: 6px;
+}
+#pa-video-col .pa-course-controls button {
+    background: rgba(0,0,0,.65);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.25);
+    border-radius: 999px;
+    font-size: 11px;
+    letter-spacing: .03em;
+    font-weight: 600;
+    line-height: 1;
+    padding: 8px 10px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .2s ease, border-color .2s ease;
+}
+#pa-video-col .pa-course-controls button:hover {
+    background: rgba(255,255,255,.16);
+    border-color: rgba(255,255,255,.4);
+}
+#pa-course-toggle-audio {
+    min-width: 84px;
+}
+@media (max-width: 768px) {
+  #pa-video-col .pa-course-controls {
+    right: 10px;
+    bottom: 10px;
+    gap: 4px;
+    padding: 5px;
+  }
+  #pa-video-col .pa-course-controls button {
+    padding: 7px 8px;
+    font-size: 10px;
+  }
+  #pa-course-toggle-audio {
+    min-width: 72px;
+  }
 }
 
 /* ── RIGHT: text column ── */
@@ -4758,11 +4817,13 @@ if(window.location.protocol != 'https:')
     padding-right: 10px !important;
     box-sizing: border-box !important;
     overflow-y: auto !important;
+    width: 50% !important;
 }
 #vbid-c1e000b4-ylaf0aoi .text-side .vertical-aligner {
     display: block !important;
     height: auto !important;
     min-height: 0 !important;
+    width: 100% !important;
 }
 
 /* Left-align text */
@@ -4892,7 +4953,7 @@ if(window.location.protocol != 'https:')
 		
 			<a class="removable-parent" href="/cinematography-course.html" data-link-type="EXISTING"   target="_self" >
 		
-			<span id="4df2acaf"  class="preview-element Link item-link magic-circle-holder text-element custom" data-menu-name="PREVIEW_LINK" >ON-SET EXPERIENCE</span>
+			<span id="4df2acaf"  class="preview-element Link item-link magic-circle-holder text-element custom" data-menu-name="PREVIEW_LINK" >CINEMATOGRAPHY WORKSHOP</span>
 			</a>
 	
 		</li>
@@ -5122,7 +5183,7 @@ if(window.location.protocol != 'https:')
 												<br class="upper-line-break" />
 <div class="blocks-preview-subtitle-holder removable-parent order-handle">
 	
-	<h3 id="vbid-c1e000b4-krft5dkm" class="preview-element blocks-preview-subtitle magic-circle-holder text-element quick-text-style-menu   allow-mobile-hide" data-menu-name="BLOCKS_PREVIEW_SUBTITLE">EXPLORE HANDS ON WITH THE LATEST TECHNOLOGY IN CINEMATOGRAPHY</h3>
+	<h3 id="vbid-c1e000b4-krft5dkm" class="preview-element blocks-preview-subtitle magic-circle-holder text-element quick-text-style-menu   allow-mobile-hide" data-menu-name="BLOCKS_PREVIEW_SUBTITLE">A hands-on journey into lighting, camera, and visual storytelling</h3>
 
 </div>
 <br class="lower-line-break" />
@@ -5187,7 +5248,14 @@ if(window.location.protocol != 'https:')
 </div>
 				</div>
 			</div>	
-				<div id="pa-video-col"><iframe src="https://www.youtube.com/embed/UukWGCXjmGY?autoplay=1&mute=1&loop=1&controls=0&playlist=UukWGCXjmGY&rel=0&modestbranding=1&playsinline=1" allow="autoplay; fullscreen" allowfullscreen style="border:none;width:100%;height:100%;position:absolute;top:0;left:0;"></iframe></div><div class="text-side shrinker-parent">
+				<div id="pa-video-col">
+                  <iframe id="pa-course-iframe" src="https://www.youtube.com/embed/UukWGCXjmGY?enablejsapi=1&autoplay=1&mute=1&loop=1&controls=1&playlist=UukWGCXjmGY&rel=0&modestbranding=1&playsinline=1" allow="autoplay" style="border:none;width:100%;height:100%;position:absolute;top:0;left:0;"></iframe>
+                  <div class="pa-course-controls">
+                    <button type="button" id="pa-course-toggle-audio">Sound On</button>
+                    <button type="button" id="pa-course-vol-down">Vol -</button>
+                    <button type="button" id="pa-course-vol-up">Vol +</button>
+                  </div>
+                </div><div class="text-side shrinker-parent">
 					<div class="vertical-aligner">
 						<div class="item-details preview-content-wrapper  multi" style="position:relative;">
 							<div class="draggable-div-holder"></div>
@@ -5202,7 +5270,7 @@ if(window.location.protocol != 'https:')
 <br class="upper-line-break" />
 <div class="preview-title-holder removable-parent order-handle">
 	
-	<h2 id="vbid-c1e000b4-l9551iic" class="preview-element preview-title magic-circle-holder inner-page text-element quick-text-style-menu   allow-mobile-hide" data-menu-name="PREVIEW_TITLE" >ABOUT THE COURSE</h2>
+	<h2 id="vbid-c1e000b4-l9551iic" class="preview-element preview-title magic-circle-holder inner-page text-element quick-text-style-menu   allow-mobile-hide" data-menu-name="PREVIEW_TITLE" >ABOUT THE WORKSHOP</h2>
 	
 </div>
 <br class="lower-line-break" />
@@ -5224,7 +5292,7 @@ if(window.location.protocol != 'https:')
 <div class="preview-body-holder removable-parent order-handle">
 	
 	<div id="vbid-c1e000b4-b9f2eksf" class="preview-element preview-body magic-circle-holder text-element quick-text-style-menu   allow-mobile-hide" data-menu-name="PREVIEW_BODY">
-		<p><span style="font-family:arial;"><span style="font-size:14px;">This course is a focused 2-hour deep dive into real-world cinematography, built around practical techniques used on professional sets. You’ll gain insight into how high-end productions operate, working with industry-standard equipment including the ARRI Alexa Mini, Skypanels, HMI lighting, and professional grip systems such as dollies and tracks—alongside a full crew environment with a gaffer and key grip. </span></span><br></p><p><span style="font-family:arial;"><span style="font-size:14px;"></span></span><br></p><p><span style="font-family:arial;"><span style="font-size:14px;">The course covers over 20 essential concepts, from lighting theory to on-set decision-making, with a strong emphasis on execution. You’ll follow step-by-step setups for indoor day and night lighting, as well as beauty lighting techniques used to shape and enhance faces for artists on camera. </span></span><br></p><p><span style="font-family:arial;"><span style="font-size:14px;"></span></span><br></p><p><span style="font-family:arial;"><span style="font-size:14px;">Designed to be practical and concise, this course focuses on the choices that make a difference—helping you understand not just how to light a scene, but why.</span></span></p>
+		<p><span style="font-family:arial;"><span style="font-size:14px;">This workshop is a focused 2-hour deep dive into real-world cinematography, built around practical techniques used on professional sets. You’ll gain insight into how high-end productions operate, working with industry-standard equipment including the ARRI Alexa Mini, Skypanels, HMI lighting, and professional grip systems such as dollies and tracks—alongside a full crew environment with a gaffer and key grip. </span></span><br></p><p><span style="font-family:arial;"><span style="font-size:14px;"></span></span><br></p><p><span style="font-family:arial;"><span style="font-size:14px;">The workshop covers over 20 essential concepts, from lighting theory to on-set decision-making, with a strong emphasis on execution. You’ll follow step-by-step setups for indoor day and night lighting, as well as beauty lighting techniques used to shape and enhance faces for artists on camera. </span></span><br></p><p><span style="font-family:arial;"><span style="font-size:14px;"></span></span><br></p><p><span style="font-family:arial;"><span style="font-size:14px;">Designed to be practical and concise, this workshop focuses on the choices that make a difference—helping you understand not just how to light a scene, but why.</span></span></p>
 	</div>
 	
 </div>
@@ -5437,7 +5505,7 @@ if(window.location.protocol != 'https:')
 <br class="upper-line-break" />
 <div class="preview-title-holder removable-parent order-handle">
 	
-	<h2 id="vbid-17f36f05-2radl3nj" class="preview-element preview-title magic-circle-holder inner-page text-element quick-text-style-menu   allow-mobile-hide" data-menu-name="PREVIEW_TITLE" >Strategy planning<br></h2>
+	<h2 id="vbid-17f36f05-2radl3nj" class="preview-element preview-title magic-circle-holder inner-page text-element quick-text-style-menu   allow-mobile-hide" data-menu-name="PREVIEW_TITLE" >Chapter 1 — Indoor Day Lighting Setup</h2>
 	
 </div>
 <br class="lower-line-break" />
@@ -5452,7 +5520,7 @@ if(window.location.protocol != 'https:')
 <div class="preview-body-holder removable-parent order-handle">
 	
 	<div id="vbid-17f36f05-wrdluvmc" class="preview-element preview-body magic-circle-holder text-element quick-text-style-menu   allow-mobile-hide" data-menu-name="PREVIEW_BODY">
-		<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed malesuada faucibus ex nec ultricies. Donec mattis egestas nisi non pretium. Suspendisse nec eros ut erat facilisis maximus</p>
+		<p>In this one-hour chapter, Pierre Azar breaks down an indoor day scene from concept to execution. He explains how the lighting setup is approached, which lights are chosen and why, and how each decision shapes the final image. The chapter also demonstrates the use of a camera on a dolly track, showing how movement can add depth, rhythm, and cinematic flow to the scene.</p>
 	</div>
 	
 </div>
@@ -5546,7 +5614,7 @@ if(window.location.protocol != 'https:')
 <br class="upper-line-break" />
 <div class="preview-title-holder removable-parent order-handle">
 	
-	<h2 id="vbid-17f36f05-rdpniljz" class="preview-element preview-title magic-circle-holder inner-page text-element quick-text-style-menu   allow-mobile-hide" data-menu-name="PREVIEW_TITLE" >Marketing Research</h2>
+	<h2 id="vbid-17f36f05-rdpniljz" class="preview-element preview-title magic-circle-holder inner-page text-element quick-text-style-menu   allow-mobile-hide" data-menu-name="PREVIEW_TITLE" >Chapter 2 — Beauty Lighting & Face Wrap</h2>
 	
 </div>
 <br class="lower-line-break" />
@@ -5561,7 +5629,7 @@ if(window.location.protocol != 'https:')
 <div class="preview-body-holder removable-parent order-handle">
 	
 	<div id="vbid-17f36f05-uziykxep" class="preview-element preview-body magic-circle-holder text-element quick-text-style-menu   allow-mobile-hide" data-menu-name="PREVIEW_BODY">
-		<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed malesuada faucibus ex nec ultricies. Donec mattis egestas nisi non pretium. Suspendisse nec eros ut erat facilisis maximus.</p>
+		<p>In this 20-minute chapter, Pierre Azar demonstrates how to light faces for beauty with minimal shadows, using different lighting setups to create a soft and flattering look. He explains how to achieve proper wrap on the face and how light placement, softness, and direction affect the final result.</p>
 	</div>
 	
 </div>
@@ -5655,7 +5723,7 @@ if(window.location.protocol != 'https:')
 <br class="upper-line-break" />
 <div class="preview-title-holder removable-parent order-handle">
 	
-	<h2 id="vbid-17f36f05-cbcn74ry" class="preview-element preview-title magic-circle-holder inner-page text-element quick-text-style-menu   allow-mobile-hide" data-menu-name="PREVIEW_TITLE" >Project Management</h2>
+	<h2 id="vbid-17f36f05-cbcn74ry" class="preview-element preview-title magic-circle-holder inner-page text-element quick-text-style-menu   allow-mobile-hide" data-menu-name="PREVIEW_TITLE" >Chapter 3 — Interior Night Lighting Setup</h2>
 	
 </div>
 <br class="lower-line-break" />
@@ -5670,7 +5738,7 @@ if(window.location.protocol != 'https:')
 <div class="preview-body-holder removable-parent order-handle">
 	
 	<div id="vbid-17f36f05-jg9odaeb" class="preview-element preview-body magic-circle-holder text-element quick-text-style-menu   allow-mobile-hide" data-menu-name="PREVIEW_BODY">
-		<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed malesuada faucibus ex nec ultricies. Donec mattis egestas nisi non pretium. Suspendisse nec eros ut erat facilisis maximus.</p>
+		<p>In this 38-minute chapter, Pierre Azar breaks down an interior night scene, showing how to create moonlight and combine practical lights with film lights to build mood, depth, and atmosphere. The chapter explains how different light sources work together to shape the scene and create a cinematic night interior.</p>
 	</div>
 	
 </div>
@@ -5764,7 +5832,7 @@ if(window.location.protocol != 'https:')
 <br class="upper-line-break" />
 <div class="preview-title-holder removable-parent order-handle">
 	
-	<h2 id="vbid-17f36f05-ubjj9wws" class="preview-element preview-title magic-circle-holder inner-page text-element quick-text-style-menu   allow-mobile-hide" data-menu-name="PREVIEW_TITLE" >Business analysis</h2>
+	<h2 id="vbid-17f36f05-ubjj9wws" class="preview-element preview-title magic-circle-holder inner-page text-element quick-text-style-menu   allow-mobile-hide" data-menu-name="PREVIEW_TITLE" >Chapter 4 — Final Creative Exercise: Color Mixing</h2>
 	
 </div>
 <br class="lower-line-break" />
@@ -5779,7 +5847,7 @@ if(window.location.protocol != 'https:')
 <div class="preview-body-holder removable-parent order-handle">
 	
 	<div id="vbid-17f36f05-2bz3k6br" class="preview-element preview-body magic-circle-holder text-element quick-text-style-menu   allow-mobile-hide" data-menu-name="PREVIEW_BODY">
-		<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed malesuada faucibus ex nec ultricies. Donec mattis egestas nisi non pretium. Suspendisse nec eros ut erat facilisis maximus.</p>
+		<p>In this final chapter, Pierre Azar explores how to mix colors creatively and understand which colors work well together. The course ends with a colorful music video-style scene where students dance as the camera moves handheld, bringing energy, rhythm, and visual expression to the final setup.</p>
 	</div>
 	
 </div>
@@ -6309,7 +6377,7 @@ if(window.location.protocol != 'https:')
 	</div>
 	<noscript id="deferred-styles">
 		<link rel="stylesheet" type="text/css" href="/css/effects.css" />
-		<link rel="stylesheet" type="text/css" href="/css/lightbox.css">
+		<link rel="stylesheet" type="text/css" href="/css/lightbox.css?v=20260523-overlayfix1">
 	</noscript>
 	<script>
 		var loadDeferredStyles = function() {
@@ -6326,8 +6394,8 @@ if(window.location.protocol != 'https:')
 	</script>
 
 	
-	<script defer src="/js/lightbox.js" type="text/javascript"></script>
-	<script defer src="/js/spimeengine.js" type="text/javascript"></script>
+	<script defer src="/js/lightbox.js?v=20260524-videofix9" type="text/javascript"></script>
+	<script defer src="/js/spimeengine.js?v=20260524-global-video7" type="text/javascript"></script>
 
 
 	
@@ -6486,6 +6554,72 @@ function submitCheckout(e) {
 }
 </script>
 <!-- ── End Areeba Checkout ────────────────────────────────────────────────── -->
+
+<script>
+/* ── About workshop video: visible audio controls ── */
+(function() {
+  function sendYouTubeCommand(func, value) {
+    var iframe = document.getElementById('pa-course-iframe');
+    if (!iframe || !iframe.contentWindow) return;
+    var payload = {
+      event: 'command',
+      func: func,
+      args: typeof value === 'undefined' ? [] : [value]
+    };
+    iframe.contentWindow.postMessage(JSON.stringify(payload), 'https://www.youtube.com');
+  }
+
+  function initCourseAudioControls() {
+    var toggleAudioBtn = document.getElementById('pa-course-toggle-audio');
+    var volDownBtn = document.getElementById('pa-course-vol-down');
+    var volUpBtn = document.getElementById('pa-course-vol-up');
+    if (!toggleAudioBtn || !volDownBtn || !volUpBtn) return;
+
+    var volume = 70;
+    var isMuted = true;
+    function syncAudioButton() {
+      toggleAudioBtn.textContent = isMuted ? 'Sound On' : 'Sound Off';
+    }
+    function setMuted(nextMuted) {
+      isMuted = !!nextMuted;
+      if (isMuted) {
+        sendYouTubeCommand('mute');
+      } else {
+        sendYouTubeCommand('unMute');
+        sendYouTubeCommand('setVolume', volume);
+      }
+      syncAudioButton();
+    }
+
+    toggleAudioBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      setMuted(!isMuted);
+    });
+
+    volDownBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      volume = Math.max(0, volume - 10);
+      if (isMuted) setMuted(false);
+      sendYouTubeCommand('setVolume', volume);
+    });
+
+    volUpBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      volume = Math.min(100, volume + 10);
+      if (isMuted) setMuted(false);
+      sendYouTubeCommand('setVolume', volume);
+    });
+
+    syncAudioButton();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCourseAudioControls);
+  } else {
+    initCourseAudioControls();
+  }
+})();
+</script>
 
 <script>
 /* ── Member login button ── */

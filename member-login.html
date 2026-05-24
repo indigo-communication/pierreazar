@@ -61,7 +61,7 @@
     <!-- Login form -->
     <div id="form-login">
       <h2>MEMBER LOGIN</h2>
-      <p class="sub">Access the cinematography course and member content.</p>
+      <p class="sub">Access the cinematography workshop and member content.</p>
       <div class="field">
         <label>Email</label>
         <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email">
@@ -77,7 +77,7 @@
     <!-- Register form -->
     <div id="form-register" style="display:none;">
       <h2>CREATE ACCOUNT</h2>
-      <p class="sub">Register to access the cinematography course.</p>
+      <p class="sub">Register to access the cinematography workshop.</p>
       <div class="field">
         <label>Name <span style="color:#555;font-weight:400;">(optional)</span></label>
         <input type="text" id="reg-name" placeholder="Your name" autocomplete="name">
@@ -104,7 +104,7 @@
 <script>
   // Redirect if already logged in (but not if we just logged out)
   if (!new URLSearchParams(location.search).get('logout')) {
-    fetch('/member/me').then(function(r){ return r.json(); }).then(function(d){
+    fetch('/member/me', { credentials: 'include' }).then(function(r){ return r.json(); }).then(function(d){
       if (d.ok) {
         var redir = new URLSearchParams(location.search).get('next') || '/course';
         location.href = redir;

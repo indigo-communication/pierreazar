@@ -1410,7 +1410,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if not video_url:
                     self._json_response({'ok': False, 'error': 'video_url required'}, status=400)
                     return
-                field = content_manager.add_portfolio_video(video_url)
+                field = cm.add_portfolio_video(video_url)
                 self._json_response({'ok': True, 'field': field})
             except Exception as e:
                 self._json_response({'ok': False, 'error': str(e)}, status=400)
@@ -1424,7 +1424,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             try:
                 data = json.loads(body) if body else {}
                 index = int(data.get('index', -1))
-                content_manager.delete_portfolio_video(index)
+                cm.delete_portfolio_video(index)
                 self._json_response({'ok': True})
             except Exception as e:
                 self._json_response({'ok': False, 'error': str(e)}, status=400)
@@ -1583,10 +1583,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     return
 
                 filename  = parts['filename'].decode('utf-8', errors='ignore').strip()
+                thumb_field = parts.get('thumb_field', b'').decode('utf-8', errors='ignore').strip()
+                if thumb_field:
+                    safe_path = cm.recommended_video_thumbnail_path(thumb_field)
+                    if safe_path:
+                        filename = safe_path
                 raw_bytes = parts['file']
                 ok, err   = cm.save_image(filename, raw_bytes)
                 if ok:
-                    self._json_response({'ok': True})
+                    self._json_response({'ok': True, 'path': filename})
                 else:
                     self._json_response({'ok': False, 'error': err}, status=400)
             except Exception as e:

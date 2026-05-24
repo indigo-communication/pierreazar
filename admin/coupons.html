@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Coupons — Pierre Azar Admin</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/png" href="assets/images/favicon.png">
+    <link href="assets/vendor/metismenu/dist/metisMenu.min.css" rel="stylesheet">
+    <link href="assets/vendor/bootstrap-select/dist/css/bootstrap-select.min.css" rel="stylesheet">
+    <link class="main-switcher" href="assets/css/switcher.css" rel="stylesheet">
+    <link class="main-plugins" href="assets/css/plugins.css" rel="stylesheet">
+    <link class="main-css" href="assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<div id="main-wrapper">
+
+    <!-- Nav Header + Sidebar -->
+    <div class="nav-header">
+        <a href="index.html" class="brand-logo" aria-label="Brand Logo">
+            <span style="font-family:Montserrat,Arial,sans-serif;font-weight:700;font-size:18px;letter-spacing:.15em;color:var(--bs-primary)">PA</span>
+            <span class="brand-title" style="font-family:Montserrat,Arial,sans-serif;font-weight:700;font-size:16px;letter-spacing:.1em;color:var(--bs-heading-color);margin-left:8px">PIERRE AZAR</span>
+        </a>
+        <div class="nav-control">
+            <div class="hamburger"><span class="line"></span><span class="line"></span><span class="line"></span></div>
+        </div>
+    </div>
+    <div class="header">
+        <div class="header-content">
+            <nav class="navbar navbar-expand">
+                <div class="collapse navbar-collapse justify-content-between">
+                    <div class="header-left"><div class="dashboard_bar">Coupon Codes</div></div>
+                    <div class="navbar-nav header-right">
+                        <div class="nav-item d-flex align-items-center">
+                            <a href="login.html" class="btn btn-sm btn-outline-danger ms-2">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </div>
+    <div class="deznav">
+        <div class="deznav-scroll">
+            <ul class="metismenu" id="menu">
+                <li class="menu-title">PIERRE AZAR</li>
+                <li>
+                    <a href="index.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 7.5L10 1.667L17.5 7.5V16.667C17.5 17.109 17.324 17.533 17.012 17.845C16.699 18.158 16.275 18.333 15.833 18.333H4.167C3.725 18.333 3.301 18.158 2.988 17.845C2.676 17.533 2.5 17.109 2.5 16.667V7.5Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="menu-title">MANAGE</li>
+                <li>
+                    <a href="submissions.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><polyline points="22,6 12,13 2,6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Form Submissions</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="course-sales.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="3" width="18" height="14" rx="2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 8L14 11L10 14" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Workshop Sales</span>
+                    </a>
+                </li>
+                <li class="mm-active">
+                    <a href="coupons.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M20.59 13.41L13.42 20.58A2 2 0 0 1 11 20.58L3 12.59V3H12.58L20.59 11A2 2 0 0 1 20.59 13.41Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><line x1="7" y1="7" x2="7.01" y2="7" stroke="#888" stroke-width="2" stroke-linecap="round"/></svg></div>
+                        <span class="nav-text">Coupons</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="members.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="7" r="4" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Members</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="finance.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="1" x2="12" y2="23" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 5H9.5C8.57 5 7.68 5.37 7.02 6.02C6.37 6.68 6 7.57 6 8.5C6 9.43 6.37 10.32 7.02 10.98C7.68 11.63 8.57 12 9.5 12H14.5C15.43 12 16.32 12.37 16.98 13.02C17.63 13.68 18 14.57 18 15.5C18 16.43 17.63 17.32 16.98 17.98C16.32 18.63 15.43 19 14.5 19H6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Finance</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="reports.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 20V10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 20V4" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 20v-6" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Reports</span>
+                    </a>
+                </li>
+                <li class="menu-title">SETTINGS</li>
+                <li>
+                    <a href="content-editor.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Content Editor</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="payment-settings.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="1" y="4" width="22" height="16" rx="2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><line x1="1" y1="10" x2="23" y2="10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Payment Gateway</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="change-password.html" aria-expanded="false">
+                        <div class="menu-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <span class="nav-text">Change Password</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="deznav-footer">
+                <a href="https://pierreazar.com" target="_blank">
+                    <div class="d-flex align-items-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/><line x1="2" y1="12" x2="22" y2="12" stroke="#888" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <p class="ms-2 mb-0">pierreazar.com</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- End Sidebar -->
+
+    <!-- Content Body -->
+    <div class="content-body">
+        <div class="container-fluid">
+
+            <div class="row page-titles">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.html">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Coupons</li>
+                </ol>
+            </div>
+
+            <!-- Generate Coupon Card -->
+            <div class="row mb-4">
+                <div class="col-xl-5 col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">Generate New Coupon</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Discount</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="inp-discount" value="50" min="1" max="100">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Max Uses <span class="text-muted">(0 = unlimited)</span></label>
+                                <input type="number" class="form-control" id="inp-max-uses" value="1" min="0">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Note <span class="text-muted">(optional — e.g. recipient name)</span></label>
+                                <input type="text" class="form-control" id="inp-note" placeholder="e.g. John Doe — special offer">
+                            </div>
+                            <button class="btn btn-primary w-100" onclick="generateCoupon()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="me-2"><path d="M20.59 13.41L13.42 20.58A2 2 0 0 1 11 20.58L3 12.59V3H12.58L20.59 11A2 2 0 0 1 20.59 13.41Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><line x1="7" y1="7" x2="7.01" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                                Generate Coupon
+                            </button>
+                            <div id="gen-result" class="mt-3" style="display:none;">
+                                <div class="alert alert-success d-flex align-items-center justify-content-between mb-0">
+                                    <div>
+                                        <strong>Generated:</strong>
+                                        <span id="gen-code" style="font-family:monospace;font-size:16px;letter-spacing:.1em;margin-left:8px;"></span>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-success ms-3" onclick="copyCode()">Copy</button>
+                                </div>
+                            </div>
+                            <div id="gen-error" class="mt-3 alert alert-danger" style="display:none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coupons Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex align-items-center justify-content-between">
+                            <h4 class="card-title mb-0">All Coupons</h4>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="loadCoupons()">↻ Refresh</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover align-middle" id="coupons-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Code</th>
+                                            <th>Discount</th>
+                                            <th>Uses</th>
+                                            <th>Status</th>
+                                            <th>Expires</th>
+                                            <th>Note</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="coupons-tbody">
+                                        <tr><td colspan="7" class="text-center text-muted py-4">Loading…</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- End Content Body -->
+
+</div><!-- End Main Wrapper -->
+
+<script src="assets/vendor/global/global.min.js"></script>
+<script src="assets/vendor/metismenu/dist/metisMenu.min.js"></script>
+<script src="assets/js/custom.min.js"></script>
+<script>
+var lastGenerated = '';
+
+function loadCoupons() {
+    fetch('/api/coupons', {credentials: 'include'})
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+            var tbody = document.getElementById('coupons-tbody');
+            if (!d.ok || !d.coupons || !d.coupons.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No coupons yet.</td></tr>';
+                return;
+            }
+            var today = new Date().toISOString().slice(0,10);
+            var rows = d.coupons.slice().reverse().map(function(c){
+                var maxLabel   = c.max_uses === 0 ? '∞' : c.max_uses;
+                var expired    = c.expires && c.expires < today;
+                var statusBadge = expired
+                    ? '<span class="badge bg-danger">Expired</span>'
+                    : c.active
+                        ? '<span class="badge bg-success">Active</span>'
+                        : '<span class="badge bg-secondary">Inactive</span>';
+                var toggleLabel = c.active ? 'Deactivate' : 'Activate';
+                var toggleClass = c.active ? 'btn-outline-warning' : 'btn-outline-success';
+                var expiresLabel = c.expires
+                    ? (expired ? '<span style="color:#c87941;">' + esc(c.expires) + '</span>' : esc(c.expires))
+                    : '—';
+                return '<tr>' +
+                    '<td><code style="font-size:14px;letter-spacing:.06em;">' + esc(c.code) + '</code> ' +
+                    '<button class="btn btn-xs btn-outline-secondary py-0 px-1 ms-1" style="font-size:11px;" onclick="copyText(\'' + esc(c.code) + '\')">Copy</button></td>' +
+                    '<td><strong>' + c.discount_pct + '%</strong> off</td>' +
+                    '<td>' + c.uses + ' / ' + maxLabel + '</td>' +
+                    '<td>' + statusBadge + '</td>' +
+                    '<td style="white-space:nowrap;">' + expiresLabel + '</td>' +
+                    '<td style="color:#888;">' + esc(c.note || '') + '</td>' +
+                    '<td style="white-space:nowrap;">' +
+                    (expired ? '' : '<button class="btn btn-xs ' + toggleClass + ' me-1" onclick="toggleCoupon(\'' + esc(c.code) + '\')">' + toggleLabel + '</button>') +
+                    '<button class="btn btn-xs btn-outline-danger" onclick="deleteCoupon(\'' + esc(c.code) + '\')">Delete</button>' +
+                    '</td>' +
+                    '</tr>';
+            });
+            tbody.innerHTML = rows.join('');
+        })
+        .catch(function(){ document.getElementById('coupons-tbody').innerHTML = '<tr><td colspan="7" class="text-center text-danger">Failed to load.</td></tr>'; });
+}
+
+function esc(s){ var d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
+function copyText(t){ navigator.clipboard.writeText(t).catch(function(){ }); }
+
+function generateCoupon() {
+    var discount = parseInt(document.getElementById('inp-discount').value) || 50;
+    var maxUses  = parseInt(document.getElementById('inp-max-uses').value);
+    if (isNaN(maxUses)) maxUses = 1;
+    var note     = document.getElementById('inp-note').value.trim();
+
+    document.getElementById('gen-result').style.display = 'none';
+    document.getElementById('gen-error').style.display  = 'none';
+
+    fetch('/api/coupons', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({action:'create', discount_pct: discount, max_uses: maxUses, note: note})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+        if (d.ok && d.coupon) {
+            lastGenerated = d.coupon.code;
+            document.getElementById('gen-code').textContent = d.coupon.code;
+            document.getElementById('gen-result').style.display = 'block';
+            loadCoupons();
+        } else {
+            document.getElementById('gen-error').textContent = d.error || 'Failed to generate coupon.';
+            document.getElementById('gen-error').style.display = 'block';
+        }
+    })
+    .catch(function(){
+        document.getElementById('gen-error').textContent = 'Network error.';
+        document.getElementById('gen-error').style.display = 'block';
+    });
+}
+
+function copyCode() { copyText(lastGenerated); }
+
+function toggleCoupon(code) {
+    fetch('/api/coupons', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({action:'toggle', code: code})
+    }).then(function(){ loadCoupons(); });
+}
+
+function deleteCoupon(code) {
+    if (!confirm('Delete coupon ' + code + '? This cannot be undone.')) return;
+    fetch('/api/coupons', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({action:'delete', code: code})
+    }).then(function(){ loadCoupons(); });
+}
+
+loadCoupons();
+</script>
+</body>
+</html>

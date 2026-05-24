@@ -51,6 +51,32 @@ Located at `/admin/`. Auth via `pa_admin` cookie (managed by `server.py`).
 
 ---
 
+### Session: May 23, 2026 — Dynamic Portfolio Videos + Admin Fixes
+
+#### Problem
+- Client needed to add portfolio videos on demand (new videos at top-left of grid).
+- New video thumbnails were linked (shared `img_028.jpg`) — changing one changed others.
+- Delete video API failed with `name 'content_manager' is not defined`.
+
+#### Method / Approach
+- `content_manager.py`: dynamic items in `data/portfolio_dynamic.json`, insert at featured grid anchor, dedicated thumb paths per video (`portfolio-video-N.jpg`), server-side upload fork via `thumb_field`.
+- `server.py`: `POST /api/portfolio/add-video`, `POST /api/portfolio/delete-video` (fixed `cm.` import).
+- `admin/content-editor.html`: Add New Video, delete buttons, per-video Replace Thumb with safe upload path.
+
+#### Results
+- Add video works; grid layout fixed (side-by-side in featured grid).
+- Thumbnail linking fixed — each video gets its own file; upload enforced server-side.
+- Delete API fixed and verified on VPS (`200 OK`).
+- Live dynamic portfolio list currently **empty** (test videos removed). Static slots 0–8 unchanged.
+
+#### Next Steps (tomorrow)
+1. **Clean admin dashboard** — UI polish, remove test clutter, verify all sections load cleanly.
+2. **Finish project** — final QA on portfolio add/delete/thumb flow, client handoff checklist.
+3. Optional: commit local changes (`content_manager.py`, `server.py`, `admin/content-editor.html`) when tests pass.
+4. Do not push/deploy to production without explicit confirmation after tests.
+
+---
+
 ### Session: April 29, 2026 — Hero, Course, Stats
 
 #### What was done

@@ -11,7 +11,6 @@ Portfolio - Pierre_Azar</title>
 	
 	
 	
-		<script src="https://www.youtube.com/iframe_api"></script>
 		<!-- CSS -->
 		<style class='common-css'>
 
@@ -3286,6 +3285,19 @@ and (max-width : 768px)  {
 	pointer-events: none!important;
 }
 
+/* Portfolio clean mode (no thumbnails):
+   remove thumbnail overlay, keep native inline video layout. */
+#xprs .preview-image-holder .inner-pic-holder > a.image-link[data-link-type='LIGHTBOX']{
+	display: none !important;
+	pointer-events: none !important;
+}
+
+/* Remove thumbnails only for cards that actually contain inline video. */
+#xprs .preview-image-holder .inner-pic-holder.pa-video-card > .inner-pic{
+	background-image: none !important;
+	background-color: #000 !important;
+}
+
 .flex[data-slide-effect='SQUARES'] .sub.item-box.before-visible{
 	transform: translateX(60%) scale(0.4);
 }
@@ -5043,7 +5055,7 @@ if(window.location.protocol != 'https:')
 		
 			<a class="removable-parent" href="/cinematography-course.html" data-link-type="EXISTING"   target="_self" >
 		
-			<span id="4df2acaf"  class="preview-element Link item-link magic-circle-holder text-element custom" data-menu-name="PREVIEW_LINK" >ON-SET EXPERIENCE</span>
+			<span id="4df2acaf"  class="preview-element Link item-link magic-circle-holder text-element custom" data-menu-name="PREVIEW_LINK" >CINEMATOGRAPHY WORKSHOP</span>
 			</a>
 	
 		</li>
@@ -6331,7 +6343,7 @@ if(window.location.protocol != 'https:')
 	</div>
 	<noscript id="deferred-styles">
 		<link rel="stylesheet" type="text/css" href="/css/effects.css" />
-		<link rel="stylesheet" type="text/css" href="/css/lightbox.css">
+		<link rel="stylesheet" type="text/css" href="/css/lightbox.css?v=20260523-overlayfix1">
 	</noscript>
 	<script>
 		var loadDeferredStyles = function() {
@@ -6348,8 +6360,8 @@ if(window.location.protocol != 'https:')
 	</script>
 
 	
-	<script defer src="/js/lightbox.js" type="text/javascript"></script>
-	<script defer src="/js/spimeengine.js" type="text/javascript"></script>
+	<script defer src="/js/lightbox.js?v=20260524-videofix9" type="text/javascript"></script>
+	<script defer src="/js/spimeengine.js?v=20260524-global-video6" type="text/javascript"></script>
 
 
 	
@@ -6430,6 +6442,29 @@ if(window.location.protocol != 'https:')
   }
 })();
 </script>
+
+<script>
+/* Portfolio: mark only video cards so thumbnail removal stays scoped. */
+(function() {
+  function markVideoCards() {
+    var holders = document.querySelectorAll('#xprs .preview-image-holder .inner-pic-holder');
+    for (var i = 0; i < holders.length; i++) {
+      var holder = holders[i];
+      if (holder.querySelector('.preview-video-holder')) {
+        holder.classList.add('pa-video-card');
+      } else {
+        holder.classList.remove('pa-video-card');
+      }
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', markVideoCards);
+  } else {
+    markVideoCards();
+  }
+})();
+</script>
+
 </body>
 
 	

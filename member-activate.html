@@ -101,7 +101,7 @@
   }
 
   // Require login
-  fetch('/member/me').then(function(r){ return r.json(); }).then(function(d){
+  fetch('/member/me', { credentials: 'include' }).then(function(r){ return r.json(); }).then(function(d){
     if (!d.ok) {
       // Show login notice instead of immediately redirecting
       document.getElementById('login-notice').style.display = 'block';

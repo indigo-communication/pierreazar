@@ -20,6 +20,197 @@ SpimeEngine.stripePaymentParams = {};
 SpimeEngine.scrollEnabled = true;
 SpimeEngine.finishedLoading = false;
 
+// Global video behavior policy:
+// Detect YouTube/Vimeo iframe links and normalize player params
+// so current and future embeds get consistent controls/UX.
+SpimeEngine.normalizeVideoSource = function(src){
+	if (!src){
+		return src;
+	}
+	var url;
+	try{
+		url = new URL(src, window.location.href);
+	}catch(e){
+		return src;
+	}
+	var host = (url.hostname || "").toLowerCase();
+	var path = url.pathname || "";
+	var isYouTube = host.indexOf("youtube.com") !== -1 || host.indexOf("youtu.be") !== -1;
+	var isVimeo = host.indexOf("vimeo.com") !== -1;
+	if (isYouTube){
+		url.searchParams.set("controls","1");
+		url.searchParams.set("playsinline","1");
+		url.searchParams.set("rel","0");
+		url.searchParams.set("modestbranding","1");
+		url.searchParams.set("enablejsapi","1");
+		// If loop is requested, make sure playlist is set for YT loop behavior.
+		if (url.searchParams.get("loop") === "1" && !url.searchParams.get("playlist")){
+			var videoId = "";
+			if (host.indexOf("youtu.be") !== -1){
+				videoId = path.replace(/^\/+/,"").split("/")[0];
+			}else{
+				videoId = path.split("/").pop();
+			}
+			if (videoId){
+				url.searchParams.set("playlist", videoId);
+			}
+		}
+		return url.toString();
+	}
+	if (isVimeo){
+		url.searchParams.set("controls","1");
+		url.searchParams.set("background","0");
+		url.searchParams.set("title","0");
+		url.searchParams.set("byline","0");
+		url.searchParams.set("badge","0");
+		url.searchParams.set("autopause","0");
+		url.searchParams.set("dnt","1");
+		return url.toString();
+	}
+	return src;
+};
+
+SpimeEngine.normalizeVideoEmbeds = function(container){
+	var scope = (typeof container != "undefined") ? container : $(document);
+	scope.find("iframe.video-frame").each(function(){
+		var frame = $(this);
+		var src = frame.attr("src");
+		if (src === "about:blank"){
+			src = "";
+		}
+		var dataSrc = frame.attr("data-pa-src");
+		var normalizedSrc = src ? SpimeEngine.normalizeVideoSource(src) : "";
+		var normalizedDataSrc = dataSrc ? SpimeEngine.normalizeVideoSource(dataSrc) : "";
+		var targetSrc = normalizedSrc || normalizedDataSrc;
+		var previewVideoHolder = frame.closest(".preview-video-source");
+		if (targetSrc && previewVideoHolder.length && previewVideoHolder.hasClass("vid-cover")){
+			targetSrc = SpimeEngine.applyInlineCoverVideoPolicy(targetSrc);
+			if (normalizedDataSrc){
+				normalizedDataSrc = SpimeEngine.applyInlineCoverVideoPolicy(normalizedDataSrc);
+			}
+		}
+		var shouldLazyLoad = targetSrc && SpimeEngine.shouldLazyLoadVideoFrame(frame, targetSrc);
+		if (shouldLazyLoad){
+			frame.attr("data-pa-src", targetSrc);
+			frame.removeAttr("src");
+			SpimeEngine.registerLazyVideoFrame(frame);
+		}else{
+			if (targetSrc){
+				frame.attr("src", targetSrc);
+				if (normalizedDataSrc){
+					frame.attr("data-pa-src", normalizedDataSrc);
+				}
+			}
+		}
+		// Keep inline behavior consistent while allowing fullscreen controls.
+		frame.attr("allow","autoplay; fullscreen; encrypted-media; picture-in-picture");
+		frame.attr("allowfullscreen","allowfullscreen");
+		frame.attr("webkitallowfullscreen","webkitallowfullscreen");
+		frame.attr("mozallowfullscreen","mozallowfullscreen");
+	});
+};
+
+SpimeEngine.applyInlineCoverVideoPolicy = function(src){
+	if (!src){
+		return src;
+	}
+	var url;
+	try{
+		url = new URL(src, window.location.href);
+	}catch(e){
+		return src;
+	}
+	var host = (url.hostname || "").toLowerCase();
+	var path = url.pathname || "";
+	var isYouTube = host.indexOf("youtube.com") !== -1 || host.indexOf("youtu.be") !== -1;
+	var isVimeo = host.indexOf("vimeo.com") !== -1;
+	if (isYouTube){
+		var videoId = "";
+		if (host.indexOf("youtu.be") !== -1){
+			videoId = path.replace(/^\/+/,"").split("/")[0];
+		}else{
+			videoId = path.split("/").pop();
+		}
+		url.searchParams.set("autoplay", "1");
+		url.searchParams.set("mute", "1");
+		url.searchParams.set("loop", "1");
+		if (videoId){
+			url.searchParams.set("playlist", videoId);
+		}
+		return url.toString();
+	}
+	if (isVimeo){
+		url.searchParams.set("autoplay", "1");
+		url.searchParams.set("muted", "1");
+		url.searchParams.set("loop", "1");
+		return url.toString();
+	}
+	return src;
+};
+
+SpimeEngine.shouldLazyLoadVideoFrame = function(frame, src){
+	// Keep autoplay videos eager; delay all other embeds until they are near viewport.
+	if (typeof window["EditorHelper"] != "undefined"){
+		return false;
+	}
+	if (!src){
+		return false;
+	}
+	var holder = frame.closest(".magic-circle-holder");
+	if (holder.length && holder.hasClass("vid-autoplay")){
+		return false;
+	}
+	return true;
+};
+
+SpimeEngine.activateVideoFrame = function(frame){
+	if (!frame || !frame.length){
+		return;
+	}
+	var dataSrc = frame.attr("data-pa-src");
+	var src = frame.attr("src");
+	if (( !src || src === "about:blank") && dataSrc){
+		frame.attr("src", dataSrc);
+	}
+};
+
+SpimeEngine.registerLazyVideoFrame = function(frame){
+	if (!frame || !frame.length){
+		return;
+	}
+	if (frame.data("paLazyBound")){
+		return;
+	}
+	frame.data("paLazyBound", true);
+	var element = frame.get(0);
+	if (!element){
+		return;
+	}
+	var holder = frame.closest(".magic-circle-holder");
+	if (holder.length && !holder.data("paLazyHoverBound")){
+		holder.data("paLazyHoverBound", true);
+		holder.on("mouseenter touchstart click", function(){
+			SpimeEngine.activateVideoFrame(frame);
+		});
+	}
+	if (!("IntersectionObserver" in window)){
+		SpimeEngine.activateVideoFrame(frame);
+		return;
+	}
+	if (!SpimeEngine.lazyVideoObserver){
+		SpimeEngine.lazyVideoObserver = new IntersectionObserver(function(entries, observer){
+			entries.forEach(function(entry){
+				if (entry.isIntersecting || entry.intersectionRatio > 0){
+					var currentFrame = $(entry.target);
+					SpimeEngine.activateVideoFrame(currentFrame);
+					observer.unobserve(entry.target);
+				}
+			});
+		}, {rootMargin: "300px 0px", threshold: 0.01});
+	}
+	SpimeEngine.lazyVideoObserver.observe(element);
+};
+
 /******************************************************************************************************
  *                                               MAIN
  *                                  called from body onLoad func    
@@ -932,6 +1123,27 @@ SpimeEngine.fixZoomedImages = function(container){
 };
 
 
+SpimeEngine.sendYouTubePostMessageCommand = function(videoId, commandName){
+	var vid = $("#" + videoId + "-vidframe");
+	if (vid.length === 0 || !vid[0].contentWindow){
+		return;
+	}
+	var normalizedCommand = commandName.replace("bind-and-","").replace("-muted","");
+	try{
+		if (commandName.indexOf("muted") !== -1 || commandName === "mute"){
+			vid[0].contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
+		}
+		if (normalizedCommand === "play"){
+			vid[0].contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+		}else if (normalizedCommand === "pause"){
+			vid[0].contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+		}else if (normalizedCommand === "stop"){
+			vid[0].contentWindow.postMessage('{"event":"command","func":"stopVideo","args":""}', '*');
+		}
+	}catch(e){}
+};
+
+
 SpimeEngine.sendVideoCommand = function(videoId,commandName){
 	var vid = $("#" + videoId + "-vidframe");
 	if (vid.is(".ytplayer")){
@@ -945,10 +1157,10 @@ SpimeEngine.sendVideoCommand = function(videoId,commandName){
 				}
 				SpimeEngine.sendVideoCommandOnInterval(videoId,commandName);
 			}else{
-				SpimeEngine.sendVideoCommandOnInterval(videoId,"init-"+commandName);
+				SpimeEngine.sendYouTubePostMessageCommand(videoId, commandName);
 			}
 		}else{
-			SpimeEngine.sendVideoCommandOnInterval(videoId,"init-"+commandName);
+			SpimeEngine.sendYouTubePostMessageCommand(videoId, commandName);
 		}
 	}else if (vid.is(".vimplayer")){
 		setTimeout(function(){
@@ -973,7 +1185,7 @@ SpimeEngine.sendVideoCommandOnInterval = function(videoId,commandName,interval){
 			if (commandName.indexOf("init-") == -1){
 				SpimeEngine.sendVideoCommandOnInterval(videoId,commandName,interval*1.3);
 			}else{
-				SpimeEngine.sendVideoCommand(videoId,commandName.replace("init-",""));
+				SpimeEngine.sendYouTubePostMessageCommand(videoId, commandName.replace("init-",""));
 			}
 			
 		},interval);
@@ -1032,6 +1244,7 @@ function onytplayerStateChange(e) {
 }
 
 SpimeEngine.initVideos = function(){
+	SpimeEngine.normalizeVideoEmbeds();
 	//only in site and preview
 	if(typeof window["EditorHelper"] == "undefined"){
 		//Enable click to play
@@ -1129,6 +1342,7 @@ SpimeEngine.initDynamicStripe = function(feedHolder){
 	feedHolder.load(window.location.protocol + resolvedHost + "/get_part",{"vbid":feedHolder.attr("id"),"root_id":$(".master.container").attr("id"),"no_blocking_div":true},function(data, status, xhr){
 		feedHolder.find(".sub.item-box").addClass("animated-opacity");
 		SpimeEngine.InitHolder(feedHolder);
+		SpimeEngine.normalizeVideoEmbeds(feedHolder);
 		LightBox.initLinks(feedHolder);
 		feedHolder.addClass("loaded");
 	});

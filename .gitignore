@@ -22,3 +22,6 @@ images/hq/
 
 # Session notes
 PROJECT_RECAP.md
+
+# Bunny Stream secrets
+bunny-stream/token_auth_key.txt

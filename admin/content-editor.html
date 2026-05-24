@@ -329,12 +329,14 @@
                             <div class="card-body">
 
                                 <!-- VIDEOS -->
-                                <span class="section-label">&#127916; Portfolio Videos</span>
+                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                                  <span class="section-label mb-0">&#127916; Portfolio Videos</span>
+                                  <button type="button" id="btn-add-portfolio-video" class="btn btn-success btn-sm" onclick="toggleAddVideoForm()">&#43; Add New Video</button>
+                                </div>
                                 <p class="text-muted small">Paste a YouTube or Vimeo URL (or just the video ID) — auto-detected. New videos are added at the top-left of the portfolio.</p>
 
                                 <!-- Add Video inline form -->
                                 <div id="add-video-bar" class="mb-3">
-                                  <button type="button" class="btn btn-success btn-sm" onclick="toggleAddVideoForm()">&#43; Add New Video</button>
                                   <div id="add-video-form" style="display:none;" class="mt-2 p-3 border rounded bg-light">
                                     <div class="row g-2 align-items-end">
                                       <div class="col">
@@ -844,11 +846,12 @@ function loadPageVideos(page) {
                 html += '<img src="' + escH(thumb || '/images/backgrounds/1.jpg') + '?t=' + Date.now() + '" alt="' + escH(label) + ' thumbnail">';
                 html += '<div class="video-meta">Video link: ' + escH(v.value || 'Not set') + '</div>';
                 html += '<div class="input-group input-group-sm">';
-                html += '<input type="text" class="form-control" id="' + escH(thumbField) + '" value="' + escH(v.thumbnail || '') + '" placeholder="images/photos/your-thumb.jpg">';
+                var uploadPath = v.upload_path || v.thumbnail || '';
+                html += '<input type="text" class="form-control" id="' + escH(thumbField) + '" value="' + escH(v.thumbnail || '') + '" data-upload-path="' + escH(uploadPath) + '" placeholder="images/photos/your-thumb.jpg">';
                 html += '<button class="btn btn-outline-light" type="button" onclick="triggerVideoThumbReplace(' + escH(JSON.stringify(thumbField)) + ',' + escH(JSON.stringify(page)) + ')">Replace Thumb</button>';
                 html += '</div>';
                 if (!v.thumbnail) html += '<div class="video-meta warn">No thumbnail set. Add one now.</div>';
-                else if (v.thumbnail_conflict) html += '<div class="video-meta warn">Thumbnail is shared by multiple videos. Replacing it affects all of them.</div>';
+                else if (v.thumbnail_conflict) html += '<div class="video-meta warn">Thumbnail is shared by multiple videos. Upload uses a dedicated file automatically.</div>';
                 else html += '<div class="video-meta">Thumbnail: ' + escH(v.thumbnail) + '</div>';
                 html += '</div>';
             });
@@ -916,7 +919,8 @@ function triggerVideoThumbReplace(thumbField, page) {
     input.style.display = 'none';
     input.addEventListener('change', function(){
         if (!input.files || !input.files[0]) return;
-        var targetPath = document.getElementById(thumbField) ? document.getElementById(thumbField).value : '';
+        var inputEl = document.getElementById(thumbField);
+        var targetPath = inputEl ? (inputEl.getAttribute('data-upload-path') || inputEl.value) : '';
         if (!targetPath) {
             showVideoStatus(page, false, 'Set thumbnail path first (e.g. images/photos/new-thumb.jpg).');
             return;
@@ -931,6 +935,7 @@ function uploadVideoThumb(targetPath, page, file, thumbField) {
     showVideoStatus(page, true, 'Uploading thumbnail...');
     var fd = new FormData();
     fd.append('filename', targetPath);
+    fd.append('thumb_field', thumbField);
     fd.append('file', file);
     fetch('/api/upload-image', { method:'POST', credentials:'include', body:fd })
         .then(function(r){ if(r.status===401){ window.location.href='login.html'; return null; } return r.json(); })
@@ -940,8 +945,14 @@ function uploadVideoThumb(targetPath, page, file, thumbField) {
                 showVideoStatus(page, false, d.error || 'Upload failed');
                 return;
             }
+            var savedPath = d.path || targetPath;
             var payload = {};
-            payload[thumbField] = targetPath;
+            payload[thumbField] = savedPath;
+            var inputEl = document.getElementById(thumbField);
+            if (inputEl) {
+                inputEl.value = savedPath;
+                inputEl.setAttribute('data-upload-path', savedPath);
+            }
             return fetch('/api/content', {
                 method:'POST',
                 credentials:'include',

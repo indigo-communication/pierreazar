@@ -45,6 +45,19 @@
       font-weight:700;letter-spacing:.08em;padding:7px 14px;border-radius:4px;
       cursor:pointer;text-transform:uppercase;transition:border-color .2s,color .2s;}
     .btn-logout:hover{border-color:#666;color:#aaa;}
+    .coupon-row{display:flex;gap:8px;margin-bottom:16px;}
+    .coupon-row input{flex:1;background:#1a1a1a;border:1px solid #2a2a2a;color:#f0f0f0;
+      font-size:13px;padding:10px 12px;border-radius:4px;outline:none;letter-spacing:.05em;
+      text-transform:uppercase;}
+    .coupon-row input::placeholder{text-transform:none;color:#555;}
+    .coupon-row input:focus{border-color:#555;}
+    .btn-apply{background:none;border:1px solid #333;color:#aaa;font-size:12px;font-weight:700;
+      letter-spacing:.06em;padding:10px 16px;border-radius:4px;cursor:pointer;white-space:nowrap;
+      text-transform:uppercase;transition:border-color .2s,color .2s;}
+    .btn-apply:hover{border-color:#888;color:#fff;}
+    .coupon-ok{font-size:12px;color:#5ab87e;margin-top:-10px;margin-bottom:14px;display:none;}
+    .coupon-err{font-size:12px;color:#c87941;margin-top:-10px;margin-bottom:14px;display:none;}
+    .price-original{font-size:16px;color:#555;text-decoration:line-through;margin-bottom:2px;}
   </style>
 </head>
 <body>
@@ -58,7 +71,7 @@
   <div class="card">
     <div class="lock-icon">🎬</div>
     <h2>UNLOCK THE FULL COURSE</h2>
-    <p class="sub">Your account is active. Upgrade to Premium to access the full cinematography course.</p>
+    <p class="sub">Your account is active. Upgrade to Premium to access the full cinematography workshop.</p>
 
     <div class="features">
       <div class="feature">
@@ -80,9 +93,17 @@
     </div>
 
     <div class="price-box">
+      <div class="price-original" id="price-original" style="display:none;"></div>
       <div class="price" id="price-display">$99</div>
       <div class="price-sub">ONE-TIME PAYMENT · LIFETIME ACCESS</div>
     </div>
+
+    <div class="coupon-row">
+      <input type="text" id="coupon-input" placeholder="Have a coupon code?" maxlength="30" oninput="this.value=this.value.toUpperCase()">
+      <button class="btn-apply" onclick="applyCoupon()">Apply</button>
+    </div>
+    <div class="coupon-ok" id="coupon-ok"></div>
+    <div class="coupon-err" id="coupon-err"></div>
 
     <button class="btn" id="btn-pay" onclick="doPay()">GET FULL ACCESS NOW</button>
     <div class="msg error" id="msg-pay"></div>
@@ -98,32 +119,69 @@
 </footer>
 
 <script>
-  var userEmail = '';
-  var userName  = '';
+  var userEmail     = '';
+  var userName      = '';
+  var basePrice     = 99;
+  var appliedCoupon = '';
+  var finalPrice    = 99;
 
-  // Load price from config and check session
-  fetch('/member/me').then(function(r){ return r.json(); }).then(function(d){
-    if (!d.ok) {
-      location.href = '/member-login.html?next=/member/upgrade';
-      return;
-    }
-    if (d.premium) {
-      location.href = '/course';
-      return;
-    }
+  fetch('/member/me', {credentials:'include'}).then(function(r){ return r.json(); }).then(function(d){
+    if (!d.ok) { location.href = '/member-login.html?next=/member/upgrade'; return; }
+    if (d.premium) { location.href = '/course'; return; }
     userEmail = d.email || '';
     userName  = d.name  || '';
-  }).catch(function(){
-    location.href = '/member-login.html?next=/member/upgrade';
-  });
+  }).catch(function(){ location.href = '/member-login.html?next=/member/upgrade'; });
 
-  fetch('/api/payment-config').then(function(r){ return r.json(); }).catch(function(){ return {}; });
+  fetch('/api/payment-config').then(function(r){ return r.json(); }).then(function(d){
+    if (d && d.config && d.config.course_price) {
+      basePrice  = parseFloat(d.config.course_price) || 99;
+      finalPrice = basePrice;
+      document.getElementById('price-display').textContent = '$' + basePrice;
+    }
+  }).catch(function(){});
 
   function showMsg(text) {
     var el = document.getElementById('msg-pay');
     el.textContent = text;
     el.style.display = 'block';
   }
+
+  function applyCoupon() {
+    var code = document.getElementById('coupon-input').value.trim().toUpperCase();
+    var okEl  = document.getElementById('coupon-ok');
+    var errEl = document.getElementById('coupon-err');
+    okEl.style.display = errEl.style.display = 'none';
+
+    if (!code) { errEl.textContent = 'Please enter a coupon code.'; errEl.style.display = 'block'; return; }
+
+    fetch('/api/validate-coupon?code=' + encodeURIComponent(code))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d.ok) {
+          appliedCoupon = d.code;
+          var pct        = d.discount_pct;
+          finalPrice     = Math.round(basePrice * (1 - pct / 100) * 100) / 100;
+          var origEl     = document.getElementById('price-original');
+          origEl.textContent = '$' + basePrice;
+          origEl.style.display = 'block';
+          document.getElementById('price-display').textContent = '$' + finalPrice;
+          okEl.textContent = '✓ Coupon applied — ' + pct + '% off!';
+          okEl.style.display = 'block';
+        } else {
+          appliedCoupon = '';
+          finalPrice    = basePrice;
+          document.getElementById('price-original').style.display = 'none';
+          document.getElementById('price-display').textContent = '$' + basePrice;
+          errEl.textContent = d.error || 'Invalid coupon code.';
+          errEl.style.display = 'block';
+        }
+      })
+      .catch(function(){ errEl.textContent = 'Could not validate coupon. Try again.'; errEl.style.display = 'block'; });
+  }
+
+  document.getElementById('coupon-input').addEventListener('keydown', function(e){
+    if (e.key === 'Enter') applyCoupon();
+  });
 
   function doLogout() {
     fetch('/member/logout', {method:'POST'}).finally(function(){
@@ -139,7 +197,7 @@
     fetch('/api/initiate-payment', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({name: userName, email: userEmail})
+      body: JSON.stringify({name: userName, email: userEmail, coupon_code: appliedCoupon})
     })
     .then(function(r){ return r.json(); })
     .then(function(d){

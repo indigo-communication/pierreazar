@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <title>Cinematography Course — Pierre Azar</title>
+  <title>Cinematography Workshop — Pierre Azar</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
     body{background:#0d0d0d;color:#f0f0f0;font-family:Arial,sans-serif;min-height:100vh;}
@@ -56,17 +56,15 @@
 </header>
 
 <script>
-  // Check member session — redirect to login if not authenticated
-  fetch('/member/me').then(function(r){ return r.json(); }).then(function(d){
-    if (!d.ok) {
-      location.href = '/member-login?next=/course';
-    } else if (!d.premium) {
+  // Check member session; allow token-based access if not logged in.
+  fetch('/member/me', { credentials: 'include' }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.ok && !d.premium) {
       location.href = '/member/upgrade';
     } else {
       var el = document.getElementById('member-email-display');
-      if (el) el.textContent = d.email;
+      if (el && d.ok) el.textContent = d.email;
       // Show membership since date
-      if (d.premium_since) {
+      if (d.ok && d.premium_since) {
         var since = new Date(d.premium_since);
         var formatted = since.toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
         var sd = document.getElementById('member-since-display');
@@ -74,7 +72,7 @@
       }
     }
   }).catch(function(){
-    location.href = '/member-login?next=/course';
+    // Ignore; token-based access may still be valid.
   });
 
   function doLogout() {
@@ -87,7 +85,7 @@
 </script>
 
 <div class="hero">
-  <h1>CINEMATOGRAPHY COURSE</h1>
+  <h1>CINEMATOGRAPHY WORKSHOP</h1>
   <p>A focused 2-hour deep dive into real-world cinematography — practical techniques used on professional sets.</p>
 </div>
 <div class="divider"></div>
@@ -101,16 +99,9 @@
   <p class="section-title">Currently Playing</p>
 
   <div class="video-wrapper" id="main-video">
-    <!--
-      ╔══════════════════════════════════════════════════════════════════╗
-      ║  REPLACE THIS PLACEHOLDER WITH YOUR ACTUAL VIMEO / YOUTUBE ID  ║
-      ║  Example Vimeo:  https://player.vimeo.com/video/YOUR_VIDEO_ID   ║
-      ║  Example YouTube: https://www.youtube.com/embed/YOUR_VIDEO_ID   ║
-      ╚══════════════════════════════════════════════════════════════════╝
-    -->
     <iframe
       id="course-video-frame"
-      src="https://player.vimeo.com/video/REPLACE_WITH_COURSE_VIDEO_ID?title=0&byline=0&portrait=0"
+      src=""
       allowfullscreen
       allow="autoplay; fullscreen; picture-in-picture">
     </iframe>
@@ -119,36 +110,11 @@
   <p class="section-title">Course Chapters</p>
 
   <ul class="chapters" id="chapters-list">
-    <!-- Add or remove chapters as needed. Set data-video-id to your Vimeo/YouTube ID. -->
-    <li class="chapter active" data-video-id="REPLACE_WITH_COURSE_VIDEO_ID" data-source="vimeo" onclick="playChapter(this)">
-      <span class="ch-num">01</span>
-      <span class="ch-title">Introduction &amp; Equipment Overview</span>
-      <span class="ch-duration">12 min</span>
-      <span class="ch-icon">&#9654;</span>
-    </li>
-    <li class="chapter" data-video-id="REPLACE_WITH_VIDEO_ID_2" data-source="vimeo" onclick="playChapter(this)">
-      <span class="ch-num">02</span>
-      <span class="ch-title">Lighting Theory — Indoor Day Setup</span>
-      <span class="ch-duration">18 min</span>
-      <span class="ch-icon">&#9654;</span>
-    </li>
-    <li class="chapter" data-video-id="REPLACE_WITH_VIDEO_ID_3" data-source="vimeo" onclick="playChapter(this)">
-      <span class="ch-num">03</span>
-      <span class="ch-title">Indoor Night Lighting Techniques</span>
-      <span class="ch-duration">22 min</span>
-      <span class="ch-icon">&#9654;</span>
-    </li>
-    <li class="chapter" data-video-id="REPLACE_WITH_VIDEO_ID_4" data-source="vimeo" onclick="playChapter(this)">
-      <span class="ch-num">04</span>
-      <span class="ch-title">Beauty Lighting for Artists on Camera</span>
-      <span class="ch-duration">15 min</span>
-      <span class="ch-icon">&#9654;</span>
-    </li>
-    <li class="chapter" data-video-id="REPLACE_WITH_VIDEO_ID_5" data-source="vimeo" onclick="playChapter(this)">
-      <span class="ch-num">05</span>
-      <span class="ch-title">On-Set Decision Making</span>
-      <span class="ch-duration">20 min</span>
-      <span class="ch-icon">&#9654;</span>
+    <li class="chapter" style="cursor:default;">
+      <span class="ch-num">..</span>
+      <span class="ch-title">Loading course chapters...</span>
+      <span class="ch-duration"></span>
+      <span class="ch-icon"></span>
     </li>
   </ul>
 
@@ -156,18 +122,65 @@
 </div>
 
 <script>
-function playChapter(el) {
-  document.querySelectorAll('.chapter').forEach(function(c){ c.classList.remove('active'); });
-  el.classList.add('active');
-  var id     = el.getAttribute('data-video-id');
-  var source = el.getAttribute('data-source') || 'vimeo';
-  var frame  = document.getElementById('course-video-frame');
-  if (source === 'vimeo') {
-    frame.src = 'https://player.vimeo.com/video/' + id + '?title=0&byline=0&portrait=0&autoplay=1';
-  } else {
-    frame.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1';
+var COURSE_CHAPTERS = [];
+
+function addAutoplay(url) {
+  try {
+    var u = new URL(url);
+    u.searchParams.set('autoplay', '1');
+    return u.toString();
+  } catch (e) {
+    return url;
   }
 }
+
+function playChapter(index) {
+  var chapters = document.querySelectorAll('.chapter');
+  chapters.forEach(function(c){ c.classList.remove('active'); });
+  if (chapters[index]) chapters[index].classList.add('active');
+  var frame = document.getElementById('course-video-frame');
+  if (!frame || !COURSE_CHAPTERS[index]) return;
+  frame.src = addAutoplay(COURSE_CHAPTERS[index].embed_url);
+}
+
+function renderChapters(data) {
+  COURSE_CHAPTERS = data || [];
+  var list = document.getElementById('chapters-list');
+  if (!list) return;
+  list.innerHTML = '';
+
+  if (!COURSE_CHAPTERS.length) {
+    list.innerHTML = '<li class="chapter" style="cursor:default;"><span class="ch-num">--</span><span class="ch-title">No chapters configured yet.</span><span class="ch-duration"></span><span class="ch-icon"></span></li>';
+    return;
+  }
+
+  COURSE_CHAPTERS.forEach(function(ch, idx){
+    var li = document.createElement('li');
+    li.className = 'chapter' + (idx === 0 ? ' active' : '');
+    li.innerHTML = ''
+      + '<span class="ch-num">' + String(idx + 1).padStart(2, '0') + '</span>'
+      + '<span class="ch-title">' + (ch.title || ('Chapter ' + (idx + 1))) + '</span>'
+      + '<span class="ch-duration">' + (ch.duration || '') + '</span>'
+      + '<span class="ch-icon">&#9654;</span>';
+    li.onclick = function(){ playChapter(idx); };
+    list.appendChild(li);
+  });
+
+  playChapter(0);
+}
+
+fetch('/api/course-videos' + location.search, { credentials: 'include' })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if (!d.ok) throw new Error(d.error || 'Failed to load videos');
+    renderChapters(d.chapters || []);
+  })
+  .catch(function(){
+    var list = document.getElementById('chapters-list');
+    if (list) {
+      list.innerHTML = '<li class="chapter" style="cursor:default;"><span class="ch-num">!!</span><span class="ch-title">Unable to load course videos. Please refresh.</span><span class="ch-duration"></span><span class="ch-icon"></span></li>';
+    }
+  });
 </script>
 
 </body>

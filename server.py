@@ -483,6 +483,25 @@ def send_email(name, sender_email, message):
 # ── Request Handler ──────────────────────────────────────────────────────────
 class Handler(http.server.SimpleHTTPRequestHandler):
 
+    # ---- static asset caching ----
+
+    def send_head(self):
+        """Add long-lived Cache-Control for static assets."""
+        path = urllib.parse.urlparse(self.path).path.lower()
+        ext = os.path.splitext(path)[1]
+        f = super().send_head()
+        return f
+
+    def end_headers(self):
+        path = urllib.parse.urlparse(self.path).path.lower()
+        ext = os.path.splitext(path)[1]
+        if ext in ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico',
+                   '.woff', '.woff2', '.ttf', '.otf'):
+            self.send_header('Cache-Control', 'public, max-age=2592000, immutable')
+        elif ext in ('.css', '.js'):
+            self.send_header('Cache-Control', 'public, max-age=86400')
+        super().end_headers()
+
     # ---- helpers ----
 
     def _json_response(self, data, status=200, extra_headers=None):

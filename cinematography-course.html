@@ -4715,6 +4715,23 @@ if(window.location.protocol != 'https:')
     overflow: visible !important;
 }
 
+/* Subtitle spacing — more breathing room */
+#vbid-c1e000b4-p1vonkci .blocks-preview-subtitle-holder {
+    margin-top: 16px !important;
+    margin-bottom: 80px !important;
+    display: block !important;
+}
+#vbid-c1e000b4-p1vonkci .blocks-preview-subtitle {
+    display: block !important;
+    letter-spacing: 0.08em !important;
+}
+@media (max-width: 900px) {
+    #vbid-c1e000b4-p1vonkci .blocks-preview-subtitle-holder {
+        margin-top: 20px !important;
+        margin-bottom: 60px !important;
+    }
+}
+
 /* iframe fills its positioned parent */
 #pa-video-col iframe,
 #pa-course-iframe {

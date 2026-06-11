@@ -1,0 +1,49 @@
+/* Contact form — visible send button on dark backgrounds */
+.style-d2ba6020-ba7hzeoa .preview-item-links,
+.style-66177501-ttntr3bj .preview-item-links {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  margin-top: 8px;
+}
+
+.style-d2ba6020-ba7hzeoa .preview-item-links a,
+.style-66177501-ttntr3bj .preview-item-links a {
+  visibility: visible !important;
+  opacity: 1 !important;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.style-d2ba6020-ba7hzeoa .preview-item-links span,
+.style-66177501-ttntr3bj .preview-item-links span {
+  color: #fff !important;
+  border: 2px solid #fff !important;
+  background-color: transparent !important;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.style-d2ba6020-ba7hzeoa .preview-item-links span:hover,
+.style-66177501-ttntr3bj .preview-item-links span:hover,
+.style-d2ba6020-ba7hzeoa .preview-item-links span:focus,
+.style-66177501-ttntr3bj .preview-item-links span:focus {
+  color: #000 !important;
+  background-color: #fff !important;
+}
+
+/* Hide broken platform captcha injected by legacy form JS */
+.style-d2ba6020-ba7hzeoa .g-recaptcha,
+.style-66177501-ttntr3bj .g-recaptcha {
+  display: none !important;
+}
+
+.pa-contact-msg {
+  display: none;
+  margin-top: 15px;
+  font-family: Montserrat, Arial, sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: #fff;
+  text-align: center;
+}

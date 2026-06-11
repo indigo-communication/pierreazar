@@ -84,6 +84,87 @@ def _build_bunny_embed_url(library_id, video_id, token_key, expires):
         f'?token={token}&expires={expires}'
     )
 
+def _youtube_embed_url(vid):
+    return (
+        f'https://www.youtube.com/embed/{vid}'
+        '?enablejsapi=1&autoplay=1&mute=1&loop=1&controls=1'
+        f'&playlist={vid}&rel=0&modestbranding=1&playsinline=1'
+    )
+
+def _youtube_is_available(vid):
+    if not vid:
+        return False
+    try:
+        url = f'https://www.youtube.com/oembed?format=json&url=https://youtu.be/{urllib.parse.quote(vid)}'
+        with urllib.request.urlopen(url, timeout=6) as resp:
+            return resp.status == 200
+    except Exception:
+        return False
+
+def _bunny_embed_is_available(embed_url):
+    try:
+        with urllib.request.urlopen(embed_url, timeout=8) as resp:
+            body = resp.read(4096).decode('utf-8', errors='ignore')
+        return '<h1>404</h1>' not in body
+    except Exception:
+        return False
+
+# Known-good public promo when CMS/Bunny links are stale or unavailable.
+_PROMO_YOUTUBE_FALLBACK = 'sIcsHObKmzI'
+
+def _resolve_course_promo_embed():
+    """Signed Bunny intro or configured YouTube/Vimeo promo for homepage/course teaser."""
+    link = ''
+    try:
+        all_content = cm.get_all()
+        link = (
+            all_content.get('homepage_course_video_link')
+            or all_content.get('course_video_link')
+            or ''
+        ).strip()
+    except Exception:
+        link = ''
+
+    source, vid = cm._parse_video_input(link)
+    expires = int(time.time()) + (60 * 60 * 6)
+
+    if source == 'youtube' and vid and _youtube_is_available(vid):
+        return {'ok': True, 'provider': 'youtube', 'embed_url': _youtube_embed_url(vid)}
+
+    if source == 'vimeo' and vid:
+        url = (
+            f'https://player.vimeo.com/video/{vid}'
+            '?autoplay=1&loop=1&title=0&byline=0&badge=0&muted=1'
+        )
+        return {'ok': True, 'provider': 'vimeo', 'embed_url': url}
+
+    library_id, videos = _parse_bunny_course_config()
+    token_key = _read_bunny_token_key()
+    bunny_vid = vid if source == 'bunny' else ''
+    if not bunny_vid and videos:
+        bunny_vid = videos[0]['video_id']
+
+    if library_id and bunny_vid and token_key:
+        url = _build_bunny_embed_url(library_id, bunny_vid, token_key, expires)
+        url += '&autoplay=true&loop=true&muted=true&preload=true'
+        if _bunny_embed_is_available(url):
+            return {
+                'ok': True,
+                'provider': 'bunny',
+                'embed_url': url,
+                'fallback': source != 'bunny',
+            }
+
+    if _youtube_is_available(_PROMO_YOUTUBE_FALLBACK):
+        return {
+            'ok': True,
+            'provider': 'youtube',
+            'embed_url': _youtube_embed_url(_PROMO_YOUTUBE_FALLBACK),
+            'fallback': True,
+        }
+
+    return {'ok': False, 'error': 'No promo video configured'}
+
 # ── Payment config helpers ───────────────────────────────────────────────────
 _DEFAULT_PAYMENT_CONFIG = {
     'enabled':      False,
@@ -93,7 +174,7 @@ _DEFAULT_PAYMENT_CONFIG = {
     'secret_key':   '',
     'gateway_url':  'https://gateway.areeba.com',
     'currency':     'USD',
-    'course_price': 99.00,
+    'course_price': 149.00,
     'course_name':  'Cinematography Workshop',
     'return_base_url': 'https://pierreazar.com',
 }
@@ -497,7 +578,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         ext = os.path.splitext(path)[1]
         if ext in ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico',
                    '.woff', '.woff2', '.ttf', '.otf'):
-            self.send_header('Cache-Control', 'public, max-age=2592000, immutable')
+            self.send_header('Cache-Control', 'public, max-age=86400, must-revalidate')
         elif ext in ('.css', '.js'):
             self.send_header('Cache-Control', 'public, max-age=86400')
         super().end_headers()
@@ -921,6 +1002,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
 
         # ---- Course: signed Bunny chapter URLs ----
+        if path == '/api/course-promo-embed':
+            self._json_response(_resolve_course_promo_embed())
+            return
+
         if path == '/api/course-videos':
             # Access allowed for premium member session or valid token query.
             member_email = _get_member_session(self.headers.get('Cookie', ''))
@@ -1140,11 +1225,23 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 })
                 _write_json(SUBMISSIONS_FILE, submissions)
 
-                # Send email if SMTP is configured
+                email_sent = False
+                email_error = None
                 if cfg.SMTP_USER and cfg.SMTP_PASS:
-                    send_email(name, email, message)
+                    try:
+                        send_email(name, email, message)
+                        email_sent = True
+                    except Exception as mail_err:
+                        email_error = str(mail_err)
 
-                self._json_response({'ok': True})
+                self._json_response({
+                    'ok': True,
+                    'saved': True,
+                    'email_sent': email_sent,
+                    'email_error': email_error,
+                })
+            except ValueError as e:
+                self._json_response({'ok': False, 'error': str(e)})
             except Exception as e:
                 self._json_response({'ok': False, 'error': str(e)})
             return

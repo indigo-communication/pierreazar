@@ -70,4 +70,77 @@
     font-size: 11px !important;
     letter-spacing: 0 !important;
   }
+
+  /* ── Header brand (PIERRE AZAR / CINEMATOGRAPHER): full visibility on mobile ──
+     The theme sets force-min-height50 (50px) + left-div height:10px on narrow
+     viewports, which clips the subtitle vertically. Keep both lines visible.
+     ─────────────────────────────────────────────────────────────────────────── */
+  .master.item-box.header-box.minimal-design .menu_layout .preview-subtitle-holder,
+  .master.item-box.header-box.being-scrolled .menu_layout .preview-subtitle-holder {
+    display: inline-block !important;
+  }
+
+  .master.item-box.header-box.force-min-height50,
+  .master.item-box.header-box.force-min-height50 .menus-wrapper {
+    min-height: auto !important;
+  }
+
+  .master.item-box.header-box .menu_layout .left-div,
+  .master.item-box.header-box .menu_layout .right-div {
+    height: auto !important;
+  }
+
+  .master.item-box.header-box .menu_layout .item-details.menu {
+    line-height: 1.25 !important;
+    overflow: visible !important;
+  }
+
+  .master.item-box.header-box .preview-content-holder,
+  .master.item-box.header-box .preview-content-wrapper,
+  .master.item-box.header-box .header-wrapper {
+    overflow: visible !important;
+  }
+
+  .master.item-box.header-box .menu_layout .helper-div,
+  .master.item-box.header-box .menu_layout .left-div {
+    max-width: calc(100vw - 130px) !important;
+  }
+
+  .master.item-box.header-box .preview-title-holder,
+  .master.item-box.header-box .preview-subtitle-holder {
+    display: block !important;
+    overflow: visible !important;
+    max-width: 100% !important;
+  }
+
+  .master.item-box.header-box .preview-title,
+  .master.item-box.header-box #element-bb8218412079d9e,
+  .master.item-box.header-box.style-6d830c27-ubat0wmj .preview-subtitle {
+    white-space: nowrap !important;
+    overflow: visible !important;
+    line-height: 1.25 !important;
+    max-width: 100% !important;
+    font-size: clamp(9px, 2.65vw, 12px) !important;
+    letter-spacing: 0.02em !important;
+    margin-bottom: 2px !important;
+  }
+
+  .master.item-box.header-box .preview-title {
+    font-size: clamp(11px, 3.4vw, 17px) !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Hide stray <br> spacing between title and subtitle in the header */
+  .master.item-box.header-box .menu_layout .item-details.menu > br {
+    display: none !important;
+  }
+}
+
+/* Extra-tight phones: shrink subtitle slightly so CINEMATOGRAPHER stays on one line */
+@media (max-width: 400px) {
+  .master.item-box.header-box #element-bb8218412079d9e,
+  .master.item-box.header-box.style-6d830c27-ubat0wmj .preview-subtitle {
+    font-size: clamp(8px, 2.35vw, 11px) !important;
+    letter-spacing: 0.01em !important;
+  }
 }

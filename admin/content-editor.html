@@ -226,28 +226,28 @@
                                     <div class="mb-3">
                                         <label class="form-label" for="homepage_reel_video_link">Hero Background Reel</label>
                                         <input type="text" class="form-control" id="homepage_reel_video_link" name="homepage_reel_video_link"
-                                               placeholder="YouTube or Vimeo URL / ID" autocomplete="off">
+                                               placeholder="YouTube, Vimeo, or Bunny Stream embed URL" autocomplete="off">
                                         <div class="form-text">Uses YouTube for marketing/public videos. Use Bunny Stream fields below for protected lessons.</div>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label" for="homepage_selected_video_1">Selected Works — Video 1</label>
                                         <input type="text" class="form-control" id="homepage_selected_video_1" name="homepage_selected_video_1"
-                                               placeholder="YouTube or Vimeo URL / ID" autocomplete="off">
+                                               placeholder="YouTube, Vimeo, or Bunny Stream embed URL" autocomplete="off">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label" for="homepage_selected_video_2">Selected Works — Video 2</label>
                                         <input type="text" class="form-control" id="homepage_selected_video_2" name="homepage_selected_video_2"
-                                               placeholder="YouTube or Vimeo URL / ID" autocomplete="off">
+                                               placeholder="YouTube, Vimeo, or Bunny Stream embed URL" autocomplete="off">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label" for="homepage_selected_video_3">Selected Works — Video 3</label>
                                         <input type="text" class="form-control" id="homepage_selected_video_3" name="homepage_selected_video_3"
-                                               placeholder="YouTube or Vimeo URL / ID" autocomplete="off">
+                                               placeholder="YouTube, Vimeo, or Bunny Stream embed URL" autocomplete="off">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label" for="homepage_course_video_link">Course Promo on Homepage <span class="badge bg-secondary fw-normal">also updates Course page</span></label>
                                         <input type="text" class="form-control" id="homepage_course_video_link" name="homepage_course_video_link"
-                                               placeholder="YouTube or Vimeo URL / ID" autocomplete="off">
+                                               placeholder="YouTube, Vimeo, or Bunny Stream embed URL" autocomplete="off">
                                         <div class="form-text">Video shown in the "Cinematography Workshop" section on the homepage. Saving this also updates the Course page.</div>
                                     </div>
                                     <div class="d-flex align-items-center gap-3 mb-2">
@@ -404,7 +404,7 @@
                                     <div class="mb-3">
                                         <label class="form-label" for="course_video_link">Promo Video Link <span class="badge bg-secondary fw-normal">also updates homepage course promo</span></label>
                                         <input type="text" class="form-control" id="course_video_link" name="course_video_link"
-                                               placeholder="YouTube or Vimeo URL / ID" autocomplete="off">
+                                               placeholder="YouTube, Vimeo, or Bunny Stream embed URL" autocomplete="off">
                                         <div class="form-text">Uses YouTube for promo/public videos. Use Bunny Stream below for paid course parts.</div>
                                     </div>
                                     <div class="d-flex align-items-center gap-3 mb-2">
@@ -933,7 +933,8 @@ function loadPageVideos(page) {
                         var ytId = (v.value.match(/(?:youtu\.be\/|v=)([A-Za-z0-9_-]{6,})/) || [])[1] || '';
                         if (ytId) embedSrc = 'https://www.youtube.com/embed/' + ytId + '?rel=0&modestbranding=1';
                     } else if (v.source === 'vimeo') {
-                        var vmId = (v.value.match(/vimeo\.com\/(\d+)/) || [])[1] || '';
+                        var vmId = (v.value.match(/vimeo\.com\/(?:video\/)?(\d+)/) || [])[1] || '';
+                        if (!vmId && /^\d+$/.test(String(v.value || '').trim())) vmId = String(v.value).trim();
                         if (vmId) embedSrc = 'https://player.vimeo.com/video/' + vmId;
                     }
                     if (embedSrc) {

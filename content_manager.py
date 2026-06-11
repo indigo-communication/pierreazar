@@ -8,8 +8,10 @@ import re
 import random
 import shutil
 import string
+import time
 
 BASE = os.path.dirname(os.path.abspath(__file__))
+BUNNY_COURSE_LINK_FILE = os.path.join(BASE, 'bunny-stream', 'course_link.txt')
 
 PUBLIC_PAGES = [
     'index.html',
@@ -51,6 +53,19 @@ PORTFOLIO_DYNAMIC_FILE = os.path.join(BASE, 'data', 'portfolio_dynamic.json')
 def _build_portfolio_item_html(wrapper_id, video_id, img_id, source, vid,
                                iframe_src, iframe_class, thumb_path):
     """Build portfolio grid item HTML — nesting must match static items for matrix layout."""
+    if source == 'youtube':
+        video_inner = (
+            f'\t\t<div class="yt-facade" data-vid="{vid}" onclick="playYT(this)">'
+            f'<img src="https://img.youtube.com/vi/{vid}/hqdefault.jpg" alt="Video thumbnail" loading="lazy">'
+            f'<button class="yt-play-btn" aria-label="Play">'
+            f'<svg viewBox="0 0 68 48"><path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="#f00"/>'
+            f'<path d="M45 24 27 14v20z" fill="#fff"/></svg></button></div>\n'
+        )
+    else:
+        video_inner = (
+            f'\t\t<iframe class="{iframe_class} preview video-frame" id="{video_id}-vidframe" '
+            f'src="{iframe_src}" frameborder="0" width="100%" height="100%"></iframe>\n'
+        )
     return (
         f'<div id="{wrapper_id}" class="sub item-box  page-box style-5582618c-u4ta6ilj" '
         f'data-holder-type="page" data-child-type="STYLE" data-styleid="style-5582618c-u4ta6ilj" '
@@ -80,8 +95,7 @@ def _build_portfolio_item_html(wrapper_id, video_id, img_id, source, vid,
         f'vid-cover allow-mobile-hide" data-menu-name="PREVIEW_VIDEO" data-json-name="PREVIEW_VIDEO" '
         f'data-spimeTEXT=\'{vid}\' data-spimeVIDEO_ID=\'{vid}\' data-spimeVID_COVER=\'True\' '
         f'data-spimeSOURCE=\'{source}\' data-spimeCONTEXT=\'PREVIEW\' data-spimeVBID=\'{video_id}\'>\n'
-        f'\t\t<iframe class="{iframe_class} preview video-frame" id="{video_id}-vidframe" '
-        f'src="{iframe_src}" frameborder="0" width="100%" height="100%"></iframe>\n'
+        f'{video_inner}'
         f'\t</div>\n'
         f'</div>\n'
         f'    </div>\n'
@@ -476,6 +490,7 @@ HEADER_FIELDS = {
     'homepage_selected_works_title': ('index.html', 'vbid-6fed10fa-kkspkfk3'),
     'homepage_selected_works_subtitle': ('index.html', 'vbid-6fed10fa-0sinf33q'),
     # portfolio
+    'portfolio_hero_title': ('portfolio.html', 'vbid-b3e6bf42-lqbei8re'),
     'portfolio_featured_projects_title': ('portfolio.html', 'vbid-5582618c-nhssypbg'),
     # course
     'course_hero_title': ('cinematography-course.html', 'vbid-ca1eb861-lqbei8re'),
@@ -738,7 +753,42 @@ def _extract_video_src(content, element_id):
         r'id="' + re.escape(element_id) + r'-vidframe"\s+src="([^"]+)"',
         content
     )
-    return m.group(1).strip() if m else ''
+    if m:
+        return m.group(1).strip()
+
+    block_m = re.search(r'<div id="' + re.escape(element_id) + r'"[^>]*>', content)
+    if not block_m:
+        return ''
+
+    chunk = content[block_m.start():block_m.start() + 2500]
+
+    yt_m = re.search(r'class="yt-facade"\s+data-vid="([A-Za-z0-9_-]+)"', chunk)
+    if yt_m:
+        return f'https://www.youtube.com/embed/{yt_m.group(1)}'
+
+    src_m = re.search(r"data-spimeSOURCE\s*=\s*['\"](\w+)['\"]", chunk)
+    vid_m = re.search(r"data-spimeVIDEO_ID\s*=\s*['\"]([^'\"]+)['\"]", chunk)
+    if src_m and vid_m:
+        source, vid = src_m.group(1), vid_m.group(1)
+        if source == 'youtube':
+            return f'https://www.youtube.com/embed/{vid}'
+        if source == 'vimeo':
+            return f'https://player.vimeo.com/video/{vid}'
+
+    return ''
+
+
+def _bunny_library_id():
+    if not os.path.exists(BUNNY_COURSE_LINK_FILE):
+        return ''
+    for line in open(BUNNY_COURSE_LINK_FILE, encoding='utf-8'):
+        s = line.strip()
+        if not s or s.startswith('#'):
+            continue
+        m = re.search(r'\b(\d{3,})\b', s)
+        if m:
+            return m.group(1)
+    return ''
 
 
 def _parse_video_input(value):
@@ -746,10 +796,16 @@ def _parse_video_input(value):
     if not raw:
         return '', ''
     lower = raw.lower()
+    if 'mediadelivery.net' in lower:
+        m = re.search(r'/embed/(\d+)/([0-9a-fA-F-]{36})', raw)
+        if m:
+            return 'bunny', m.group(2)
+    if re.fullmatch(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}', raw):
+        return 'bunny', raw
     if 'youtube.com' in lower or 'youtu.be' in lower:
         y = re.search(r'(?:v=|\/embed\/|youtu\.be\/)([A-Za-z0-9_-]{6,})', raw)
         return ('youtube', y.group(1)) if y else ('', '')
-    if 'vimeo.com' in lower:
+    if 'vimeo.com' in lower or 'player.vimeo.com' in lower:
         v = re.search(r'vimeo\.com/(?:video/)?(\d+)', raw)
         return ('vimeo', v.group(1)) if v else ('', '')
     if re.fullmatch(r'\d+', raw):
@@ -769,6 +825,9 @@ def _parse_video_from_src(src):
     if 'player.vimeo.com/video/' in s:
         m = re.search(r'player\.vimeo\.com/video/(\d+)', src, re.IGNORECASE)
         return ('vimeo', m.group(1) if m else '')
+    if 'mediadelivery.net/embed/' in s:
+        m = re.search(r'/embed/\d+/([0-9a-fA-F-]{36})', src, re.IGNORECASE)
+        return ('bunny', m.group(1) if m else '')
     return '', ''
 
 
@@ -777,11 +836,62 @@ def _video_link_from_parts(source, vid):
         return ''
     if source == 'youtube':
         return 'https://youtu.be/' + vid
+    if source == 'bunny':
+        lib = _bunny_library_id() or '659916'
+        return f'https://iframe.mediadelivery.net/embed/{lib}/{vid}'
     return 'https://vimeo.com/' + vid
 
 
+_YT_PLAY_SVG = (
+    '<svg viewBox="0 0 68 48">'
+    '<path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="#f00"/>'
+    '<path d="M45 24 27 14v20z" fill="#fff"/></svg>'
+)
+
+
+def _youtube_facade_html(vid):
+    return (
+        f'<div class="yt-facade" data-vid="{vid}" onclick="playYT(this)">'
+        f'<img src="https://img.youtube.com/vi/{vid}/hqdefault.jpg" alt="Video thumbnail" loading="lazy">'
+        f'<button class="yt-play-btn" aria-label="Play">{_YT_PLAY_SVG}</button></div>'
+    )
+
+
+def _video_iframe_html(element_id, src, iframe_class):
+    return (
+        f'<iframe class="{iframe_class} preview video-frame" id="{element_id}-vidframe" '
+        f'src="{src}" frameborder="0" width="100%" height="100%"></iframe>'
+    )
+
+
+def _use_youtube_facade(element_id, cls, autoplay):
+    if autoplay or 'vid-autoplay' in cls:
+        return False
+    return element_id.startswith('vbid-') or element_id.startswith('pa-vid-')
+
+
+def _replace_video_inner(content, element_id, new_inner):
+    eid = re.escape(element_id)
+    facade_pat = re.compile(
+        r'(<div id="' + eid + r'"[^>]*>)\s*<div class="yt-facade"[^>]*>.*?</div>(\s*</div>)',
+        re.DOTALL,
+    )
+    if facade_pat.search(content):
+        return facade_pat.sub(lambda m: m.group(1) + '\n\t\t' + new_inner + m.group(2), content, count=1)
+
+    iframe_pat = re.compile(
+        r'(<div id="' + eid + r'"[^>]*>)\s*<iframe[^>]*id="' + eid + r'-vidframe"[^>]*>.*?</iframe>(\s*</div>)',
+        re.DOTALL,
+    )
+    if iframe_pat.search(content):
+        return iframe_pat.sub(lambda m: m.group(1) + '\n\t\t' + new_inner + m.group(2), content, count=1)
+
+    open_pat = re.compile(r'(<div id="' + eid + r'"[^>]*>)')
+    return open_pat.sub(lambda m: m.group(1) + '\n\t\t' + new_inner + '\n\t', content, count=1)
+
+
 def _update_video_block(content, element_id, source, vid):
-    if source not in ('vimeo', 'youtube') or not vid:
+    if source not in ('vimeo', 'youtube', 'bunny') or not vid:
         return content
     # source + id attributes
     content = re.sub(
@@ -807,7 +917,10 @@ def _update_video_block(content, element_id, source, vid):
     loop = 'vid-loop' in cls
     mute = 'vid-mute' in cls
 
-    if source == 'youtube':
+    if source == 'bunny':
+        src = 'about:blank'
+        iframe_class = 'bunnyplayer preview video-frame'
+    elif source == 'youtube':
         params = [
             'enablejsapi=1',
             'rel=0',
@@ -827,28 +940,18 @@ def _update_video_block(content, element_id, source, vid):
             f'https://player.vimeo.com/video/{vid}?api=1&player_id={element_id}-vidframe'
             f'&autoplay={1 if autoplay else 0}'
             f'&loop={1 if loop else 0}'
-            f'&title=0&byline=0&badge=0'
+            f'&muted={1 if mute or autoplay else 0}'
+            f'&controls=1'
+            f'&title=0&byline=0&badge=0&background=0&autopause=0&dnt=1'
         )
         iframe_class = 'vimplayer preview video-frame'
 
-    iframe_pattern = re.compile(
-        r'<iframe[^>]*id="' + re.escape(element_id) + r'-vidframe"[^>]*>',
-        re.DOTALL
-    )
+    if source == 'youtube' and _use_youtube_facade(element_id, cls, autoplay):
+        new_inner = _youtube_facade_html(vid)
+    else:
+        new_inner = _video_iframe_html(element_id, src, iframe_class)
 
-    def _rewrite_iframe_tag(m):
-        tag = m.group(0)
-        if 'class="' in tag:
-            tag = re.sub(r'(class=")[^"]*(")', lambda c: c.group(1) + iframe_class + c.group(2), tag, count=1)
-        else:
-            tag = tag[:-1] + f' class="{iframe_class}">'
-        if 'src="' in tag:
-            tag = re.sub(r'(src=")[^"]*(")', lambda s: s.group(1) + src + s.group(2), tag, count=1)
-        else:
-            tag = tag[:-1] + f' src="{src}">'
-        return tag
-
-    content = iframe_pattern.sub(_rewrite_iframe_tag, content)
+    content = _replace_video_inner(content, element_id, new_inner)
 
     # Some templates (home/course promo block) also mirror the same video in a
     # secondary container (`#pa-video-col`). Keep that fallback iframe in sync
@@ -857,19 +960,21 @@ def _update_video_block(content, element_id, source, vid):
         if source == 'youtube':
             pa_src = (
                 f'https://www.youtube.com/embed/{vid}'
-                '?autoplay=1&mute=1&loop=1&controls=0'
+                '?enablejsapi=1&autoplay=1&mute=1&loop=1&controls=1'
                 f'&playlist={vid}&rel=0&modestbranding=1&playsinline=1'
             )
+        elif source == 'bunny':
+            pa_src = ''
         else:
             pa_src = (
                 f'https://player.vimeo.com/video/{vid}'
                 '?autoplay=1&loop=1&title=0&byline=0&badge=0&muted=1'
             )
         content = re.sub(
-            r'(<div id="pa-video-col"><iframe[^>]*src=")[^"]*(")',
+            r'(<iframe id="pa-course-iframe"[^>]*src=")[^"]*(")',
             lambda m: m.group(1) + pa_src + m.group(2),
             content,
-            count=1
+            count=1,
         )
     return content
 
@@ -900,7 +1005,7 @@ def get_all():
 
     # Course price
     m = re.search(r'<span class="real-price">\s*([\d.]+)\s*</span>', c)
-    result['course_price'] = m.group(1).strip() if m else '99'
+    result['course_price'] = m.group(1).strip() if m else '149'
 
     # Buy button text
     m = re.search(r'id="vbid-c1e000b4-nold91wb"[^>]*>([^<]+)</span>', c)
@@ -1012,9 +1117,16 @@ def save_content(data):
     # ── Video links + thumbnails ─────────────────────────────────────────────
     for field, (page, video_id, thumb_id) in VIDEO_FIELDS.items():
         if field in data:
-            source, vid = _parse_video_input(data[field])
+            raw = str(data[field]).strip()
+            if not raw:
+                continue
+            source, vid = _parse_video_input(raw)
             if source and vid:
                 pages[page] = _update_video_block(pages[page], video_id, source, vid)
+            else:
+                errors.append(
+                    f'{field}: could not parse video link — paste a YouTube or Vimeo URL/ID'
+                )
 
     # homepage course + course page should stay in sync
     if 'homepage_course_video_link' in data and 'course_video_link' not in data:
@@ -1176,6 +1288,26 @@ def list_images():
     return result
 
 
+def _bump_image_cache_references(rel_path):
+    """Append ?v=timestamp to HTML references after an image file is replaced."""
+    rel_path = rel_path.lstrip('/')
+    if rel_path.startswith('images/'):
+        rel_path = rel_path[len('images/'):]
+    paths = {rel_path, 'images/' + rel_path}
+    ts = str(int(time.time()))
+    for page in PUBLIC_PAGES:
+        content = _read(page)
+        orig = content
+        for p in paths:
+            content = re.sub(
+                re.escape(p) + r'(\?v=\d+)?',
+                p + '?v=' + ts,
+                content
+            )
+        if content != orig:
+            _write(page, content)
+
+
 def save_image(filename, raw_bytes):
     """Replace an existing image. filename may be 'photos/img_001.jpg' or plain 'img_001.jpg'.
     Returns (ok, error_msg)."""
@@ -1211,6 +1343,8 @@ def save_image(filename, raw_bytes):
         os.makedirs(os.path.dirname(target), exist_ok=True)
         with open(target, 'wb') as f:
             f.write(raw_bytes)
+        rel = f'{folder}/{safe_name}'
+        _bump_image_cache_references(rel)
         return True, None
     except Exception as e:
         return False, str(e)

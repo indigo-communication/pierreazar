@@ -201,7 +201,14 @@
     })
     .then(function(r){ return r.json(); })
     .then(function(d){
-      if (d.ok && d.checkout_url) {
+      if (d.ok && d.capture_context) {
+        sessionStorage.setItem('pa_uc_checkout', JSON.stringify({
+          order_id: d.order_id,
+          email: userEmail,
+          name: userName
+        }));
+        location.href = '/payment-checkout.html';
+      } else if (d.ok && d.checkout_url) {
         location.href = d.checkout_url;
       } else {
         showMsg(d.error || 'Payment setup failed. Please try again.');

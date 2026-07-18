@@ -1,8 +1,9 @@
-import http.server, ssl, os, re, json, smtplib, urllib.parse, hashlib, secrets, io, hmac, base64, time
-import urllib.request
+import http.server, http.client, ssl, os, re, json, smtplib, urllib.parse, hashlib, secrets, io, hmac, base64, time, html
+import urllib.request, urllib.error
 from datetime import datetime, timezone
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.utils import formatdate
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -169,10 +170,11 @@ def _resolve_course_promo_embed():
 _DEFAULT_PAYMENT_CONFIG = {
     'enabled':      False,
     'demo_mode':    False,
+    'gateway_type': 'cybersource',
     'merchant_id':  '',
     'api_key':      '',
     'secret_key':   '',
-    'gateway_url':  'https://gateway.areeba.com',
+    'gateway_url':  'apitest.cybersource.com',
     'currency':     'USD',
     'course_price': 149.00,
     'course_name':  'Cinematography Workshop',
@@ -193,7 +195,7 @@ def save_payment_config(data):
     clean = {k: v for k, v in data.items() if k in allowed}
     # Validate types
     if 'course_price' in clean:
-        clean['course_price'] = float(clean['course_price'])
+        clean['course_price'] = round(float(clean['course_price']), 2)
     if 'enabled' in clean:
         clean['enabled'] = bool(clean['enabled'])
     if 'demo_mode' in clean:
@@ -209,6 +211,587 @@ def _masked_config(cfg_data):
         out[field] = val[:4] + '****' if len(val) > 4 else ('****' if val else '')
     return out
 
+def _payment_gateway_host(cfg_data):
+    host = (cfg_data.get('gateway_url') or 'apitest.cybersource.com').strip()
+    host = host.replace('https://', '').replace('http://', '').rstrip('/')
+    return host or 'apitest.cybersource.com'
+
+def _payment_allowed_origins(cfg_data):
+    """Apex + www variants of the configured site URL (Cybersource needs an exact match)."""
+    base = (cfg_data.get('return_base_url') or 'https://pierreazar.com').rstrip('/')
+    allowed = {base}
+    if '://www.' in base:
+        allowed.add(base.replace('://www.', '://', 1))
+    else:
+        scheme, sep, rest = base.partition('://')
+        if sep and rest:
+            allowed.add(f'{scheme}://www.{rest}')
+    return allowed
+
+def _payment_target_origins(cfg_data, page_origin=None):
+    """
+    Cybersource UNUSED_TARGET_ORIGINS fires when JWT origins don't match
+    window.location.origin exactly — including www vs non-www.
+    Pass only the current page origin (must be on the allowlist).
+    """
+    allowed = _payment_allowed_origins(cfg_data)
+    origin = (page_origin or '').strip().rstrip('/')
+    if origin in allowed:
+        return [origin]
+    return [next(iter(sorted(allowed)))]
+
+def _format_money(amount):
+    return f'{float(amount):.2f}'
+
+def _cybersource_bill_to(name, email):
+    """Cybersource requires bill_address1, bill_city, bill_country for auth."""
+    parts = (name or '').split()
+    first_name = parts[0] if parts else 'Guest'
+    last_name = parts[-1] if len(parts) > 1 else first_name
+    return {
+        'firstName': first_name,
+        'lastName': last_name,
+        'email': email,
+        'address1': 'Beirut',
+        'locality': 'Beirut',
+        'administrativeArea': 'Beirut',
+        'country': 'LB',
+        'postalCode': '1103',
+    }
+
+def _cybersource_digest(body):
+    digest = base64.b64encode(hashlib.sha256(body.encode('utf-8')).digest()).decode('utf-8')
+    return f'SHA-256={digest}'
+
+def _cybersource_signature(cfg_data, host, date_hdr, method, request_target, body):
+    merchant_id = cfg_data['merchant_id']
+    secret_key  = cfg_data['secret_key']
+    digest_hdr  = _cybersource_digest(body)
+    target      = f'{method.lower()} {request_target}'
+    signing = (
+        f'host: {host}\n'
+        f'date: {date_hdr}\n'
+        f'(request-target): {target}\n'
+        f'digest: {digest_hdr}\n'
+        f'v-c-merchant-id: {merchant_id}'
+    )
+    secret = base64.b64decode(secret_key)
+    sig = base64.b64encode(hmac.new(secret, signing.encode('utf-8'), hashlib.sha256).digest()).decode('utf-8')
+    key_id = cfg_data['api_key']
+    signature_header = (
+        f'keyid="{key_id}", algorithm="HmacSHA256", '
+        f'headers="host date (request-target) digest v-c-merchant-id", '
+        f'signature="{sig}"'
+    )
+    return digest_hdr, signature_header
+
+def _cybersource_api_request(cfg_data, method, request_target, body_obj=None):
+    host = _payment_gateway_host(cfg_data)
+    body = json.dumps(body_obj, separators=(',', ':')) if body_obj is not None else ''
+    date_hdr = formatdate(timeval=None, localtime=False, usegmt=True)
+    digest_hdr, signature_header = _cybersource_signature(cfg_data, host, date_hdr, method, request_target, body)
+    conn = http.client.HTTPSConnection(host, timeout=30)
+    try:
+        conn.request(
+            method,
+            request_target,
+            body=body.encode('utf-8') if body else None,
+            headers={
+                'Host': host,
+                'Date': date_hdr,
+                'Digest': digest_hdr,
+                'v-c-merchant-id': cfg_data['merchant_id'],
+                'Signature': signature_header,
+                'Content-Type': 'application/json',
+            },
+        )
+        resp = conn.getresponse()
+        raw = resp.read().decode('utf-8')
+        if resp.status >= 400:
+            raise ValueError(f'Cybersource error ({resp.status}): {raw[:500]}')
+        return raw
+    except ValueError:
+        raise
+    except Exception as e:
+        raise ValueError(f'Cybersource connection error: {e}') from e
+    finally:
+        conn.close()
+
+# Unified Checkout UI branding (matches payment-checkout.css light theme).
+_CYBERSOURCE_APPEARANCE = {
+    'variables': {
+        'backgroundColor': '#ffffff',
+        'textColor': '#18181b',
+        'headerBackground': '#ffffff',
+        'headerForeground': '#18181b',
+        'headerAvatarBackgroundColor': '#18181b',
+        'headerAvatarForegroundColor': '#ffffff',
+        'inputBackground': '#ffffff',
+        'inputColor': '#18181b',
+        'inputPlaceholderColor': '#a1a1aa',
+        'inputBorderColor': '#e4e4e7',
+        'inputBorderRadius': '8px',
+        'inputFocusedBorderColor': '#18181b',
+        'buttonBackground': '#18181b',
+        'buttonForeground': '#ffffff',
+        'buttonBorderRadius': '8px',
+        'buttonHoverBackground': '#000000',
+        'buttonHoverForeground': '#ffffff',
+        'fontFamily': 'Arial, sans-serif',
+        'borderRadius': '8px',
+    }
+}
+
+def _cybersource_create_capture_context(cfg_data, order_id, amount, name, email, page_origin=None):
+    """Create a Cybersource Unified Checkout capture context JWT."""
+    currency = cfg_data.get('currency', 'USD')
+    payload = {
+        'targetOrigins': _payment_target_origins(cfg_data, page_origin),
+        'allowedCardNetworks': ['VISA', 'MASTERCARD', 'AMEX'],
+        'allowedPaymentTypes': ['PANENTRY'],
+        'country': 'LB',
+        'locale': 'en_US',
+        'appearance': _CYBERSOURCE_APPEARANCE,
+        'data': {
+            'clientReferenceInformation': {'code': order_id},
+            'orderInformation': {
+                'amountDetails': {
+                    'totalAmount': _format_money(amount),
+                    'currency': currency,
+                },
+                'billTo': _cybersource_bill_to(name, email),
+            },
+        },
+        'completeMandate': {'type': 'CAPTURE'},
+        'captureMandate': {
+            'billingType': 'FULL',
+            'requestEmail': False,
+            'requestPhone': False,
+            'requestShipping': False,
+        },
+    }
+    raw = _cybersource_api_request(cfg_data, 'POST', '/uc/v1/sessions', payload)
+
+    try:
+        parsed = json.loads(raw)
+        if isinstance(parsed, dict):
+            token = parsed.get('captureContext') or parsed.get('jwt') or parsed.get('keyId')
+            if token:
+                return token
+    except json.JSONDecodeError:
+        pass
+    token = raw.strip().strip('"')
+    if token.count('.') >= 2:
+        return token
+    raise ValueError('Unexpected Cybersource capture context response')
+
+def _decode_jwt_payload(token):
+    if not token or token.count('.') < 2:
+        return {}
+    segment = token.split('.')[1]
+    pad = '=' * (-len(segment) % 4)
+    try:
+        return json.loads(base64.urlsafe_b64decode(segment + pad))
+    except Exception:
+        return {}
+
+def _cybersource_extract_payment_id(payload):
+    if not isinstance(payload, dict):
+        return ''
+    for key in ('id', 'transactionId'):
+        val = str(payload.get(key, '')).strip()
+        if val:
+            return val
+    details = payload.get('details')
+    if isinstance(details, dict):
+        val = str(details.get('id', '')).strip()
+        if val:
+            return val
+    return ''
+
+def _cybersource_reason_ok(reason):
+    return str(reason).strip() in ('', '100', '110')
+
+def _cybersource_tss_find_transaction(cfg_data, query):
+    payload = {
+        'save': False,
+        'timezone': 'Etc/UTC',
+        'query': query,
+        'offset': 0,
+        'limit': 5,
+        'sort': 'submitTimeUtc:desc',
+    }
+    raw = _cybersource_api_request(cfg_data, 'POST', '/tss/v2/searches', payload)
+    data = json.loads(raw)
+    return data.get('_embedded', {}).get('transactionSummaries', [])
+
+def _cybersource_transaction_approved(txn, order):
+    if not txn:
+        return False, 'Transaction not found in Cybersource'
+    app = txn.get('applicationInformation') or {}
+    reason = str(app.get('reasonCode', '')).strip()
+    rflag = str(app.get('rFlag', '')).strip().upper()
+    if reason and not _cybersource_reason_ok(reason):
+        msg = app.get('rMessage') or f'Cybersource reason code {reason}'
+        return False, msg
+    if rflag.startswith('D'):
+        return False, app.get('rMessage') or f'Cybersource flag {rflag}'
+    for sub in app.get('applications') or []:
+        if sub.get('name') == 'ics_auth':
+            sub_reason = str(sub.get('reasonCode', '')).strip()
+            if sub_reason and not _cybersource_reason_ok(sub_reason):
+                return False, sub.get('rMessage') or f'Authorization failed ({sub_reason})'
+    ref = (txn.get('clientReferenceInformation') or {}).get('code', '')
+    if ref and ref != order.get('order_id'):
+        return False, f'Order reference mismatch ({ref})'
+    amount_details = (txn.get('orderInformation') or {}).get('amountDetails') or {}
+    if amount_details:
+        expected = f"{float(order.get('amount', 0)):.2f}"
+        got = str(amount_details.get('totalAmount', '')).strip()
+        if got and got != expected:
+            return False, f'Amount mismatch (expected {expected}, got {got})'
+    return True, reason or '100'
+
+def _cybersource_find_approved_transaction(cfg_data, order, payment_id=None):
+    order_id = order.get('order_id', '')
+    queries = []
+    if payment_id:
+        queries.append(f'id:{payment_id}')
+    if order_id:
+        queries.append(f'clientReferenceInformation.code:{order_id}')
+    for query in queries:
+        txns = _cybersource_tss_find_transaction(cfg_data, query)
+        for txn in txns:
+            ok, detail = _cybersource_transaction_approved(txn, order)
+            if ok:
+                return txn, detail
+    return None, None
+
+def _cybersource_verify_payment(cfg_data, order, payment_id=None):
+    last_err = 'Transaction not found in Cybersource'
+    for attempt in range(4):
+        txn, detail = _cybersource_find_approved_transaction(cfg_data, order, payment_id)
+        if txn:
+            return {
+                'ok': True,
+                'cybersource_id': txn.get('id', payment_id or ''),
+                'status': 'AUTHORIZED',
+                'gateway_reason': detail,
+                'source': 'tss_verify',
+            }
+        if attempt < 3:
+            time.sleep(1.0)
+    raise ValueError(last_err)
+
+def _cybersource_extract_status(payload):
+    """Return payment status string if present. Do not invent success."""
+    if not isinstance(payload, dict):
+        return ''
+    for key in ('status', 'outcome', 'paymentStatus'):
+        val = str(payload.get(key, '')).strip().upper()
+        if val:
+            return val
+    details = payload.get('details')
+    if isinstance(details, dict):
+        for key in ('status', 'outcome', 'paymentStatus'):
+            val = str(details.get(key, '')).strip().upper()
+            if val:
+                return val
+    ctx = payload.get('ctx')
+    if isinstance(ctx, list):
+        for item in ctx:
+            if isinstance(item, dict) and isinstance(item.get('data'), dict):
+                st = _cybersource_extract_status(item['data'])
+                if st:
+                    return st
+    return ''
+
+def _cybersource_is_authorized_status(status):
+    # Only real settlement outcomes count as paid. Never PENDING/ACCEPTED alone.
+    return status in {'AUTHORIZED', 'CAPTURED', 'PARTIAL_AUTHORIZED'}
+
+def _cybersource_payload_succeeded(payload):
+    if not payload or not isinstance(payload, dict):
+        return False
+    fail_values = {'DECLINED', 'FAILED', 'REJECTED', 'VOIDED', 'CANCELLED', 'ERROR', 'INVALID_REQUEST'}
+    status = _cybersource_extract_status(payload)
+    if status in fail_values:
+        return False
+    if _cybersource_is_authorized_status(status):
+        return True
+    # Walk only for explicit status fields — never treat token id/details as success
+    stack = [payload]
+    while stack:
+        node = stack.pop()
+        if not isinstance(node, dict):
+            continue
+        for key in ('status', 'outcome', 'paymentStatus'):
+            val = str(node.get(key, '')).strip().upper()
+            if val in fail_values:
+                return False
+            if _cybersource_is_authorized_status(val):
+                return True
+        for val in node.values():
+            if isinstance(val, dict):
+                stack.append(val)
+            elif isinstance(val, list):
+                stack.extend(x for x in val if isinstance(x, dict))
+    processor = payload.get('processorInformation')
+    reason = ''
+    if isinstance(processor, dict):
+        reason = str(processor.get('responseCode', ''))
+    if not reason:
+        reason = str(payload.get('reasonCode', ''))
+    if reason in ('100', '110') and status:
+        return _cybersource_is_authorized_status(status)
+    return False
+
+def _cybersource_normalize_result(result_raw):
+    if result_raw is None or result_raw == '':
+        return '', {}
+    if isinstance(result_raw, dict):
+        for key in ('jwt', 'token', 'transientTokenJwt', 'result'):
+            token = result_raw.get(key)
+            if isinstance(token, str) and token.strip():
+                jwt = token.strip()
+                payload = _decode_jwt_payload(jwt)
+                return jwt, payload or result_raw
+        return '', result_raw
+    token = str(result_raw).strip()
+    if token.startswith('{') and token.endswith('}'):
+        try:
+            return _cybersource_normalize_result(json.loads(token))
+        except json.JSONDecodeError:
+            pass
+    return token, _decode_jwt_payload(token)
+
+def _cybersource_is_transient_token(payload, jwt_str):
+    if not jwt_str or jwt_str.count('.') < 2:
+        return False
+    if payload and _cybersource_payload_succeeded(payload):
+        return False
+    if not payload:
+        return True
+    # Completed payment JWTs include transaction status/id from UC autoProcessing
+    if _cybersource_extract_status(payload):
+        return False
+    token_type = str(payload.get('type', '')).lower()
+    if token_type.startswith(('mf-', 'api-', 'gda-', 'uc-', 'flex')):
+        return True
+    if 'flex' in str(payload.get('iss', '')).lower():
+        return True
+    data = payload.get('data')
+    if isinstance(data, dict) and data.get('type') in ('001', '002', '003', '004'):
+        return True
+    # JWT without payment status is a token to charge, not a success receipt
+    if not payload.get('details') and not payload.get('id'):
+        return True
+    return False
+
+def _cybersource_charge_transient_token(cfg_data, order, transient_jwt):
+    amount = float(order.get('amount', cfg_data.get('course_price', 0)))
+    currency = cfg_data.get('currency', 'USD')
+    payload = {
+        'clientReferenceInformation': {'code': order.get('order_id', '')},
+        'processingInformation': {'capture': True},
+        'tokenInformation': {'transientTokenJwt': transient_jwt},
+        'orderInformation': {
+            'amountDetails': {
+                'totalAmount': _format_money(amount),
+                'currency': currency,
+            },
+            'billTo': _cybersource_bill_to(order.get('name', ''), order.get('email', '')),
+        },
+    }
+    raw = _cybersource_api_request(cfg_data, 'POST', '/pts/v2/payments', payload)
+    try:
+        resp = json.loads(raw)
+    except json.JSONDecodeError as e:
+        raise ValueError(f'Invalid payment response from Cybersource: {raw[:200]}') from e
+    status = _cybersource_extract_status(resp)
+    if not _cybersource_is_authorized_status(status):
+        err = (resp.get('errorInformation') or {}).get('message') or status or 'unknown'
+        raise ValueError(f'Payment not approved by Cybersource ({err})')
+    payment_id = _cybersource_extract_payment_id(resp)
+    if not payment_id:
+        raise ValueError('Cybersource did not return a transaction id')
+    return _cybersource_verify_payment(cfg_data, order, payment_id)
+
+def _cybersource_process_payment(cfg_data, order, result_raw):
+    """Confirm payment only when Cybersource TSS shows an approved txn for this order."""
+    jwt_str, payload = _cybersource_normalize_result(result_raw)
+    jwt_payload = payload or (_decode_jwt_payload(jwt_str) if jwt_str else {})
+    payment_id = _cybersource_extract_payment_id(jwt_payload)
+
+    if jwt_str and _cybersource_is_transient_token(jwt_payload, jwt_str):
+        return _cybersource_charge_transient_token(cfg_data, order, jwt_str)
+
+    status = _cybersource_extract_status(jwt_payload)
+    if status in {'DECLINED', 'FAILED', 'REJECTED', 'VOIDED', 'CANCELLED', 'ERROR', 'INVALID_REQUEST'}:
+        raise ValueError(f'Payment declined ({status})')
+
+    return _cybersource_verify_payment(cfg_data, order, payment_id or None)
+
+def _cybersource_payment_succeeded(result_jwt):
+    try:
+        return bool(_cybersource_process_payment(get_payment_config(), {}, result_jwt).get('ok'))
+    except Exception:
+        return False
+
+def _receipt_access_key(order_id, email):
+    cfg = get_payment_config()
+    pepper = (cfg.get('merchant_id') or 'pierreazar') + ':receipt'
+    raw = f'{order_id}:{email.strip().lower()}'
+    return hmac.new(pepper.encode(), raw.encode(), hashlib.sha256).hexdigest()[:32]
+
+def _payment_success_redirect(order_id, email, course_token=None):
+    key = _receipt_access_key(order_id, email)
+    qs = urllib.parse.urlencode({'order': order_id, 'key': key})
+    if course_token:
+        qs += '&' + urllib.parse.urlencode({'token': course_token})
+    return f'/payment-success.html?{qs}'
+
+def _find_paid_order(order_id, email=None):
+    orders = _read_json(ORDERS_FILE)
+    order = next((o for o in orders if o.get('order_id') == order_id), None)
+    if not order or order.get('status') != 'paid':
+        return None
+    if email and order.get('email', '').strip().lower() != email.strip().lower():
+        return None
+    return order
+
+def _order_from_course_token(token):
+    if not token:
+        return None
+    entry = next((t for t in _read_json(COURSE_TOKENS_FILE) if t.get('token') == token), None)
+    if not entry:
+        return None
+    return _find_paid_order(entry.get('order_id', ''), entry.get('email', ''))
+
+def _build_receipt_html(order, cfg_data):
+    amount = float(order.get('amount', cfg_data.get('course_price', 0)))
+    currency = cfg_data.get('currency', 'USD')
+    course = cfg_data.get('course_name', 'Cinematography Workshop')
+    order_id = order.get('order_id', '')
+    name = order.get('name', '')
+    email = order.get('email', '')
+    date_raw = order.get('date', '')
+    try:
+        dt = datetime.fromisoformat(date_raw.replace('Z', '+00:00'))
+        date_display = dt.strftime('%d %B %Y, %H:%M UTC')
+    except Exception:
+        date_display = date_raw or datetime.now(timezone.utc).strftime('%d %B %Y')
+    gateway_host = _payment_gateway_host(cfg_data)
+    test_mode = 'apitest' in gateway_host or 'test' in gateway_host
+    test_banner = (
+        '<div style="background:#fff3cd;color:#856404;padding:10px 14px;border-radius:6px;'
+        'margin-bottom:20px;font-size:13px;border:1px solid #ffeeba;">'
+        '<strong>TEST TRANSACTION</strong> — This is a sandbox payment receipt. '
+        'No real charge was made to your card.</div>'
+    ) if test_mode else ''
+    amount_display = f'${_format_money(amount)} {currency}' if currency == 'USD' else f'{_format_money(amount)} {currency}'
+    return (
+        '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'
+        '<title>Receipt ' + order_id + ' — Pierre Azar</title>'
+        '<style>'
+        'body{font-family:Arial,sans-serif;color:#111;max-width:640px;margin:40px auto;padding:0 24px;}'
+        'h1{font-size:22px;margin:0 0 4px;} .meta{color:#666;font-size:13px;margin-bottom:24px;}'
+        'table{width:100%;border-collapse:collapse;margin:20px 0;} '
+        'td{padding:10px 0;border-bottom:1px solid #eee;vertical-align:top;} '
+        'td.label{color:#666;width:38%;} .total td{font-weight:700;font-size:16px;border-top:2px solid #111;}'
+        '.footer{margin-top:32px;padding-top:16px;border-top:1px solid #ddd;color:#666;font-size:12px;line-height:1.6;}'
+        '@media print{body{margin:0;} .no-print{display:none;}}'
+        '</style></head><body>'
+        + test_banner +
+        '<h1>Payment Receipt</h1>'
+        '<p class="meta">Pierre Azar — Cinematography Workshop</p>'
+        '<table>'
+        f'<tr><td class="label">Receipt #</td><td>{order_id}</td></tr>'
+        f'<tr><td class="label">Date</td><td>{date_display}</td></tr>'
+        f'<tr><td class="label">Customer</td><td>{name}<br><span style="color:#666;font-size:13px;">{email}</span></td></tr>'
+        f'<tr><td class="label">Item</td><td>{course}</td></tr>'
+        f'<tr><td class="label">Payment method</td><td>Card (Areeba / Cybersource)</td></tr>'
+        f'<tr class="total"><td class="label">Amount paid</td><td>{amount_display}</td></tr>'
+        '</table>'
+        '<div class="footer">'
+        'Thank you for your purchase. Course access details are sent separately by email.<br>'
+        'For support: <a href="mailto:contact@pierreazar.com">contact@pierreazar.com</a>'
+        '</div>'
+        '<p class="no-print" style="margin-top:24px;">'
+        '<button onclick="window.print()" style="padding:10px 18px;cursor:pointer;">Print / Save as PDF</button>'
+        '</p>'
+        '</body></html>'
+    )
+
+def _finalize_paid_order(order_id, cfg_data, gateway_name='cybersource', payment_meta=None):
+    """Mark order paid, record sale, issue access. Returns redirect path.
+    Call only after Cybersource AUTHORIZED/CAPTURED is confirmed."""
+    payment_meta = payment_meta or {}
+    orders = _read_json(ORDERS_FILE)
+    order = next((o for o in orders if o.get('order_id') == order_id), None)
+    if not order:
+        return {'ok': False, 'redirect': '/payment-failed.html'}
+    if order.get('status') == 'paid':
+        buyer_email = order.get('email', '').strip().lower()
+        return {'ok': True, 'redirect': _payment_success_redirect(order_id, buyer_email)}
+
+    sales = _read_json(SALES_FILE)
+    sales.append({
+        'date':     datetime.now(timezone.utc).isoformat(),
+        'name':     order.get('name', ''),
+        'email':    order.get('email', ''),
+        'course':   cfg_data.get('course_name', 'Cinematography Workshop'),
+        'amount':   order.get('amount', cfg_data.get('course_price', 99)),
+        'status':   'paid',
+        'order_id': order_id,
+        'gateway':  gateway_name,
+        'cybersource_id': payment_meta.get('cybersource_id', ''),
+        'gateway_status': payment_meta.get('status', ''),
+    })
+    _write_json(SALES_FILE, sales)
+    for o in orders:
+        if o.get('order_id') == order_id:
+            o['status'] = 'paid'
+            if payment_meta.get('cybersource_id'):
+                o['cybersource_id'] = payment_meta['cybersource_id']
+            if payment_meta.get('status'):
+                o['gateway_status'] = payment_meta['status']
+    _write_json(ORDERS_FILE, orders)
+
+    coupon_used = order.get('coupon_code', '').strip()
+    if coupon_used:
+        _use_coupon(coupon_used)
+
+    buyer_email = order.get('email', '').strip().lower()
+    buyer_name  = order.get('name', '')
+    base_url    = cfg_data.get('return_base_url', 'https://pierreazar.com')
+    members     = _read_json(MEMBERS_FILE)
+    is_member   = any(m.get('email') == buyer_email for m in members)
+
+    if is_member:
+        act_code = _generate_activation_code(buyer_email)
+        try:
+            _send_activation_email(buyer_name, buyer_email, act_code, base_url)
+        except Exception as e:
+            _log_email_error(f'activation_email:{order_id}', e)
+        try:
+            _send_purchase_notification_email(order, cfg_data, payment_meta)
+        except Exception as e:
+            _log_email_error(f'purchase_notify:{order_id}', e)
+        return {'ok': True, 'redirect': _payment_success_redirect(order_id, buyer_email)}
+
+    course_token = _generate_course_token(buyer_email, order_id)
+    receipt_url = f"{base_url.rstrip('/')}/api/receipt?{urllib.parse.urlencode({'order': order_id, 'key': _receipt_access_key(order_id, buyer_email), 'download': '1'})}"
+    try:
+        _send_course_access_email(buyer_name, buyer_email, course_token, base_url, receipt_url)
+    except Exception as e:
+        _log_email_error(f'course_access_email:{order_id}', e)
+    try:
+        _send_purchase_notification_email(order, cfg_data, payment_meta)
+    except Exception as e:
+        _log_email_error(f'purchase_notify:{order_id}', e)
+    return {'ok': True, 'redirect': _payment_success_redirect(order_id, buyer_email, course_token)}
+
 # ── Areeba / MPGS hosted checkout ────────────────────────────────────────────
 def _areeba_create_session(cfg_data, order_id, amount, name, email):
     """
@@ -217,7 +800,9 @@ def _areeba_create_session(cfg_data, order_id, amount, name, email):
     """
     merchant_id = cfg_data['merchant_id']
     api_key     = cfg_data['api_key']
-    gateway_url = cfg_data['gateway_url'].rstrip('/')
+    gateway_url = _payment_gateway_host(cfg_data)
+    if 'areeba.com' in gateway_url and 'cybersource' not in gateway_url:
+        gateway_url = 'epayment.areeba.com'
     currency    = cfg_data.get('currency', 'USD')
     return_url  = cfg_data.get('return_base_url', 'https://pierreazar.com').rstrip('/') + '/payment-return'
 
@@ -364,6 +949,104 @@ def _generate_activation_code(email):
     _write_json(ACTIVATION_CODES_FILE, codes)
     return code
 
+def _log_email_error(context, exc):
+    try:
+        log_path = os.path.join(DATA_DIR, 'email.log')
+        with open(log_path, 'a', encoding='utf-8') as f:
+            f.write(f"{datetime.now(timezone.utc).isoformat()} [{context}] {exc}\n")
+    except Exception:
+        pass
+
+def _log_email_ok(context, to_addr):
+    try:
+        log_path = os.path.join(DATA_DIR, 'email.log')
+        with open(log_path, 'a', encoding='utf-8') as f:
+            f.write(f"{datetime.now(timezone.utc).isoformat()} [OK {context}] to={to_addr}\n")
+    except Exception:
+        pass
+
+def _smtp_send(msg, recipients, include_notify_cc=False):
+    """Send via Hostinger SMTP. recipients: str or list."""
+    if isinstance(recipients, str):
+        recipients = [recipients]
+    recipients = [r for r in recipients if r]
+    if not recipients:
+        raise ValueError('No email recipients')
+    # Hostinger often hides/drops mailbox self-mail (From==To same account).
+    if include_notify_cc:
+        cc = (getattr(cfg, 'NOTIFY_CC', '') or '').strip()
+        if cc and cc.lower() not in {r.lower() for r in recipients}:
+            recipients.append(cc)
+            if not msg.get('Cc'):
+                msg['Cc'] = cc
+    with smtplib.SMTP(cfg.SMTP_HOST, cfg.SMTP_PORT, timeout=30) as s:
+        s.ehlo()
+        s.starttls()
+        s.ehlo()
+        s.login(cfg.SMTP_USER, cfg.SMTP_PASS)
+        refused = s.sendmail(cfg.SMTP_USER, recipients, msg.as_string())
+    if refused:
+        raise ValueError(f'SMTP refused: {refused}')
+    return recipients
+
+def _send_purchase_notification_email(order, cfg_data, payment_meta=None):
+    """Notify Pierre Azar when a new course purchase is completed."""
+    payment_meta = payment_meta or {}
+    order_id = order.get('order_id', '')
+    name = order.get('name', '')
+    email = order.get('email', '')
+    amount = _format_money(order.get('amount', cfg_data.get('course_price', 0)))
+    currency = cfg_data.get('currency', 'USD')
+    course = cfg_data.get('course_name', 'Cinematography Workshop')
+    cybersource_id = payment_meta.get('cybersource_id') or order.get('cybersource_id', '')
+    subject = f'New course purchase — {order_id}'
+    body_text = (
+        f'A new course purchase was completed on pierreazar.com.\n\n'
+        f'Order: {order_id}\n'
+        f'Customer: {name}\n'
+        f'Email: {email}\n'
+        f'Course: {course}\n'
+        f'Amount: {amount} {currency}\n'
+    )
+    if cybersource_id:
+        body_text += f'Cybersource ID: {cybersource_id}\n'
+    body_text += f'\nAdmin sales: https://pierreazar.com/admin/course-sales.html\n'
+    body_html = (
+        '<html><body style="font-family:Arial,sans-serif;color:#222;max-width:600px;">'
+        '<h2 style="margin:0 0 12px;">New course purchase</h2>'
+        '<table style="width:100%;border-collapse:collapse;">'
+        f'<tr><td style="padding:6px 0;color:#666;">Order</td><td>{order_id}</td></tr>'
+        f'<tr><td style="padding:6px 0;color:#666;">Customer</td><td>{name}</td></tr>'
+        f'<tr><td style="padding:6px 0;color:#666;">Email</td><td><a href="mailto:{email}">{email}</a></td></tr>'
+        f'<tr><td style="padding:6px 0;color:#666;">Course</td><td>{course}</td></tr>'
+        f'<tr><td style="padding:6px 0;color:#666;">Amount</td><td><strong>{amount} {currency}</strong></td></tr>'
+    )
+    if cybersource_id:
+        body_html += f'<tr><td style="padding:6px 0;color:#666;">Cybersource ID</td><td>{cybersource_id}</td></tr>'
+    body_html += (
+        '</table>'
+        '<p style="margin-top:20px;">'
+        '<a href="https://pierreazar.com/admin/course-sales.html" '
+        'style="background:#222;color:#fff;padding:10px 18px;text-decoration:none;border-radius:4px;">'
+        'View in admin</a></p>'
+        '</body></html>'
+    )
+    to_addr = (getattr(cfg, 'NOTIFY_EMAIL', None) or cfg.RECIPIENT_EMAIL).strip()
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    # Match contact-form headers (those already deliver to Pierre).
+    msg['From'] = f'{getattr(cfg, "SENDER_NAME", "Pierre Azar Website")} <{cfg.SMTP_USER}>'
+    msg['To'] = to_addr
+    if email:
+        msg['Reply-To'] = email
+    msg['Date'] = formatdate(timeval=None, localtime=False, usegmt=True)
+    msg['Message-ID'] = f'<purchase-{order_id}-{secrets.token_hex(6)}@pierreazar.com>'
+    msg.attach(MIMEText(body_text, 'plain'))
+    msg.attach(MIMEText(body_html, 'html'))
+    sent_to = _smtp_send(msg, to_addr, include_notify_cc=True)
+    _log_email_ok(f'purchase_notify:{order_id}', ','.join(sent_to))
+    return sent_to
+
 def _send_activation_email(name, email, code, base_url):
     """Send the one-time activation code to the buyer."""
     activate_url = f"{base_url.rstrip('/')}/member/activate"
@@ -397,15 +1080,14 @@ def _send_activation_email(name, email, code, base_url):
     )
     msg = MIMEMultipart('alternative')
     msg['Subject'] = subject
-    msg['From']    = f'Pierre Azar <{cfg.SMTP_USER}>'
+    msg['From']    = f'{getattr(cfg, "SENDER_NAME", "Pierre Azar Website")} <{cfg.SMTP_USER}>'
     msg['To']      = email
+    msg['Date'] = formatdate(timeval=None, localtime=False, usegmt=True)
+    msg['Message-ID'] = f'<activation-{secrets.token_hex(8)}@pierreazar.com>'
     msg.attach(MIMEText(body_text, 'plain'))
     msg.attach(MIMEText(body_html, 'html'))
-    with smtplib.SMTP(cfg.SMTP_HOST, cfg.SMTP_PORT) as s:
-        s.ehlo()
-        s.starttls()
-        s.login(cfg.SMTP_USER, cfg.SMTP_PASS)
-        s.sendmail(cfg.SMTP_USER, email, msg.as_string())
+    sent_to = _smtp_send(msg, email)
+    _log_email_ok(f'activation_email:{email}', ','.join(sent_to))
 
 # ── Course access token helpers ──────────────────────────────────────────────
 
@@ -449,19 +1131,26 @@ def _validate_course_token(token, client_ip):
     _write_json(COURSE_TOKENS_FILE, tokens)
     return True, entry
 
-def _send_course_access_email(name, email, token, base_url):
+def _send_course_access_email(name, email, token, base_url, receipt_url=None):
     """Send the course access link to the buyer."""
     link = f"{base_url.rstrip('/')}/course?token={token}"
     subject = "Your Cinematography Workshop Access"
+    receipt_line = f"\nDownload your receipt: {receipt_url}\n" if receipt_url else ''
     body_text = (
         f"Hi {name},\n\n"
         f"Thank you for your purchase! Here is your personal access link:\n\n"
-        f"{link}\n\n"
+        f"{link}\n"
+        f"{receipt_line}\n"
         f"IMPORTANT: This link is personal and non-transferable.\n"
         f"It can only be used from up to {COURSE_MAX_IPS} different devices.\n"
         f"Do not share it — sharing will lock your access.\n\n"
         f"Pierre Azar"
     )
+    receipt_html = ''
+    if receipt_url:
+        receipt_html = (
+            f'<p><a href="{receipt_url}" style="color:#222;">Download your payment receipt</a></p>'
+        )
     body_html = (
         '<html><body style="font-family:Arial,sans-serif;color:#222;max-width:600px;">'
         f'<p>Hi {name},</p>'
@@ -469,6 +1158,7 @@ def _send_course_access_email(name, email, token, base_url):
         f'<p><a href="{link}" style="background:#222;color:#fff;padding:12px 24px;'
         f'text-decoration:none;border-radius:4px;display:inline-block;">Access Your Course</a></p>'
         f'<p style="color:#888;font-size:13px;">Or copy this link: {link}</p>'
+        f'{receipt_html}'
         f'<hr style="border:none;border-top:1px solid #eee;">'
         f'<p style="color:#c00;font-size:13px;"><strong>Important:</strong> This link is personal '
         f'and non-transferable. It can only be used from up to {COURSE_MAX_IPS} different devices. '
@@ -478,15 +1168,15 @@ def _send_course_access_email(name, email, token, base_url):
     )
     msg = MIMEMultipart("alternative")
     msg["Subject"]  = subject
-    msg["From"]     = f"Pierre Azar <{cfg.SMTP_USER}>"
+    msg["From"]     = f'{getattr(cfg, "SENDER_NAME", "Pierre Azar Website")} <{cfg.SMTP_USER}>'
     msg["To"]       = email
+    msg["Date"] = formatdate(timeval=None, localtime=False, usegmt=True)
+    msg["Message-ID"] = f'<course-access-{secrets.token_hex(8)}@pierreazar.com>'
     msg.attach(MIMEText(body_text, "plain"))
     msg.attach(MIMEText(body_html, "html"))
-    with smtplib.SMTP(cfg.SMTP_HOST, cfg.SMTP_PORT) as s:
-        s.ehlo()
-        s.starttls()
-        s.login(cfg.SMTP_USER, cfg.SMTP_PASS)
-        s.sendmail(cfg.SMTP_USER, email, msg.as_string())
+    sent_to = _smtp_send(msg, email)
+    _log_email_ok(f'course_access_email:{email}', ','.join(sent_to))
+    return sent_to
 
 # ── Coupon helpers ───────────────────────────────────────────────────────────
 def _generate_coupon_code():
@@ -554,14 +1244,65 @@ def send_email(name, sender_email, message):
     msg.attach(MIMEText(body_text, "plain"))
     msg.attach(MIMEText(body_html, "html"))
 
-    with smtplib.SMTP(cfg.SMTP_HOST, cfg.SMTP_PORT) as s:
-        s.ehlo()
-        s.starttls()
-        s.login(cfg.SMTP_USER, cfg.SMTP_PASS)
-        s.sendmail(cfg.SMTP_USER, cfg.RECIPIENT_EMAIL, msg.as_string())
+    sent_to = _smtp_send(msg, cfg.RECIPIENT_EMAIL, include_notify_cc=True)
+    _log_email_ok(f'contact_form:{sender_email}', ','.join(sent_to))
+    return sent_to
+
+
+def _send_contact_confirmation_email(name, email, message):
+    """Confirm to the submitting client that their message was received."""
+    safe_name = html.escape(name or email)
+    safe_message = html.escape(message).replace('\n', '<br>')
+    subject = "We received your message — Pierre Azar"
+    body_text = (
+        f"Hi {name or email},\n\n"
+        "Thank you for contacting Pierre Azar. Your message has been received "
+        "and we will get back to you as soon as possible.\n\n"
+        f"Your message:\n{message}\n\n"
+        "Pierre Azar"
+    )
+    body_html = (
+        '<html><body style="font-family:Arial,sans-serif;color:#222;max-width:600px;">'
+        f'<p>Hi {safe_name},</p>'
+        '<p>Thank you for contacting Pierre Azar. Your message has been received '
+        'and we will get back to you as soon as possible.</p>'
+        '<div style="margin:20px 0;padding:16px;background:#f5f5f5;border-left:3px solid #222;">'
+        f'{safe_message}</div>'
+        '<p>Pierre Azar</p>'
+        '</body></html>'
+    )
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = f"{cfg.SENDER_NAME} <{cfg.SMTP_USER}>"
+    msg["To"] = email
+    msg["Date"] = formatdate(timeval=None, localtime=False, usegmt=True)
+    msg["Message-ID"] = f"<contact-confirmation-{secrets.token_hex(8)}@pierreazar.com>"
+    msg.attach(MIMEText(body_text, "plain"))
+    msg.attach(MIMEText(body_html, "html"))
+    sent_to = _smtp_send(msg, email)
+    _log_email_ok(f'contact_confirmation:{email}', ','.join(sent_to))
+    return sent_to
 
 
 # ── Request Handler ──────────────────────────────────────────────────────────
+_PAYMENT_CSP = (
+    "default-src 'self'; "
+    "script-src 'self' https://up.cybersource.com https://flex.cybersource.com "
+    "https://testup.cybersource.com https://testflex.cybersource.com; "
+    "style-src 'self' 'unsafe-inline' https://up.cybersource.com https://flex.cybersource.com "
+    "https://testup.cybersource.com https://testflex.cybersource.com; "
+    "style-src-elem 'self' 'unsafe-inline' https://up.cybersource.com https://flex.cybersource.com "
+    "https://testup.cybersource.com https://testflex.cybersource.com; "
+    "frame-src 'self' https://up.cybersource.com https://flex.cybersource.com "
+    "https://testup.cybersource.com https://testflex.cybersource.com "
+    "https://*.cardinalcommerce.com https://cas.client.cardinaltrusted.com; "
+    "connect-src 'self' https://up.cybersource.com https://flex.cybersource.com "
+    "https://testup.cybersource.com https://testflex.cybersource.com "
+    "https://*.cardinalcommerce.com; "
+    "img-src 'self' data: https:; "
+    "font-src 'self' data: https:;"
+)
+
 class Handler(http.server.SimpleHTTPRequestHandler):
 
     # ---- static asset caching ----
@@ -576,11 +1317,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
         path = urllib.parse.urlparse(self.path).path.lower()
         ext = os.path.splitext(path)[1]
+        if path in ('/payment-checkout.html', '/payment-checkout.js', '/payment-checkout.css'):
+            self.send_header('Content-Security-Policy', _PAYMENT_CSP)
         if ext in ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.ico',
                    '.woff', '.woff2', '.ttf', '.otf'):
             self.send_header('Cache-Control', 'public, max-age=86400, must-revalidate')
         elif ext in ('.css', '.js'):
             self.send_header('Cache-Control', 'public, max-age=86400')
+        elif ext == '.html':
+            self.send_header('Cache-Control', 'no-store')
         super().end_headers()
 
     # ---- helpers ----
@@ -776,6 +1521,37 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json_response({'ok': True, 'coupons': _read_json(COUPONS_FILE)})
             return
 
+        # ---- Public: payment receipt ----
+        if path == '/api/receipt':
+            qs = dict(urllib.parse.parse_qsl(urllib.parse.urlparse(self.path).query))
+            order_id = str(qs.get('order', '')).strip()
+            key = str(qs.get('key', '')).strip()
+            token = str(qs.get('token', '')).strip()
+            order = None
+            if order_id and key:
+                candidate = _find_paid_order(order_id)
+                if candidate and secrets.compare_digest(_receipt_access_key(order_id, candidate.get('email', '')), key):
+                    order = candidate
+            elif token:
+                order = _order_from_course_token(token)
+            if not order:
+                self.send_response(404)
+                self.send_header('Content-Type', 'text/html; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(b'<h1>Receipt not found</h1><p>Invalid or expired receipt link.</p>')
+                return
+            html = _build_receipt_html(order, get_payment_config()).encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.send_header('Content-Length', str(len(html)))
+            if qs.get('download') == '1':
+                fname = f'receipt-{order.get("order_id", "order")}.html'
+                self.send_header('Content-Disposition', f'attachment; filename="{fname}"')
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            self.wfile.write(html)
+            return
+
         # ---- Public: validate a coupon ----
         if path == '/api/validate-coupon':
             qs   = dict(urllib.parse.parse_qsl(urllib.parse.urlparse(self.path).query))
@@ -808,55 +1584,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 success = (result == order.get('success_indicator', '')) or (result.lower() == 'success')
 
             if success and order and order.get('status') != 'paid':
-                # Record the sale
-                sales = _read_json(SALES_FILE)
-                sales.append({
-                    'date':     datetime.now(timezone.utc).isoformat(),
-                    'name':     order.get('name', ''),
-                    'email':    order.get('email', ''),
-                    'course':   cfg_data.get('course_name', 'Cinematography Workshop'),
-                    'amount':   order.get('amount', cfg_data.get('course_price', 99)),
-                    'status':   'paid',
-                    'order_id': order_id,
-                    'gateway':  'areeba',
-                })
-                _write_json(SALES_FILE, sales)
-                # Mark order as paid
-                for o in orders:
-                    if o.get('order_id') == order_id:
-                        o['status'] = 'paid'
-                _write_json(ORDERS_FILE, orders)
-                # Use coupon if one was applied
-                coupon_used = order.get('coupon_code', '').strip()
-                if coupon_used:
-                    _use_coupon(coupon_used)
-                # Generate activation code for member, or course token for non-member
-                buyer_email = order.get('email', '').strip().lower()
-                buyer_name  = order.get('name', '')
-                base_url    = cfg_data.get('return_base_url', 'https://pierreazar.com')
-                members     = _read_json(MEMBERS_FILE)
-                is_member   = any(m.get('email') == buyer_email for m in members)
-
-                if is_member:
-                    # Member flow: generate one-time activation code
-                    act_code = _generate_activation_code(buyer_email)
-                    try:
-                        _send_activation_email(buyer_name, buyer_email, act_code, base_url)
-                    except Exception:
-                        pass
-                    self.send_response(302)
-                    self.send_header('Location', '/member/activate')
-                    self.end_headers()
-                else:
-                    # Non-member flow: send course token link by email
-                    course_token = _generate_course_token(buyer_email, order_id)
-                    try:
-                        _send_course_access_email(buyer_name, buyer_email, course_token, base_url)
-                    except Exception:
-                        pass
-                    self.send_response(302)
-                    self.send_header('Location', f'/payment-success.html?token={course_token}')
-                    self.end_headers()
+                cfg_data = get_payment_config()
+                result_info = _finalize_paid_order(order_id, cfg_data, gateway_name='areeba')
+                self.send_response(302)
+                self.send_header('Location', result_info.get('redirect', '/payment-failed.html'))
+                self.end_headers()
             else:
                 self.send_response(302)
                 self.send_header('Location', '/payment-failed.html')
@@ -1227,18 +1959,27 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
                 email_sent = False
                 email_error = None
+                confirmation_sent = False
+                confirmation_error = None
                 if cfg.SMTP_USER and cfg.SMTP_PASS:
                     try:
                         send_email(name, email, message)
                         email_sent = True
                     except Exception as mail_err:
                         email_error = str(mail_err)
+                    try:
+                        _send_contact_confirmation_email(name, email, message)
+                        confirmation_sent = True
+                    except Exception as confirmation_err:
+                        confirmation_error = str(confirmation_err)
 
                 self._json_response({
                     'ok': True,
                     'saved': True,
                     'email_sent': email_sent,
                     'email_error': email_error,
+                    'confirmation_sent': confirmation_sent,
+                    'confirmation_error': confirmation_error,
                 })
             except ValueError as e:
                 self._json_response({'ok': False, 'error': str(e)})
@@ -1611,7 +2352,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     raise ValueError("Payment gateway is not enabled")
 
                 order_id = 'PA-' + secrets.token_hex(8).upper()
-                amount   = float(cfg_data.get('course_price', 99))
+                amount   = round(float(cfg_data.get('course_price', 99)), 2)
 
                 # Apply coupon discount
                 applied_coupon = None
@@ -1646,6 +2387,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if not cfg_data.get('merchant_id') or not cfg_data.get('api_key'):
                     raise ValueError("Payment gateway is not configured")
 
+                gateway_type = (cfg_data.get('gateway_type') or 'cybersource').lower()
+                if gateway_type == 'cybersource':
+                    capture_context = _cybersource_create_capture_context(
+                        cfg_data, order_id, amount, name, email
+                    )
+                    self._json_response({
+                        'ok': True,
+                        'gateway': 'cybersource',
+                        'order_id': order_id,
+                        'capture_context': capture_context,
+                    })
+                    return
+
                 session_id, success_indicator, checkout_url = _areeba_create_session(
                     cfg_data, order_id, amount, name, email
                 )
@@ -1657,6 +2411,84 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 _write_json(ORDERS_FILE, orders)
 
                 self._json_response({'ok': True, 'checkout_url': checkout_url})
+            except Exception as e:
+                self._json_response({'ok': False, 'error': str(e)}, status=400)
+            return
+
+        # ---- Refresh Cybersource capture context for a pending order ----
+        if path == '/api/refresh-capture-context':
+            body = self._read_body()
+            try:
+                data = json.loads(body) if body else {}
+                order_id = str(data.get('order_id', '')).strip()
+                if not order_id:
+                    raise ValueError('order_id is required')
+
+                cfg_data = get_payment_config()
+                if not cfg_data.get('enabled') and not cfg_data.get('demo_mode'):
+                    raise ValueError('Payment gateway is not enabled')
+                if (cfg_data.get('gateway_type') or 'cybersource').lower() != 'cybersource':
+                    raise ValueError('Capture context refresh is only for Cybersource')
+                if not cfg_data.get('merchant_id') or not cfg_data.get('api_key'):
+                    raise ValueError('Payment gateway is not configured')
+
+                orders = _read_json(ORDERS_FILE)
+                order = next((o for o in orders if o.get('order_id') == order_id), None)
+                if not order:
+                    raise ValueError('Order not found')
+                if order.get('status') != 'pending':
+                    raise ValueError('Order is no longer pending')
+
+                page_origin = str(data.get('origin', '')).strip()
+                capture_context = _cybersource_create_capture_context(
+                    cfg_data,
+                    order_id,
+                    float(order.get('amount', cfg_data.get('course_price', 99))),
+                    order.get('name', ''),
+                    order.get('email', ''),
+                    page_origin=page_origin,
+                )
+                self._json_response({
+                    'ok': True,
+                    'order_id': order_id,
+                    'capture_context': capture_context,
+                })
+            except Exception as e:
+                self._json_response({'ok': False, 'error': str(e)}, status=400)
+            return
+
+        # ---- Cybersource payment result (public) ----
+        if path == '/api/payment-complete':
+            body = self._read_body()
+            try:
+                data = json.loads(body) if body else {}
+                order_id = str(data.get('order_id', '')).strip()
+                result_raw = data.get('result')
+                if not order_id or result_raw is None or result_raw == '':
+                    raise ValueError('order_id and result are required')
+
+                orders = _read_json(ORDERS_FILE)
+                order = next((o for o in orders if o.get('order_id') == order_id), None)
+                if not order:
+                    raise ValueError('Order not found')
+                if order.get('email', '').strip().lower() != str(data.get('email', order.get('email', ''))).strip().lower():
+                    raise ValueError('Order verification failed')
+
+                cfg_data = get_payment_config()
+                try:
+                    payment_meta = _cybersource_process_payment(cfg_data, order, result_raw)
+                except ValueError:
+                    payment_meta = _cybersource_verify_payment(cfg_data, order, None)
+                if not payment_meta or not payment_meta.get('ok'):
+                    raise ValueError('Payment was not completed')
+
+                result_info = _finalize_paid_order(
+                    order_id, cfg_data, gateway_name='cybersource', payment_meta=payment_meta
+                )
+                self._json_response({
+                    'ok': True,
+                    'redirect': result_info.get('redirect', '/payment-success.html'),
+                })
             except Exception as e:
                 self._json_response({'ok': False, 'error': str(e)}, status=400)
             return

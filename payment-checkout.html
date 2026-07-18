@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Secure Payment — Pierre Azar</title>
+  <link rel="stylesheet" href="/payment-checkout.css?v=2">
+</head>
+<body>
+  <div class="wrap">
+    <h1>Complete Your Payment</h1>
+    <p class="sub">Click below to open the secure card checkout.</p>
+    <div class="card">
+      <div id="pa-uc-selection"></div>
+      <p class="hint">A secure payment window will open when you select a card.</p>
+      <div id="status">Loading secure payment…</div>
+      <button type="button" id="pa-retry-btn">Try again</button>
+    </div>
+    <div class="secure">
+      <span>🔒</span>
+      <span>Secured by Areeba Cybersource — card data never touches our server</span>
+    </div>
+    <a class="back" href="/cinematography-course.html">← Back to course</a>
+  </div>
+  <script src="/payment-checkout.js?v=3"></script>
+</body>
+</html>

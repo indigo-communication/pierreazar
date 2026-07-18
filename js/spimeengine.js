@@ -621,7 +621,7 @@ SpimeEngine.initProducts = function(){
 			SpimeEngine.demoProduct()
 		}
 	});
-	$("a[data-link-type='BUY']").each(function() {
+	$("a[data-link-type='BUY']").not("[data-pa-checkout]").each(function() {
 		var currentLink = $(this);
 		currentLink.addClass("clickable");
 		currentLink.removeAttr("href");

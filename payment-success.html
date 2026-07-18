@@ -7,14 +7,17 @@
     <link rel="icon" type="image/png" href="images/photos/img_033.jpg">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .card { text-align: center; padding: 3rem 2.5rem; max-width: 480px; width: 100%; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+        .card { text-align: center; padding: 3rem 2.5rem; max-width: 520px; width: 100%; }
         .icon { width: 72px; height: 72px; border-radius: 50%; background: rgba(46,204,113,.15); border: 2px solid #2ecc71; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
         .icon svg { width: 36px; height: 36px; }
         h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: .75rem; }
         p  { color: #aaa; line-height: 1.6; margin-bottom: 1.5rem; }
-        .btn { display: inline-block; padding: .75rem 2rem; background: #fff; color: #0a0a0a; border-radius: 4px; font-weight: 600; text-decoration: none; transition: opacity .2s; }
+        .actions { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+        .btn { display: inline-block; padding: .75rem 2rem; background: #fff; color: #0a0a0a; border-radius: 4px; font-weight: 600; text-decoration: none; transition: opacity .2s; border: none; cursor: pointer; font-size: 15px; }
         .btn:hover { opacity: .85; }
+        .btn.secondary { background: transparent; color: #fff; border: 1px solid #444; }
+        #receipt-note { font-size: 13px; color: #777; margin-top: 8px; }
     </style>
 </head>
 <body>
@@ -26,7 +29,40 @@
         </div>
         <h1>Payment Successful!</h1>
         <p>Thank you for enrolling in the Cinematography Workshop. You will receive course access details by email shortly.</p>
-        <a href="/" class="btn">Back to Home</a>
+        <div class="actions">
+            <a id="receipt-download" class="btn" href="#" style="display:none;">Download Receipt</a>
+            <a id="receipt-view" class="btn secondary" href="#" target="_blank" style="display:none;">View Receipt</a>
+            <a href="/" class="btn secondary">Back to Home</a>
+        </div>
+        <p id="receipt-note"></p>
     </div>
+    <script>
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var order = params.get('order');
+      var key = params.get('key');
+      var token = params.get('token');
+      var download = document.getElementById('receipt-download');
+      var view = document.getElementById('receipt-view');
+      var note = document.getElementById('receipt-note');
+      var qs = new URLSearchParams();
+      if (order && key) {
+        qs.set('order', order);
+        qs.set('key', key);
+      } else if (token) {
+        qs.set('token', token);
+      }
+      if (qs.toString()) {
+        var base = '/api/receipt?' + qs.toString();
+        download.href = base + '&download=1';
+        download.style.display = 'inline-block';
+        view.href = base;
+        view.style.display = 'inline-block';
+        note.textContent = 'You can also print the receipt and save it as PDF from your browser.';
+      } else {
+        note.textContent = 'Receipt link not found in this page URL. Check your confirmation email after your next purchase.';
+      }
+    })();
+    </script>
 </body>
 </html>

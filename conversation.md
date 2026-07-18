@@ -1,5 +1,61 @@
 # Conversation Log — Pierre Azar Web
 
+## Session: July 13, 2026 — PRODUCTION go-live (Cybersource)
+
+### Context
+- Areeba confirmed sandbox test successful (Jul 9). Live keys emailed by Hasan Wehbe.
+- User pasted prod keys in loose file `Dear Anwar,.py` (had secrets, NOT gitignored).
+
+### Actions
+1. Moved production keys to `.credentials.md`; deleted loose `.py` file (commit risk).
+2. Verified prod keys LIVE against `api.cybersource.com` (HTTP 201) — 24h note N/A.
+3. Prod hosts: lib `up.cybersource.com`, flex `flex.cybersource.com`.
+4. Added Areeba `appearance` object to capture context (light theme, matches checkout CSS). Validated HTTP 201.
+5. Updated CSP (server.py + Apache) to allow prod up/flex hosts. Apache reloaded via `apachectl -k graceful`.
+6. VPS payment_config.json → prod merchant `lb1467860101`, `api.cybersource.com`, price **0.20** (one real live test first), enabled, demo off.
+7. Verified live: capture context uses up.cybersource.com, amount 0.20, appearance applied, ref = order id.
+
+### Pending
+- User to run ONE real live $0.20 test (real charge now).
+- Areeba to create client portal users (prod + test).
+- After successful live test: raise price to real production value ($149 or final).
+
+---
+
+
+## Session: July 8, 2026 — Areeba validation failure (false success + $0.20)
+
+### Points raised by user
+1. User angry — Areeba found: site shows success while gateway says not successful; receipt shows $0.20.
+2. Areeba asked for meeting availability (two time slots) with Anwar + developer.
+
+### Root cause (our fault)
+1. Test price `$0.20` left live during Areeba validation (should have been `$149`).
+2. Payment success path too weak — could mark paid without hard AUTHORIZED/CAPTURED from Cybersource.
+
+### Fixes deployed
+1. Price restored to **$149** in `payment_config.json` + course HTML.
+2. Success only after Cybersource `AUTHORIZED` / `CAPTURED` (JWT or `/pts/v2/payments` response). Store `cybersource_id` on order/sale.
+3. Meeting reply draft for user.
+
+---
+
+## Session: July 1, 2026 — Areeba test credentials
+
+### Points raised by user
+1. Areeba sent test credentials for the payment gateway.
+
+### Status
+- Credentials stored in `.credentials.md` and deployed to VPS `data/payment_config.json`.
+- Gateway **enabled**, demo mode **off**, `gateway_type: cybersource`.
+- **Cybersource Unified Checkout implemented** (`server.py`, `payment-checkout.html`, course + member upgrade pages).
+- Live API test: `Authentication Failed` (401) from `apitest.cybersource.com` — credentials not accepted (expired or outlet not activated).
+- **Jul 1, 2026:** Wissam Mansour (Indigo) emailed Areeba technical team with 401 details + request for fresh credentials (Anwar CC'd).
+- **Jul 3, 2026:** Waiting on Areeba response.
+- **When new keys arrive:** paste in `.credentials.md` → deploy to VPS → test checkout at pierreazar.com/cinematography-course.html#checkout
+
+---
+
 ## Session: May 23, 2026 — Client feedback (priority)
 
 ### Points raised by user

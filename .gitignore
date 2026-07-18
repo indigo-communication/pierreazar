@@ -10,6 +10,7 @@ admin/assets/vendor/
 __pycache__/
 *.pyc
 *.pyo
+.venv*/
 
 # Backups & temp
 *.bak

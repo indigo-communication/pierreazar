@@ -14,7 +14,8 @@ Website for Pierre Azar (pierreazar.com), built on the Indigo website builder pl
 
 ## Admin Panel
 Located at `/admin/`. Auth via `pa_admin` cookie (managed by `server.py`).  
-**Admin login:** contact@pierreazar.com / 2025pa.
+Admin credentials are stored only in the gitignored `.credentials.md` and
+`mail_config.py`.
 
 ### Admin Pages
 | Page | Purpose |
@@ -44,10 +45,64 @@ Located at `/admin/`. Auth via `pa_admin` cookie (managed by `server.py`).
 | `member-upgrade.html` | Member upgrade to premium |
 | `server.py` | Python HTTP server — handles auth, API, email, member CRUD |
 | `mail_config.py` | SMTP config (gitignored — credentials) |
+| `mail_config.example.py` | Safe template for local SMTP/admin configuration |
 
 ---
 
 ## Session History
+
+---
+
+### Session: July 18, 2026 — Offer and syllabus labels
+
+#### Problem
+- Promotional label needed to read “Limited offer”.
+- Course heading was misspelled “COURSE SYLLABOUS”.
+
+#### Method / Approach
+- Updated the offer label on the home and course pages.
+- Corrected the syllabus heading in all matching pages.
+
+#### Results
+- Production now displays “Limited offer” and “COURSE SYLLABUS”.
+- The supplied legal portfolio/affiliation disclaimer now appears below the
+  course syllabus.
+- Owner notifications go to `contact@pierreazar.com`, with developer test CC
+  to `info@emoove.co`.
+- Get in Touch clients receive a separate submission confirmation.
+- Purchase clients receive their separate course-access email.
+- All four email paths were SMTP-tested without charging a payment.
+- The course promo banner now reads “Master the Art of Cinematic Lighting” and
+  uses the enlarged desktop/mobile heading style.
+- The custom Sound On and volume controls were removed from the course video on
+  both the home and course pages.
+- Payment configuration was not changed.
+
+#### Next Steps
+- None for this text-only update.
+
+---
+
+### Session: July 8, 2026 — Areeba false success + $0.20 receipt
+
+#### Problem
+- Areeba validation: site showed payment success while gateway reported not successful.
+- Receipt showed **$0.20** (test amount left live by mistake).
+- Client embarrassed; Areeba requesting meeting.
+
+#### Method / Approach
+1. Restored **course_price = 149** on VPS + course HTML display.
+2. Hardened `/api/payment-complete`: mark paid **only** when Cybersource returns `AUTHORIZED` / `CAPTURED` (UC result JWT or `POST /pts/v2/payments`). Store `cybersource_id`.
+3. Removed loose success paths (`PENDING`/`ACCEPTED`/token-id-as-success).
+
+#### Results
+- Live price **$149**; hardened verification deployed; server on 8080.
+- Meeting reply draft ready for Anwar → Areeba.
+
+#### Next Steps
+1. Anwar confirms two meeting slots → send apology/availability email to Areeba.
+2. Join call; walk transaction flow with Online Payment team.
+3. After OK: switch to live credentials + `api.cybersource.com`.
 
 ---
 

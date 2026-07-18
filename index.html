@@ -4583,33 +4583,6 @@ if(window.location.protocol != 'https:')
     border: none !important;
 }
 
-/* Audio control buttons */
-#pa-video-col .pa-course-controls {
-    position: absolute;
-    right: 14px; bottom: 14px; z-index: 100;
-    display: flex; gap: 6px; align-items: center;
-    background: rgba(0,0,0,0.5);
-    border: 1px solid rgba(255,255,255,.22);
-    border-radius: 999px;
-    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-    padding: 6px;
-}
-#pa-video-col .pa-course-controls button {
-    background: rgba(0,0,0,.65); color: #fff;
-    border: 1px solid rgba(255,255,255,.25);
-    border-radius: 999px;
-    font-size: 11px; letter-spacing: .03em;
-    font-weight: 600; line-height: 1;
-    padding: 8px 10px; cursor: pointer;
-    white-space: nowrap;
-    transition: background .2s, border-color .2s;
-}
-#pa-video-col .pa-course-controls button:hover {
-    background: rgba(255,255,255,.16);
-    border-color: rgba(255,255,255,.4);
-}
-#pa-course-toggle-audio { min-width: 84px; }
-
 /* Price row */
 .course-price-row br { display: none !important; }
 .course-price-row {
@@ -4622,12 +4595,34 @@ if(window.location.protocol != 'https:')
     display: inline-block !important; margin: 0 8px !important;
 }
 
+/* Limited offer: strike $149, show $99 */
+.preview-price.pa-has-offer::before { content: none !important; }
+.preview-price.pa-has-offer .real-price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.preview-price.pa-has-offer .pa-price-was {
+  text-decoration: line-through;
+  opacity: 0.4;
+  font-size: 0.72em;
+}
+.preview-price.pa-has-offer .pa-price-now {
+  font-weight: 600;
+}
+.preview-price.pa-has-offer .pa-offer-tag {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.65;
+  font-family: freight-sans-pro, Arial, sans-serif;
+}
+
 @media (max-width: 900px) {
-  #pa-video-col .pa-course-controls {
-    right: 10px; bottom: 10px; gap: 4px; padding: 5px;
-  }
-  #pa-video-col .pa-course-controls button { padding: 7px 8px; font-size: 10px; }
-  #pa-course-toggle-audio { min-width: 72px; }
   .course-price-row { padding: 16px 20px !important; }
 }
 
@@ -5511,11 +5506,6 @@ if(window.location.protocol != 'https:')
 			</div>	
 				<div id="pa-video-col">
                   <iframe id="pa-course-iframe" src="https://www.youtube.com/embed/sIcsHObKmzI?enablejsapi=1&autoplay=1&mute=1&loop=1&controls=1&playlist=sIcsHObKmzI&rel=0&modestbranding=1&playsinline=1" data-pa-promo-load="1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" style="border:none;width:100%;height:100%;position:absolute;top:0;left:0;"></iframe>
-                  <div class="pa-course-controls">
-                    <button type="button" id="pa-course-toggle-audio">Sound On</button>
-                    <button type="button" id="pa-course-vol-down">Vol -</button>
-                    <button type="button" id="pa-course-vol-up">Vol +</button>
-                  </div>
                 </div>
 				<div class="text-side shrinker-parent">
 					<div class="vertical-aligner">
@@ -5564,22 +5554,12 @@ if(window.location.protocol != 'https:')
 											
 <br class="upper-line-break" />
 <div class="preview-price-holder removable-parent order-handle">
-	<div id="vbid-c1e000b4-odsvwj1v" class="preview-element preview-price magic-circle-holder text-element quick-text-style-menu " data-menu-name="PREVIEW_PRICE" data-product-type="SERVICE" data-product-id="product-c1e000b4-odsvwj1v" >
-	
+	<div id="vbid-c1e000b4-odsvwj1v" class="preview-element preview-price magic-circle-holder text-element quick-text-style-menu pa-has-offer" data-menu-name="PREVIEW_PRICE" data-product-type="SERVICE" data-product-id="product-c1e000b4-odsvwj1v" >
 	<span class="real-price">
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	149
+		<span class="pa-price-was">$149</span>
+		<span class="pa-price-now">$99</span>
 	</span>
-	
+	<span class="pa-offer-tag">Limited offer</span>
 	</div>
 </div>
 <br class="lower-line-break" />
@@ -5594,7 +5574,7 @@ if(window.location.protocol != 'https:')
 	<div class="preview-links-wrapper">
 
 	
-		<a class="removable-parent" href="/cinematography-course.html#checkout" data-link-type="BUY"   target="_self" >
+		<a class="removable-parent pa-buy-now" href="/cinematography-course.html#checkout" data-pa-checkout="1" target="_self" >
 	
 		<span id="vbid-c1e000b4-nold91wb"  class="preview-element Link item-link magic-circle-holder text-element " data-menu-name="PREVIEW_LINK" >Buy Now</span>
 			</a>
@@ -6974,7 +6954,7 @@ if(window.location.protocol != 'https:')
 
 	
 	<script defer src="/js/lightbox.js?v=20260523-videofix6" type="text/javascript"></script>
-	<script defer src="/js/spimeengine.js?v=20260524-global-video6" type="text/javascript"></script>
+	<script defer src="/js/spimeengine.js?v=20260706-pa-buy" type="text/javascript"></script>
 
 
 	
@@ -7021,10 +7001,6 @@ if(window.location.protocol != 'https:')
         if (iframe.src !== d.embed_url) iframe.src = d.embed_url;
         iframe.setAttribute('data-pa-loaded', '1');
         iframe.dataset.provider = d.provider || '';
-        if (d.provider !== 'youtube') {
-          var controls = document.querySelector('#pa-video-col .pa-course-controls');
-          if (controls) controls.style.display = 'none';
-        }
       })
       .catch(function() {});
   }
@@ -7032,74 +7008,6 @@ if(window.location.protocol != 'https:')
     document.addEventListener('DOMContentLoaded', loadCoursePromoVideo);
   } else {
     loadCoursePromoVideo();
-  }
-})();
-</script>
-<script>
-/* ── About course video: visible audio controls ── */
-(function() {
-  function sendYouTubeCommand(func, value) {
-    var iframe = document.getElementById('pa-course-iframe');
-    if (!iframe || !iframe.contentWindow) return;
-    if (iframe.dataset.provider && iframe.dataset.provider !== 'youtube') return;
-    var payload = {
-      event: 'command',
-      func: func,
-      args: typeof value === 'undefined' ? [] : [value]
-    };
-    iframe.contentWindow.postMessage(JSON.stringify(payload), 'https://www.youtube.com');
-  }
-
-  function initCourseAudioControls() {
-    var iframe = document.getElementById('pa-course-iframe');
-    if (iframe && iframe.dataset.provider && iframe.dataset.provider !== 'youtube') return;
-    var toggleAudioBtn = document.getElementById('pa-course-toggle-audio');
-    var volDownBtn = document.getElementById('pa-course-vol-down');
-    var volUpBtn = document.getElementById('pa-course-vol-up');
-    if (!toggleAudioBtn || !volDownBtn || !volUpBtn) return;
-
-    var volume = 70;
-    var isMuted = true;
-    function syncAudioButton() {
-      toggleAudioBtn.textContent = isMuted ? 'Sound On' : 'Sound Off';
-    }
-    function setMuted(nextMuted) {
-      isMuted = !!nextMuted;
-      if (isMuted) {
-        sendYouTubeCommand('mute');
-      } else {
-        sendYouTubeCommand('unMute');
-        sendYouTubeCommand('setVolume', volume);
-      }
-      syncAudioButton();
-    }
-
-    toggleAudioBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      setMuted(!isMuted);
-    });
-
-    volDownBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      volume = Math.max(0, volume - 10);
-      if (isMuted) setMuted(false);
-      sendYouTubeCommand('setVolume', volume);
-    });
-
-    volUpBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      volume = Math.min(100, volume + 10);
-      if (isMuted) setMuted(false);
-      sendYouTubeCommand('setVolume', volume);
-    });
-
-    syncAudioButton();
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initCourseAudioControls);
-  } else {
-    initCourseAudioControls();
   }
 })();
 </script>
@@ -7162,7 +7070,7 @@ if(window.location.protocol != 'https:')
   }
 
   function swapBuyBtn() {
-    var btn = document.querySelector('a[data-link-type="BUY"]');
+    var btn = document.querySelector('a[data-pa-checkout]');
     if (btn) {
       btn.href = '/course-player.html';
       btn.removeAttribute('onclick');

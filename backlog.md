@@ -21,6 +21,7 @@ _None currently active._
 - [x] Removed and deployed the course video sound/volume controls
 - [x] Renamed and deployed the promo heading to “Master the Art of Cinematic Lighting”
 - [x] Stopped local background processes tied to this project
+- [x] Slightly enlarged and deployed the cinematic lighting heading
 
 ### Admin Panel
 - [ ] "Mark as read" action on contact form submissions (admin/index.html + admin/submissions.html)

@@ -39,6 +39,9 @@
       border-radius:4px;display:none;}
     .msg.error{background:#1a1210;border:1px solid #4a2c1a;color:#c87941;}
     .msg.success{background:#0d1a10;border:1px solid #1a4a2c;color:#5ab87e;}
+    .setup-link{display:block;margin-top:16px;color:#aaa;font-size:12px;text-align:center;
+      background:none;border:0;text-decoration:underline;cursor:pointer;width:100%;}
+    .setup-box{display:none;margin-top:18px;padding-top:18px;border-top:1px solid #222;}
     footer{text-align:center;padding:20px;font-size:12px;color:#444;
       border-top:1px solid #1a1a1a;}
     footer a{color:#555;}
@@ -72,6 +75,18 @@
       </div>
       <button class="btn" id="btn-login" onclick="doLogin()">LOG IN</button>
       <div class="msg" id="msg-login"></div>
+      <button class="setup-link" type="button" onclick="showSetupResend()">
+        Purchased but haven’t created a password?
+      </button>
+      <div class="setup-box" id="setup-resend">
+        <p class="sub">Enter your purchase email and we’ll send a secure password setup link.</p>
+        <div class="field">
+          <label>Purchase Email</label>
+          <input type="email" id="setup-email" placeholder="your@email.com" autocomplete="email">
+        </div>
+        <button class="btn" id="btn-setup" onclick="resendSetup()">SEND SETUP LINK</button>
+        <div class="msg" id="msg-setup"></div>
+      </div>
     </div>
 
     <!-- Register form -->
@@ -111,6 +126,9 @@
       }
     }).catch(function(){});
   }
+  if (new URLSearchParams(location.search).get('setup')) {
+    setTimeout(showSetupResend, 0);
+  }
 
   function showTab(tab) {
     document.getElementById('form-login').style.display    = tab === 'login'    ? '' : 'none';
@@ -146,6 +164,10 @@
         setTimeout(function(){ location.href = redir; }, 600);
       } else {
         showMsg('msg-login', d.error || 'Login failed.', 'error');
+        if (d.setup_required) {
+          document.getElementById('setup-email').value = email;
+          showSetupResend();
+        }
         btn.disabled = false;
         btn.textContent = 'LOG IN';
       }
@@ -154,6 +176,37 @@
       showMsg('msg-login', 'Network error. Please try again.', 'error');
       btn.disabled = false;
       btn.textContent = 'LOG IN';
+    });
+  }
+
+  function showSetupResend() {
+    document.getElementById('setup-resend').style.display = 'block';
+  }
+
+  function resendSetup() {
+    var email = document.getElementById('setup-email').value.trim();
+    var btn = document.getElementById('btn-setup');
+    if (!email) {
+      showMsg('msg-setup', 'Enter your purchase email.', 'error');
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    fetch('/member/resend-setup', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email: email})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      showMsg('msg-setup', d.message || 'If this email has a paid account, a setup link has been sent.', 'success');
+      btn.disabled = false;
+      btn.textContent = 'SEND SETUP LINK';
+    })
+    .catch(function(){
+      showMsg('msg-setup', 'Network error. Please try again.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'SEND SETUP LINK';
     });
   }
 
@@ -192,6 +245,11 @@
   // Allow Enter key to submit
   document.addEventListener('keydown', function(e){
     if (e.key !== 'Enter') return;
+    if (document.getElementById('setup-resend').style.display === 'block'
+        && document.activeElement === document.getElementById('setup-email')) {
+      resendSetup();
+      return;
+    }
     var loginVisible = document.getElementById('form-login').style.display !== 'none';
     if (loginVisible) doLogin(); else doRegister();
   });

@@ -104,9 +104,8 @@ SpimeEngine.normalizeVideoEmbeds = function(container){
 		}
 		// Keep inline behavior consistent while allowing fullscreen controls.
 		frame.attr("allow","autoplay; fullscreen; encrypted-media; picture-in-picture");
-		frame.attr("allowfullscreen","allowfullscreen");
-		frame.attr("webkitallowfullscreen","webkitallowfullscreen");
-		frame.attr("mozallowfullscreen","mozallowfullscreen");
+		// The modern allow policy supersedes legacy fullscreen attributes.
+		frame.removeAttr("allowfullscreen webkitallowfullscreen mozallowfullscreen");
 	});
 };
 

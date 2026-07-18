@@ -10,6 +10,39 @@ Website for Pierre Azar (pierreazar.com), built on the Indigo website builder pl
 **GitHub:** `indigo-communication/pierreazar`, master branch  
 **GitHub CLI switch:** `gh auth switch --user indigo-communication` before push
 
+## Current status — Premium Buyer Accounts
+- Verified payments now idempotently create or upgrade a Premium Member.
+- Existing member password hashes are preserved. New paid buyers receive a
+  single-use, hashed, 24-hour password setup link by email.
+- Buyers can request a replacement setup link from `member-login.html`; the
+  response is neutral and requests are throttled for five minutes.
+- Legacy activation codes and course bearer links remain valid for existing users.
+- Production migration exercise completed on July 18, 2026: 8 gateway-verified
+  test orders mapped to 4 test accounts. Anwar confirmed there have been no real
+  buyers yet, so these records must not be reported as customer revenue.
+- Nine older paid-marked orders lacked gateway evidence and were excluded for
+  manual review. No order, sale, activation-code, or legacy course-token records
+  were deleted.
+- Current blocker: Premium login and course authorization work, but all five
+  configured Bunny Stream embeds return Bunny's 404 player. Both local and
+  production token keys fail, and no Bunny dashboard/API access is filed in the
+  project credentials or access documentation.
+- Buyer purchase emails now include Pierre's workshop welcome text and route
+  new buyers through password setup or existing members through login.
+- `pierre@pierreazar.com` was removed from code and runtime member/session/
+  activation data in favor of `contact@pierreazar.com`. Contact's password was
+  preserved. Three named test members were deactivated, not deleted.
+- Member cleanup backup:
+  `data/backups/member-cleanup-20260718T191435Z/`.
+- Admin translation initialization no longer crashes when a page omits the
+  optional translation bundle. The Members page explicitly loads i18n before the
+  shared initializer; both initializer variants also guard missing bundles.
+- Active membership is currently restricted to `contact@pierreazar.com` and
+  `azarpierre1@gmail.com`. Four specified test accounts were deactivated; their
+  sessions, unused setup links, and legacy course links were revoked.
+- Deactivation backup:
+  `data/backups/member-deactivation-20260718T200403Z/`.
+
 ---
 
 ## Admin Panel
@@ -41,15 +74,103 @@ Admin credentials are stored only in the gitignored `.credentials.md` and
 | `cinematography-course.html` | Cinematography course page |
 | `get-in-touch.html` | Contact page (sends to `/send-message`) |
 | `member-login.html` | Member login portal |
+| `member-set-password.html` | Secure paid-buyer password setup page |
 | `member-activate.html` | Member activation flow |
 | `member-upgrade.html` | Member upgrade to premium |
 | `server.py` | Python HTTP server — handles auth, API, email, member CRUD |
+| `migrate_paid_buyers.py` | Dry-run/apply migration for verified paid buyers |
+| `test_premium_buyer_accounts.py` | Premium provisioning and token regression checks |
 | `mail_config.py` | SMTP config (gitignored — credentials) |
 | `mail_config.example.py` | Safe template for local SMTP/admin configuration |
 
 ---
 
 ## Session History
+
+---
+
+### Incident: July 18, 2026 — Gmail suppressed transactional emails
+
+#### Problem
+- Hostinger SMTP accepted buyer emails, but no Gmail recipient received them.
+- Non-Gmail owner/developer notifications continued to arrive.
+
+#### Method / Approach
+- Traced a delivered message's full headers and public authoritative DNS.
+- Confirmed MailChannels classified the message as `X-MC-Relay: Junk`.
+- Found that SPF authorized only the VPS while the application sends through
+  Hostinger, and Hostinger's `hostingermail-a` DKIM selector was absent.
+- Backed up the authoritative zone, added Hostinger SPF and all three official
+  DKIM CNAME records, incremented the serial, validated the zone, and reloaded it.
+
+#### Results
+- Authoritative DNS now publishes Hostinger SPF and DKIM.
+- Zone backup: `/var/named/pierreazar.com.zone.bak-20260718T183533Z`.
+- Incoming mail was also misrouted to the VPS (`MX 0 pierreazar.com`), which
+  rejected external senders with 554. After confirming all active
+  `@pierreazar.com` mailboxes are on Hostinger, MX was changed to
+  `mx1.hostinger.com` priority 5 and `mx2.hostinger.com` priority 10.
+- MX backup: `/var/named/pierreazar.com.zone.bak-mx-20260718T190622Z`.
+- Recursive resolvers still showed cached old records immediately after the fix;
+  delivery must be rechecked after DNS cache expiry.
+
+#### Next Steps
+- Do not issue more setup links until public resolvers return the new records.
+- Send one Gmail delivery check after propagation and inspect its authentication
+  results before declaring the incident closed.
+
+---
+
+### Session: July 18, 2026 — Premium Buyer Accounts
+
+#### Problem
+- Paid buyers depended on activation codes or personal course links and were not
+  automatically represented as Premium Members.
+- Buyers had no self-service recovery path when an activation email was missing.
+
+#### Method / Approach
+- Added idempotent paid-order provisioning, password-pending accounts, hashed
+  one-time setup tokens, a password setup page, neutral resend support, and
+  duplicate-notification guards.
+- Added an evidence-gated historical migration that cross-checks paid orders
+  against paid sales and requires gateway proof.
+- Backed up production data before applying the migration.
+
+#### Results
+- Seven automated regression checks pass for new/existing buyers, duplicate
+  completion, expired/used/replaced setup tokens, and legacy course links.
+- Production moved from 5 to 9 members. All 5 original password hashes were
+  unchanged; 4 migrated accounts are Premium and awaiting password setup.
+- Migration backup:
+  `data/backups/premium-migration-20260718T181152Z/`.
+- Live setup/login pages and neutral API responses return successfully.
+
+#### Next Steps
+- Confirm the first real buyer completes the emailed setup link and opens
+  `/course`; the raw setup token exists only in that buyer's email.
+- Review the 9 excluded historical paid-marked orders before granting access.
+- Local changes are not committed or pushed.
+
+---
+
+### Incident: July 18, 2026 — Public site connection refused
+
+#### Problem
+- `pierreazar.com` refused HTTP/HTTPS connections.
+
+#### Method / Approach
+- Verified DNS/VPS reachability, Apache status, listening ports, and the Python
+  backend.
+- Started Apache and enabled its automatic startup.
+
+#### Results
+- Root cause: Apache (`httpd`) was inactive and disabled; the Python backend on
+  port 8080 remained healthy.
+- Apache is active/enabled; homepage and course page return HTTP 200 over HTTPS.
+
+#### Next Steps
+- If Apache stops again without a reboot, inspect Webuzo/Apache error logs for
+  the initiating stop or crash.
 
 ---
 
@@ -68,7 +189,7 @@ Admin credentials are stored only in the gitignored `.credentials.md` and
 - The supplied legal portfolio/affiliation disclaimer now appears below the
   course syllabus.
 - Owner notifications go to `contact@pierreazar.com`, with developer test CC
-  to `info@emoove.co`.
+  to `info@emoove.co` and backup owner CC to `azarpierre1@gmail.com`.
 - Get in Touch clients receive a separate submission confirmation.
 - Purchase clients receive their separate course-access email.
 - All four email paths were SMTP-tested without charging a payment.
@@ -76,6 +197,8 @@ Admin credentials are stored only in the gitignored `.credentials.md` and
   uses the enlarged desktop/mobile heading style.
 - The custom Sound On and volume controls were removed from the course video on
   both the home and course pages.
+- Video normalization now uses the modern iframe `allow` policy without
+  redundant legacy fullscreen attributes.
 - Payment configuration was not changed.
 
 #### Next Steps

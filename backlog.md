@@ -22,8 +22,55 @@ _None currently active._
 - [x] Renamed and deployed the promo heading to “Master the Art of Cinematic Lighting”
 - [x] Stopped local background processes tied to this project
 - [x] Slightly enlarged and deployed the cinematic lighting heading
+- [x] Removed redundant iframe fullscreen attributes and refreshed the script cache
+- [x] Added and verified azarpierre1@gmail.com as backup CC for owner notifications
+
+### Done this session (Premium Buyer Accounts)
+- [x] Automatically upsert verified buyers as Premium Members
+- [x] Preserve existing member passwords and create password-pending new accounts
+- [x] Add hashed, single-use, 24-hour password setup links
+- [x] Add neutral, throttled setup-link resend from member login
+- [x] Keep legacy activation codes and course links operational
+- [x] Add idempotent evidence-gated historical migration with backups
+- [x] Exercise migration with 8 gateway-verified test orders across 4 test accounts
+- [x] Confirm all 4 migration setup emails were accepted without reported failure
+- [x] Verify original member password hashes and order/sale data were unchanged
+- [x] Deploy backend/member pages and restart only the Python server
+- [x] Add Pierre's workshop welcome copy and course action to both buyer email paths
+- [x] Replace stale `pierre@pierreazar.com` support references with Contact
+- [x] Deactivate `test@example.com`, `httpstest@example.com`, and `anwar@emoove.co`
+- [x] Merge/remove the obsolete Pierre member while preserving Contact's password
+  and migrating the active session/legacy activation record
+- [x] Deactivate the four specified test accounts and revoke their sessions,
+  password-setup links, and legacy course links
+- [x] Confirm only `contact@pierreazar.com` and `azarpierre1@gmail.com` remain active
+
+### Premium buyer follow-up
+- [ ] **BLOCKER:** Restore Bunny Stream course videos; all five configured
+  library/video IDs currently return the Bunny 404 player
+- [ ] Obtain verified Bunny dashboard/API access or corrected library/video IDs
+  and token-auth key; none are filed in project access records
+- [ ] After Bunny restores or recreates the video library, evaluate and configure
+  the **Volume delivery tier** for cost-sensitive course streaming
+- [ ] Confirm MENA playback performance on Volume before making it permanent;
+  switch back to Standard if latency or buffering is unacceptable
+- [ ] Measure actual encoded traffic per full workshop view in Bunny analytics
+  before recording any per-student or monthly cost
+- [ ] Configure low-balance alerts/auto-recharge so Stream is not suspended again
+- [ ] Confirm the first real buyer completes password setup from the emailed link
+  and opens the course
+- [ ] Manually review 9 historical paid-marked orders excluded for missing
+  gateway evidence; do not grant access without proof
+- [x] Diagnose Gmail suppression from delivered MailChannels headers
+- [x] Back up and repair authoritative Hostinger SPF/DKIM records
+- [x] Replace obsolete VPS MX with Hostinger `mx1`/`mx2` after confirming all
+  active Pierre Azar mailboxes are hosted there
+- [ ] After DNS cache expiry, send one Gmail setup-link check and confirm
+  SPF/DKIM authentication before resuming purchase-email tests
 
 ### Admin Panel
+- [x] Fix `translations is not defined` in shared admin initialization and load
+  the translation bundle before `deznav-init.js` on Members
 - [ ] "Mark as read" action on contact form submissions (admin/index.html + admin/submissions.html)
 - [ ] Disable / enable member toggle on admin/members.html
 - [ ] Verify dashboard stats load correctly from live member data

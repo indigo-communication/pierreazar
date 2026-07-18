@@ -3,7 +3,7 @@
 
 RECIPIENT_EMAIL = "owner@example.com"
 NOTIFY_EMAIL = "owner@example.com"
-NOTIFY_CC = "developer@example.com"
+NOTIFY_CC = ["developer@example.com", "owner-backup@example.com"]
 
 SMTP_HOST = "smtp.example.com"
 SMTP_PORT = 587

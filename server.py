@@ -1,6 +1,6 @@
 import http.server, http.client, ssl, os, re, json, smtplib, urllib.parse, hashlib, secrets, io, hmac, base64, time, html
 import urllib.request, urllib.error
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.utils import formatdate
@@ -21,6 +21,7 @@ ORDERS_FILE         = os.path.join(DATA_DIR, 'orders.json')
 COURSE_TOKENS_FILE  = os.path.join(DATA_DIR, 'course_tokens.json')
 MEMBERS_FILE        = os.path.join(DATA_DIR, 'members.json')
 ACTIVATION_CODES_FILE = os.path.join(DATA_DIR, 'activation_codes.json')
+PASSWORD_SETUP_TOKENS_FILE = os.path.join(DATA_DIR, 'password_setup_tokens.json')
 COUPONS_FILE          = os.path.join(DATA_DIR, 'coupons.json')
 BUNNY_STREAM_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'bunny-stream')
 BUNNY_TOKEN_KEY_FILE = os.path.join(BUNNY_STREAM_DIR, 'token_auth_key.txt')
@@ -28,6 +29,8 @@ BUNNY_COURSE_LINK_FILE = os.path.join(BUNNY_STREAM_DIR, 'course_link.txt')
 
 # ── Course access: max distinct IPs before token is locked ──────────────────
 COURSE_MAX_IPS = 2
+PASSWORD_SETUP_TTL_HOURS = 24
+PASSWORD_SETUP_RESEND_SECONDS = 300
 
 def _read_json(path):
     if not os.path.exists(path):
@@ -724,73 +727,79 @@ def _build_receipt_html(order, cfg_data):
     )
 
 def _finalize_paid_order(order_id, cfg_data, gateway_name='cybersource', payment_meta=None):
-    """Mark order paid, record sale, issue access. Returns redirect path.
-    Call only after Cybersource AUTHORIZED/CAPTURED is confirmed."""
+    """Idempotently record payment, grant Premium access, and notify parties."""
     payment_meta = payment_meta or {}
     orders = _read_json(ORDERS_FILE)
     order = next((o for o in orders if o.get('order_id') == order_id), None)
     if not order:
         return {'ok': False, 'redirect': '/payment-failed.html'}
-    if order.get('status') == 'paid':
-        buyer_email = order.get('email', '').strip().lower()
-        return {'ok': True, 'redirect': _payment_success_redirect(order_id, buyer_email)}
+    already_paid = order.get('status') == 'paid'
+    paid_at = str(order.get('paid_at') or datetime.now(timezone.utc).isoformat())
 
-    sales = _read_json(SALES_FILE)
-    sales.append({
-        'date':     datetime.now(timezone.utc).isoformat(),
-        'name':     order.get('name', ''),
-        'email':    order.get('email', ''),
-        'course':   cfg_data.get('course_name', 'Cinematography Workshop'),
-        'amount':   order.get('amount', cfg_data.get('course_price', 99)),
-        'status':   'paid',
-        'order_id': order_id,
-        'gateway':  gateway_name,
-        'cybersource_id': payment_meta.get('cybersource_id', ''),
-        'gateway_status': payment_meta.get('status', ''),
-    })
-    _write_json(SALES_FILE, sales)
-    for o in orders:
-        if o.get('order_id') == order_id:
-            o['status'] = 'paid'
-            if payment_meta.get('cybersource_id'):
-                o['cybersource_id'] = payment_meta['cybersource_id']
-            if payment_meta.get('status'):
-                o['gateway_status'] = payment_meta['status']
-    _write_json(ORDERS_FILE, orders)
+    if not already_paid:
+        sales = _read_json(SALES_FILE)
+        if not any(s.get('order_id') == order_id for s in sales):
+            sales.append({
+                'date': paid_at,
+                'name': order.get('name', ''),
+                'email': order.get('email', ''),
+                'course': cfg_data.get('course_name', 'Cinematography Workshop'),
+                'amount': order.get('amount', cfg_data.get('course_price', 99)),
+                'status': 'paid',
+                'order_id': order_id,
+                'gateway': gateway_name,
+                'cybersource_id': payment_meta.get('cybersource_id', ''),
+                'gateway_status': payment_meta.get('status', ''),
+            })
+            _write_json(SALES_FILE, sales)
 
-    coupon_used = order.get('coupon_code', '').strip()
-    if coupon_used:
-        _use_coupon(coupon_used)
+        order['status'] = 'paid'
+        order['paid_at'] = paid_at
+        if payment_meta.get('cybersource_id'):
+            order['cybersource_id'] = payment_meta['cybersource_id']
+        if payment_meta.get('status'):
+            order['gateway_status'] = payment_meta['status']
+
+        coupon_used = order.get('coupon_code', '').strip()
+        if coupon_used:
+            _use_coupon(coupon_used)
 
     buyer_email = order.get('email', '').strip().lower()
     buyer_name  = order.get('name', '')
     base_url    = cfg_data.get('return_base_url', 'https://pierreazar.com')
-    members     = _read_json(MEMBERS_FILE)
-    is_member   = any(m.get('email') == buyer_email for m in members)
+    order['paid_at'] = paid_at
+    account = _upsert_premium_buyer(order)
+    receipt_url = f"{base_url.rstrip('/')}/api/receipt?{urllib.parse.urlencode({'order': order_id, 'key': _receipt_access_key(order_id, buyer_email), 'download': '1'})}"
 
-    if is_member:
-        act_code = _generate_activation_code(buyer_email)
+    if not order.get('buyer_access_emailed'):
         try:
-            _send_activation_email(buyer_name, buyer_email, act_code, base_url)
+            if account['needs_password_setup']:
+                _issue_password_setup_email(order, base_url, receipt_url=receipt_url)
+                order['buyer_email_type'] = 'password_setup'
+            else:
+                _send_premium_access_email(
+                    buyer_name,
+                    buyer_email,
+                    base_url,
+                    order_id=order_id,
+                    receipt_url=receipt_url,
+                )
+                order['buyer_email_type'] = 'premium_access'
+            order['buyer_access_emailed'] = True
+            order['buyer_access_emailed_at'] = datetime.now(timezone.utc).isoformat()
         except Exception as e:
-            _log_email_error(f'activation_email:{order_id}', e)
+            _log_email_error(f'buyer_access:{order_id}', e)
+
+    if not order.get('merchant_notified'):
         try:
             _send_purchase_notification_email(order, cfg_data, payment_meta)
+            order['merchant_notified'] = True
+            order['merchant_notified_at'] = datetime.now(timezone.utc).isoformat()
         except Exception as e:
             _log_email_error(f'purchase_notify:{order_id}', e)
-        return {'ok': True, 'redirect': _payment_success_redirect(order_id, buyer_email)}
 
-    course_token = _generate_course_token(buyer_email, order_id)
-    receipt_url = f"{base_url.rstrip('/')}/api/receipt?{urllib.parse.urlencode({'order': order_id, 'key': _receipt_access_key(order_id, buyer_email), 'download': '1'})}"
-    try:
-        _send_course_access_email(buyer_name, buyer_email, course_token, base_url, receipt_url)
-    except Exception as e:
-        _log_email_error(f'course_access_email:{order_id}', e)
-    try:
-        _send_purchase_notification_email(order, cfg_data, payment_meta)
-    except Exception as e:
-        _log_email_error(f'purchase_notify:{order_id}', e)
-    return {'ok': True, 'redirect': _payment_success_redirect(order_id, buyer_email, course_token)}
+    _write_json(ORDERS_FILE, orders)
+    return {'ok': True, 'redirect': _payment_success_redirect(order_id, buyer_email)}
 
 # ── Areeba / MPGS hosted checkout ────────────────────────────────────────────
 def _areeba_create_session(cfg_data, order_id, amount, name, email):
@@ -932,6 +941,174 @@ def _verify_password(password, stored):
     except Exception:
         return False
 
+def _normalize_email(email):
+    return str(email or '').strip().lower()
+
+def _create_member_session(email):
+    token = secrets.token_hex(32)
+    _member_sessions[token] = _normalize_email(email)
+    _save_sessions(MEMBER_SESSIONS_FILE, _member_sessions)
+    return token
+
+def _upsert_premium_buyer(order, migration_version=None):
+    """Idempotently grant Premium membership for a verified paid order."""
+    email = _normalize_email(order.get('email'))
+    if not email or not _EMAIL_RE.match(email):
+        raise ValueError('Paid order has an invalid buyer email')
+    order_id = str(order.get('order_id', '')).strip()
+    if not order_id:
+        raise ValueError('Paid order has no order ID')
+
+    name = str(order.get('name', '')).strip()
+    paid_at = str(
+        order.get('paid_at')
+        or order.get('date')
+        or datetime.now(timezone.utc).isoformat()
+    )
+    members = _read_json(MEMBERS_FILE)
+    member = next((m for m in members if _normalize_email(m.get('email')) == email), None)
+    created = member is None
+
+    if created:
+        member = {
+            'email': email,
+            'name': name,
+            'password': '',
+            'password_pending': True,
+            'created_at': paid_at,
+            'last_login': '',
+            'active': True,
+            'premium': True,
+            'premium_since': paid_at,
+            'source_order_ids': [order_id],
+        }
+        members.append(member)
+    else:
+        member['email'] = email
+        if name and not member.get('name'):
+            member['name'] = name
+        member['active'] = member.get('active', True)
+        member['premium'] = True
+        existing_since = str(member.get('premium_since', '') or '')
+        member['premium_since'] = min(
+            [value for value in (existing_since, paid_at) if value]
+        )
+        source_orders = member.setdefault('source_order_ids', [])
+        if order_id not in source_orders:
+            source_orders.append(order_id)
+        if member.get('password'):
+            member['password_pending'] = False
+        else:
+            member['password_pending'] = True
+
+    if migration_version:
+        migrations = member.setdefault('migrations', [])
+        if migration_version not in migrations:
+            migrations.append(migration_version)
+
+    _write_json(MEMBERS_FILE, members)
+    return {
+        'member': member,
+        'created': created,
+        'needs_password_setup': bool(member.get('password_pending')),
+    }
+
+def _password_setup_digest(raw_token):
+    return hashlib.sha256(str(raw_token).encode('utf-8')).hexdigest()
+
+def _create_password_setup_token(email, order_id):
+    """Create an expiring setup token; persist only its SHA-256 digest."""
+    email = _normalize_email(email)
+    now = datetime.now(timezone.utc)
+    tokens = _read_json(PASSWORD_SETUP_TOKENS_FILE)
+    for entry in tokens:
+        if (
+            _normalize_email(entry.get('email')) == email
+            and not entry.get('consumed_at')
+            and not entry.get('invalidated_at')
+        ):
+            entry['invalidated_at'] = now.isoformat()
+
+    raw_token = secrets.token_urlsafe(48)
+    tokens.append({
+        'token_hash': _password_setup_digest(raw_token),
+        'email': email,
+        'order_id': str(order_id or ''),
+        'created_at': now.isoformat(),
+        'expires_at': (now + timedelta(hours=PASSWORD_SETUP_TTL_HOURS)).isoformat(),
+        'consumed_at': '',
+        'invalidated_at': '',
+    })
+    _write_json(PASSWORD_SETUP_TOKENS_FILE, tokens)
+    return raw_token
+
+def _setup_resend_allowed(email):
+    email = _normalize_email(email)
+    tokens = _read_json(PASSWORD_SETUP_TOKENS_FILE)
+    recent = [
+        str(entry.get('created_at', ''))
+        for entry in tokens
+        if _normalize_email(entry.get('email')) == email
+    ]
+    if not recent:
+        return True
+    try:
+        latest = datetime.fromisoformat(max(recent))
+        return datetime.now(timezone.utc) - latest >= timedelta(seconds=PASSWORD_SETUP_RESEND_SECONDS)
+    except (TypeError, ValueError):
+        return True
+
+def _find_verified_paid_order_for_email(email):
+    email = _normalize_email(email)
+    sales = _read_json(SALES_FILE)
+    paid_sale_ids = {
+        str(s.get('order_id', '')).strip()
+        for s in sales
+        if s.get('status') == 'paid' and s.get('order_id')
+    }
+    orders = _read_json(ORDERS_FILE)
+    matches = [
+        order for order in orders
+        if order.get('status') == 'paid'
+        and str(order.get('order_id', '')).strip() in paid_sale_ids
+        and _normalize_email(order.get('email')) == email
+    ]
+    return matches[-1] if matches else None
+
+def _consume_password_setup_token(raw_token, password):
+    if len(password) < 8:
+        raise ValueError('Password must be at least 8 characters')
+    digest = _password_setup_digest(raw_token)
+    tokens = _read_json(PASSWORD_SETUP_TOKENS_FILE)
+    entry = next((t for t in tokens if secrets.compare_digest(
+        str(t.get('token_hash', '')), digest
+    )), None)
+    if not entry or entry.get('consumed_at') or entry.get('invalidated_at'):
+        raise ValueError('This setup link is invalid or has already been used')
+    try:
+        if datetime.fromisoformat(str(entry.get('expires_at', ''))) <= datetime.now(timezone.utc):
+            raise ValueError('This setup link has expired')
+    except (TypeError, ValueError) as exc:
+        if isinstance(exc, ValueError) and str(exc) == 'This setup link has expired':
+            raise
+        raise ValueError('This setup link is invalid') from exc
+
+    email = _normalize_email(entry.get('email'))
+    members = _read_json(MEMBERS_FILE)
+    member = next((m for m in members if _normalize_email(m.get('email')) == email), None)
+    if not member or not member.get('premium'):
+        raise ValueError('Premium account not found')
+    if not member.get('active', True):
+        raise ValueError('Account is disabled')
+
+    member['password'] = _hash_password(password)
+    member['password_pending'] = False
+    member['password_set_at'] = datetime.now(timezone.utc).isoformat()
+    entry['consumed_at'] = datetime.now(timezone.utc).isoformat()
+    _write_json(MEMBERS_FILE, members)
+    _write_json(PASSWORD_SETUP_TOKENS_FILE, tokens)
+    return member
+
 # ── Activation code helpers ──────────────────────────────────────────────────
 
 def _generate_activation_code(email):
@@ -974,11 +1151,19 @@ def _smtp_send(msg, recipients, include_notify_cc=False):
         raise ValueError('No email recipients')
     # Hostinger often hides/drops mailbox self-mail (From==To same account).
     if include_notify_cc:
-        cc = (getattr(cfg, 'NOTIFY_CC', '') or '').strip()
-        if cc and cc.lower() not in {r.lower() for r in recipients}:
-            recipients.append(cc)
-            if not msg.get('Cc'):
-                msg['Cc'] = cc
+        configured_cc = getattr(cfg, 'NOTIFY_CC', '') or []
+        if isinstance(configured_cc, str):
+            configured_cc = [part.strip() for part in configured_cc.split(',')]
+        cc_recipients = []
+        known = {r.lower() for r in recipients}
+        for cc in configured_cc:
+            cc = str(cc).strip()
+            if cc and cc.lower() not in known:
+                recipients.append(cc)
+                cc_recipients.append(cc)
+                known.add(cc.lower())
+        if cc_recipients and not msg.get('Cc'):
+            msg['Cc'] = ', '.join(cc_recipients)
     with smtplib.SMTP(cfg.SMTP_HOST, cfg.SMTP_PORT, timeout=30) as s:
         s.ehlo()
         s.starttls()
@@ -988,6 +1173,127 @@ def _smtp_send(msg, recipients, include_notify_cc=False):
     if refused:
         raise ValueError(f'SMTP refused: {refused}')
     return recipients
+
+def _send_password_setup_email(name, email, raw_token, base_url, order_id='', receipt_url=None):
+    setup_url = (
+        f"{base_url.rstrip('/')}/member/set-password"
+        f"#token={urllib.parse.quote(raw_token)}"
+    )
+    subject = "Welcome to the Cinematography Workshop!"
+    receipt_line = f"\nDownload your receipt: {receipt_url}\n" if receipt_url else ''
+    body_text = (
+        f"Hi {name or email},\n\n"
+        "Welcome to the Cinematography Workshop!\n\n"
+        "Thank you for joining. I’m excited to have you here.\n\n"
+        "This isn’t a traditional classroom course—it’s a practical workshop where you’ll "
+        "learn the same techniques I use on professional film sets.\n\n"
+        "Your workshop is ready.\n\n"
+        "Create your password and start watching here:\n"
+        f"{setup_url}\n"
+        f"{receipt_line}\n"
+        f"The link expires in {PASSWORD_SETUP_TTL_HOURS} hours and can be used once.\n"
+        "If it expires, request a new link from the member login page.\n\n"
+        "Enjoy the workshop, and thank you for being part of this journey.\n\n"
+        "— Pierre Azar\n"
+        "contact@pierreazar.com"
+    )
+    receipt_html = (
+        f'<p><a href="{receipt_url}" style="color:#222;">Download your payment receipt</a></p>'
+        if receipt_url else ''
+    )
+    body_html = (
+        '<html><body style="font-family:Arial,sans-serif;color:#222;max-width:600px;">'
+        f'<p>Hi {html.escape(name or email)},</p>'
+        '<h2>Welcome to the Cinematography Workshop!</h2>'
+        '<p>Thank you for joining. I’m excited to have you here.</p>'
+        '<p>This isn’t a traditional classroom course—it’s a practical workshop where '
+        'you’ll learn the same techniques I use on professional film sets.</p>'
+        '<p><strong>Your workshop is ready.</strong></p>'
+        f'<p><a href="{setup_url}" style="background:#222;color:#fff;padding:12px 24px;'
+        'text-decoration:none;border-radius:4px;display:inline-block;">'
+        'Create Password &amp; Start Watching</a></p>'
+        f'<p style="color:#888;font-size:13px;">This secure link expires in '
+        f'{PASSWORD_SETUP_TTL_HOURS} hours and can be used once.</p>'
+        f'{receipt_html}'
+        '<p style="color:#888;font-size:12px;">If the link expires, request a new one '
+        'from the member login page.</p>'
+        '<p>Enjoy the workshop, and thank you for being part of this journey.</p>'
+        '<p>— Pierre Azar<br><a href="mailto:contact@pierreazar.com">'
+        'contact@pierreazar.com</a></p></body></html>'
+    )
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From'] = f'{getattr(cfg, "SENDER_NAME", "Pierre Azar Website")} <{cfg.SMTP_USER}>'
+    msg['To'] = email
+    msg['Date'] = formatdate(timeval=None, localtime=False, usegmt=True)
+    msg['Message-ID'] = f'<password-setup-{secrets.token_hex(8)}@pierreazar.com>'
+    msg.attach(MIMEText(body_text, 'plain'))
+    msg.attach(MIMEText(body_html, 'html'))
+    sent_to = _smtp_send(msg, email)
+    _log_email_ok(f'password_setup:{email}:{order_id}', ','.join(sent_to))
+    return sent_to
+
+def _issue_password_setup_email(order, base_url, receipt_url=None):
+    email = _normalize_email(order.get('email'))
+    order_id = str(order.get('order_id', '')).strip()
+    raw_token = _create_password_setup_token(email, order_id)
+    _send_password_setup_email(
+        order.get('name', ''),
+        email,
+        raw_token,
+        base_url,
+        order_id=order_id,
+        receipt_url=receipt_url,
+    )
+    return raw_token
+
+def _send_premium_access_email(name, email, base_url, order_id='', receipt_url=None):
+    login_url = f"{base_url.rstrip('/')}/member-login.html?next=/course"
+    subject = "Welcome to the Cinematography Workshop!"
+    receipt_line = f"\nDownload your receipt: {receipt_url}\n" if receipt_url else ''
+    body_text = (
+        f"Hi {name or email},\n\n"
+        "Welcome to the Cinematography Workshop!\n\n"
+        "Thank you for joining. I’m excited to have you here.\n\n"
+        "This isn’t a traditional classroom course—it’s a practical workshop where you’ll "
+        "learn the same techniques I use on professional film sets.\n\n"
+        "Your workshop is ready.\n\n"
+        f"Start watching here: {login_url}\n"
+        f"{receipt_line}\n"
+        "Enjoy the workshop, and thank you for being part of this journey.\n\n"
+        "— Pierre Azar\n"
+        "contact@pierreazar.com"
+    )
+    receipt_html = (
+        f'<p><a href="{receipt_url}" style="color:#222;">Download your payment receipt</a></p>'
+        if receipt_url else ''
+    )
+    body_html = (
+        '<html><body style="font-family:Arial,sans-serif;color:#222;max-width:600px;">'
+        f'<p>Hi {html.escape(name or email)},</p>'
+        '<h2>Welcome to the Cinematography Workshop!</h2>'
+        '<p>Thank you for joining. I’m excited to have you here.</p>'
+        '<p>This isn’t a traditional classroom course—it’s a practical workshop where '
+        'you’ll learn the same techniques I use on professional film sets.</p>'
+        '<p><strong>Your workshop is ready.</strong></p>'
+        f'<p><a href="{login_url}" style="background:#222;color:#fff;padding:12px 24px;'
+        'text-decoration:none;border-radius:4px;display:inline-block;">Start Watching</a></p>'
+        f'{receipt_html}'
+        '<p>Enjoy the workshop, and thank you for being part of this journey.</p>'
+        '<p>— Pierre Azar<br><a href="mailto:contact@pierreazar.com">'
+        'contact@pierreazar.com</a></p></body></html>'
+    )
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From'] = f'{getattr(cfg, "SENDER_NAME", "Pierre Azar Website")} <{cfg.SMTP_USER}>'
+    msg['To'] = email
+    msg['Date'] = formatdate(timeval=None, localtime=False, usegmt=True)
+    msg['Message-ID'] = f'<premium-access-{secrets.token_hex(8)}@pierreazar.com>'
+    msg.attach(MIMEText(body_text, 'plain'))
+    msg.attach(MIMEText(body_html, 'html'))
+    sent_to = _smtp_send(msg, email)
+    _log_email_ok(f'premium_access:{email}:{order_id}', ','.join(sent_to))
+    return sent_to
 
 def _send_purchase_notification_email(order, cfg_data, payment_meta=None):
     """Notify Pierre Azar when a new course purchase is completed."""
@@ -1358,12 +1664,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             note = (
                 '<div class="alert alert-warn">'
                 '<strong>Too many devices detected.</strong> Your personal link has been locked '
-                'for security. Please email <a href="mailto:pierre@pierreazar.com">pierre@pierreazar.com</a> '
+                'for security. Please email <a href="mailto:contact@pierreazar.com">contact@pierreazar.com</a> '
                 'and we will reset your access within 24 hours.'
                 '</div>'
             )
             cta_label = 'Contact Pierre'
-            cta_href  = 'mailto:pierre@pierreazar.com'
+            cta_href  = 'mailto:contact@pierreazar.com'
         else:
             note = (
                 '<div class="alert alert-info">'
@@ -1437,8 +1743,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             f'<a href="{cta_href}" class="cta">{cta_label}</a>'
             '<a href="/" class="back">&#8592; Back to pierreazar.com</a>'
             '</div></main>'
-            '<footer>Questions? <a href="mailto:pierre@pierreazar.com" '
-            'style="color:#555;">pierre@pierreazar.com</a></footer>'
+            '<footer>Questions? <a href="mailto:contact@pierreazar.com" '
+            'style="color:#555;">contact@pierreazar.com</a></footer>'
             '</body></html>'
         ).encode()
         self.send_response(200)
@@ -1721,13 +2027,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if email:
                 members = _read_json(MEMBERS_FILE)
                 member  = next((m for m in members if m.get('email') == email), {})
-                self._json_response({
-                    'ok':           True,
-                    'email':        email,
-                    'name':         member.get('name', ''),
-                    'premium':      member.get('premium', False),
-                    'premium_since': member.get('premium_since', ''),
-                })
+                if member.get('active', True):
+                    self._json_response({
+                        'ok':           True,
+                        'email':        email,
+                        'name':         member.get('name', ''),
+                        'premium':      member.get('premium', False),
+                        'premium_since': member.get('premium_since', ''),
+                    })
+                else:
+                    self._json_response({'ok': False})
             else:
                 # Keep guest checks quiet in browser Network panel.
                 self._json_response({'ok': False})
@@ -1745,7 +2054,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if member_email:
                 members = _read_json(MEMBERS_FILE)
                 member = next((m for m in members if m.get('email') == member_email), {})
-                has_access = bool(member.get('premium', False))
+                has_access = bool(
+                    member.get('active', True) and member.get('premium', False)
+                )
             else:
                 qs = dict(urllib.parse.parse_qsl(urllib.parse.urlparse(self.path).query))
                 token = qs.get('token', '').strip()
@@ -1818,6 +2129,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.end_headers()
             return
 
+        # ---- Member: password setup page ----
+        if path == '/member/set-password':
+            setup_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'member-set-password.html')
+            try:
+                with open(setup_file, 'rb') as f:
+                    content = f.read()
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html; charset=utf-8')
+                self.send_header('Content-Length', str(len(content)))
+                self.send_header('Cache-Control', 'no-store')
+                self.send_header('Referrer-Policy', 'no-referrer')
+                self.end_headers()
+                self.wfile.write(content)
+            except FileNotFoundError:
+                self.send_response(404)
+                self.end_headers()
+            return
+
         # ---- Course access (token-gated OR member session) ----
         if path == '/course':
             # Allow access via member session cookie — only if premium
@@ -1825,6 +2154,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if member_email:
                 members = _read_json(MEMBERS_FILE)
                 member  = next((m for m in members if m.get('email') == member_email), {})
+                if not member.get('active', True):
+                    self._serve_course_error(
+                        'This member account is disabled. Please contact '
+                        '<a href="mailto:contact@pierreazar.com">contact@pierreazar.com</a>.'
+                    )
+                    return
                 if not member.get('premium', False):
                     # Not premium yet — redirect to upgrade page
                     self.send_response(302)
@@ -1987,6 +2322,69 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response({'ok': False, 'error': str(e)})
             return
 
+        # ---- Member: complete paid-buyer password setup ----
+        if path == '/member/setup-password':
+            body = self._read_body()
+            try:
+                data = json.loads(body) if body else {}
+                raw_token = str(data.get('token', '')).strip()
+                password = str(data.get('password', ''))
+                if not raw_token:
+                    raise ValueError('Setup token is required')
+                member = _consume_password_setup_token(raw_token, password)
+                session_token = _create_member_session(member.get('email'))
+                self._json_response(
+                    {'ok': True, 'redirect': '/course'},
+                    extra_headers={
+                        'Set-Cookie': f'pa_member={session_token}; Path=/; HttpOnly; '
+                        'SameSite=Strict; Secure; Max-Age=2592000'
+                    }
+                )
+            except ValueError as e:
+                self._json_response({'ok': False, 'error': str(e)}, status=400)
+            except Exception as e:
+                self._json_response({'ok': False, 'error': 'Could not set password'}, status=500)
+                _log_email_error('password_setup_complete', e)
+            return
+
+        # ---- Member: resend paid-buyer password setup link ----
+        if path == '/member/resend-setup':
+            body = self._read_body()
+            try:
+                data = json.loads(body) if body else {}
+                email = _normalize_email(data.get('email'))[:200]
+                if email and _EMAIL_RE.match(email):
+                    members = _read_json(MEMBERS_FILE)
+                    member = next(
+                        (m for m in members if _normalize_email(m.get('email')) == email),
+                        None,
+                    )
+                    order = _find_verified_paid_order_for_email(email)
+                    if (
+                        member
+                        and member.get('premium')
+                        and member.get('active', True)
+                        and member.get('password_pending')
+                        and order
+                        and _setup_resend_allowed(email)
+                    ):
+                        _issue_password_setup_email(
+                            order,
+                            get_payment_config().get('return_base_url', 'https://pierreazar.com'),
+                        )
+                # Always return the same response to avoid disclosing membership.
+                self._json_response({
+                    'ok': True,
+                    'message': 'If this email has a paid account, a setup link has been sent.',
+                })
+            except Exception as e:
+                _log_email_error('password_setup_resend', e)
+                self._json_response({
+                    'ok': True,
+                    'message': 'If this email has a paid account, a setup link has been sent.',
+                })
+            return
+
         # ---- Member: register ----
         if path == '/member/register':
             body = self._read_body()
@@ -2000,8 +2398,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if len(password) < 8:
                     raise ValueError('Password must be at least 8 characters')
                 members = _read_json(MEMBERS_FILE)
-                if any(m.get('email') == email for m in members):
-                    self._json_response({'ok': False, 'error': 'Email already registered'}, status=409)
+                existing = next((m for m in members if _normalize_email(m.get('email')) == email), None)
+                if existing:
+                    response = {'ok': False, 'error': 'Email already registered'}
+                    if existing.get('password_pending'):
+                        response['setup_required'] = True
+                        response['error'] = 'A paid account exists for this email. Request a password setup link.'
+                    self._json_response(response, status=409)
                     return
                 members.append({
                     'email':        email,
@@ -2015,9 +2418,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 })
                 _write_json(MEMBERS_FILE, members)
                 # Auto-login after registration
-                token = secrets.token_hex(32)
-                _member_sessions[token] = email
-                _save_sessions(MEMBER_SESSIONS_FILE, _member_sessions)
+                token = _create_member_session(email)
                 self._json_response(
                     {'ok': True},
                     extra_headers={
@@ -2082,21 +2483,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 email    = str(data.get('email', '')).strip().lower()[:200]
                 password = str(data.get('password', ''))
                 members  = _read_json(MEMBERS_FILE)
-                member   = next((m for m in members if m.get('email') == email), None)
+                member   = next((m for m in members if _normalize_email(m.get('email')) == email), None)
+                if member and not member.get('active', True):
+                    self._json_response({'ok': False, 'error': 'Account is disabled'}, status=403)
+                    return
+                if member and member.get('password_pending'):
+                    self._json_response({
+                        'ok': False,
+                        'error': 'Create your password using the link sent after purchase.',
+                        'setup_required': True,
+                    }, status=403)
+                    return
                 if not member or not _verify_password(password, member.get('password', '')):
                     self._json_response({'ok': False, 'error': 'Invalid email or password'}, status=401)
-                    return
-                if not member.get('active', True):
-                    self._json_response({'ok': False, 'error': 'Account is disabled'}, status=403)
                     return
                 # Update last_login
                 for m in members:
                     if m.get('email') == email:
                         m['last_login'] = datetime.now(timezone.utc).isoformat()
                 _write_json(MEMBERS_FILE, members)
-                token = secrets.token_hex(32)
-                _member_sessions[token] = email
-                _save_sessions(MEMBER_SESSIONS_FILE, _member_sessions)
+                token = _create_member_session(email)
                 self._json_response(
                     {'ok': True},
                     extra_headers={
@@ -2115,6 +2521,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if part.startswith('pa_member='):
                     token = part[len('pa_member='):]
                     _member_sessions.pop(token, None)
+            _save_sessions(MEMBER_SESSIONS_FILE, _member_sessions)
             self._json_response(
                 {'ok': True},
                 extra_headers={
@@ -2564,20 +2971,23 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 # ── Start server ─────────────────────────────────────────────────────────────
 # Set PA_NO_SSL=1 and PA_PORT=8080 to run in plain HTTP mode (behind Nginx/Apache).
-_no_ssl = os.environ.get('PA_NO_SSL', '0') == '1'
-_port   = int(os.environ.get('PA_PORT', '4443'))
-_host   = os.environ.get('PA_HOST', '127.0.0.1')
+def _run_server():
+    no_ssl = os.environ.get('PA_NO_SSL', '0') == '1'
+    port = int(os.environ.get('PA_PORT', '4443'))
+    host = os.environ.get('PA_HOST', '127.0.0.1')
+    server = http.server.HTTPServer((host, port), Handler)
 
-server = http.server.HTTPServer((_host, _port), Handler)
+    if no_ssl:
+        print(f"Running at http://{host}:{port}  [HTTP mode — SSL handled by reverse proxy]")
+        print(f"Admin panel: http://{host}:{port}/admin/login.html")
+    else:
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ctx.load_cert_chain('cert.pem', 'key.pem')
+        server.socket = ctx.wrap_socket(server.socket, server_side=True)
+        print(f"Running at https://{host}:{port}")
+        print(f"Admin panel: https://{host}:{port}/admin/login.html")
 
-if _no_ssl:
-    print(f"Running at http://{_host}:{_port}  [HTTP mode — SSL handled by reverse proxy]")
-    print(f"Admin panel: http://{_host}:{_port}/admin/login.html")
-else:
-    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    ctx.load_cert_chain('cert.pem', 'key.pem')
-    server.socket = ctx.wrap_socket(server.socket, server_side=True)
-    print(f"Running at https://{_host}:{_port}")
-    print(f"Admin panel: https://{_host}:{_port}/admin/login.html")
+    server.serve_forever()
 
-server.serve_forever()
+if __name__ == '__main__':
+    _run_server()

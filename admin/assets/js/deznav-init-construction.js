@@ -437,7 +437,9 @@ function getUrlParams(dParam){
 		
 		// Set body attribute and update translations
 		$('body').attr('data-language', CurrentLang);
-		updateTranslations(translations[CurrentLang]);
+		updateTranslations(
+			typeof translations !== 'undefined' ? translations[CurrentLang] : null
+		);
 
 		// Event handler for select change
 		$('#langSwitcher').on('change', function () {
@@ -447,12 +449,15 @@ function getUrlParams(dParam){
 			setCookie('direction', this.value);
 			
 			$('body').attr('data-language', selectedLang);
-			updateTranslations(translations[selectedLang]);
+			updateTranslations(
+				typeof translations !== 'undefined' ? translations[selectedLang] : null
+			);
 			
 		});
 		
 		// Function to apply translations
 		function updateTranslations(langData) {
+			if (typeof i18n === 'undefined' || !langData) return;
 			i18n.translator.add(langData);
 			document.querySelectorAll('[data-i18n]').forEach(el => {
 				const key = el.getAttribute('data-i18n');

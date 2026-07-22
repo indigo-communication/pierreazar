@@ -229,6 +229,28 @@ Admin credentials are stored only in the gitignored `.credentials.md` and
 
 ---
 
+### Session: July 22, 2026 — Portfolio dynamic grid alignment fix
+
+#### Problem
+- New videos added via admin appeared in a **vertical column on the right** instead of continuing the 3-column grid.
+- Root cause: dynamic blocks were inserted after `layout-settings` but **before** the two closing `</div>` tags that complete each grid item — nesting them inside slot 8's wrapper.
+
+#### Method
+- Rewrote `repair_portfolio_dynamic_blocks()` to cut misaligned HTML after slot 8 and rebuild dynamic items as proper grid siblings.
+- Fixed `_portfolio_item_append_point()` / `_insert_portfolio_block()` to append after the full item block.
+- Deployed `content_manager.py` to VPS; ran repair on 3 live dynamic videos (indices 9–11).
+
+#### Results
+- Repair rebuilt 3 videos as grid siblings after slot 8.
+- Verified 4th-video add/delete cycle works on VPS after repair.
+- Synced repaired `portfolio.html` + `data/portfolio_dynamic.json` to local workspace.
+
+#### Next Steps
+1. Hard-refresh `pierreazar.com/portfolio.html` and confirm row 4+ layout.
+2. Client QA: add video, change thumb, delete.
+
+---
+
 ### Session: May 23, 2026 — Dynamic Portfolio Videos + Admin Fixes
 
 #### Problem

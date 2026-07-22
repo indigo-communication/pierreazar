@@ -4583,16 +4583,27 @@ if(window.location.protocol != 'https:')
     border: none !important;
 }
 
-/* Price row */
+/* Price row: Buy Now → $149/$99 → Limited offer */
 .course-price-row br { display: none !important; }
 .course-price-row {
     text-align: center; padding: 24px 20px;
-    display: flex; align-items: center;
-    justify-content: center; gap: 20px; flex-wrap: wrap;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 14px;
 }
-.course-price-row .preview-price-holder,
+.course-price-row .preview-form { display: none !important; }
 .course-price-row .preview-item-links {
-    display: inline-block !important; margin: 0 8px !important;
+    order: 1;
+    display: block !important;
+    margin: 0 !important;
+}
+.course-price-row .preview-price-holder {
+    order: 2;
+    display: block !important;
+    margin: 0 !important;
+}
+.course-price-row .pa-buy-now .item-link {
+    color: #fff !important;
 }
 
 /* Limited offer: strike $149, show $99 */
@@ -4620,6 +4631,20 @@ if(window.location.protocol != 'https:')
   text-transform: uppercase;
   opacity: 0.65;
   font-family: freight-sans-pro, Arial, sans-serif;
+}
+
+.pa-course-legal-note {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 18px 24px 28px;
+  background: #000;
+  color: rgba(255, 255, 255, 0.58);
+  font: 12px/1.6 Arial, sans-serif;
+  text-align: center;
+}
+.pa-course-legal-note p {
+  max-width: 980px;
+  margin: 0 auto;
 }
 
 @media (max-width: 900px) {
@@ -5552,6 +5577,10 @@ if(window.location.protocol != 'https:')
 
 										
 											
+<div class="pa-course-legal-note" role="note" aria-label="Legal disclaimer">
+	<p>Note: Any artists, brands, logos, or commercial projects appearing in this workshop are presented solely as part of my professional portfolio and cinematography work. Their appearance does not imply any affiliation with, endorsement of, or participation in this educational program.</p>
+</div>
+<div class="course-price-row" style="clear:both; text-align:center; padding:24px 20px; width:100%; box-sizing:border-box; position:relative; z-index:10;">
 <br class="upper-line-break" />
 <div class="preview-price-holder removable-parent order-handle">
 	<div id="vbid-c1e000b4-odsvwj1v" class="preview-element preview-price magic-circle-holder text-element quick-text-style-menu pa-has-offer" data-menu-name="PREVIEW_PRICE" data-product-type="SERVICE" data-product-id="product-c1e000b4-odsvwj1v" >
@@ -5582,6 +5611,7 @@ if(window.location.protocol != 'https:')
 <div class="element-placeholder" data-elementtype='LINK' style="display:none;"></div>
 	
 	</div>
+</div>
 </div>
 										
 											

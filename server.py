@@ -10,6 +10,14 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 import mail_config as cfg
 import content_manager as cm
 
+
+def _reload_cm():
+    """Reload content_manager so code/JSON changes apply without restarting server.py."""
+    global cm
+    import importlib
+    cm = importlib.reload(cm)
+    return cm
+
 # ── Data store ──────────────────────────────────────────────────────────────
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -1775,7 +1783,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if not self._require_auth():
                 return
             try:
-                self._json_response({'ok': True, 'content': cm.get_all()})
+                _reload_cm()
+                self._json_response(
+                    {'ok': True, 'content': cm.get_all()},
+                    extra_headers={'Cache-Control': 'no-store, no-cache, must-revalidate', 'Pragma': 'no-cache'},
+                )
             except Exception as e:
                 self._json_response({'ok': False, 'error': str(e)}, status=500)
             return
@@ -2669,6 +2681,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
             body = self._read_body()
             try:
+                _reload_cm()
                 data = json.loads(body) if body else {}
                 video_url = data.get('video_url', '').strip()
                 if not video_url:
@@ -2686,6 +2699,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
             body = self._read_body()
             try:
+                _reload_cm()
                 data = json.loads(body) if body else {}
                 index = int(data.get('index', -1))
                 cm.delete_portfolio_video(index)

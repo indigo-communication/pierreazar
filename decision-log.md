@@ -48,6 +48,9 @@
   Deactivating a member also requires session revocation, invalidation of unused
   setup links, locking legacy course tokens, and active-state enforcement on
   password setup, member identity, course pages, and video APIs.
+- Portfolio dynamic video add now appends after the last featured-grid item instead
+  of inserting top-left. Orphan entries in `portfolio_dynamic.json` are cleaned
+  automatically before add; production ghost index 9 was removed during deploy.
 - When Bunny Stream is restored, Volume is the preferred delivery-tier candidate
   for the workshop because Bunny positions it for large files/video at lower cost.
   It is not accepted blindly: MENA playback must be checked against Standard.

@@ -1163,11 +1163,14 @@ SpimeEngine.sendVideoCommand = function(videoId,commandName){
 		}
 	}else if (vid.is(".vimplayer")){
 		setTimeout(function(){
+			if (!vid[0].contentWindow){
+				return;
+			}
 			if ($("#" + videoId +".magic-circle-holder").hasClass("vid-mute")){
-				vid[0].contentWindow.postMessage({"method":"setVolume","value": 0}, '*');
+				vid[0].contentWindow.postMessage(JSON.stringify({"method":"setVolume","value": 0}), '*');
 			}
 			commandName = commandName.replace("-muted","");
-			vid[0].contentWindow.postMessage({"method":commandName}, '*');	
+			vid[0].contentWindow.postMessage(JSON.stringify({"method":commandName}), '*');
 		},2000);
 		
 	}
@@ -1278,19 +1281,33 @@ SpimeEngine.initVideos = function(){
 
 SpimeEngine.vimeoMessage = function(event){
 	if (!(/^https?:\/\/player.vimeo.com/).test(event.origin)) {
-		//not from vimeo
-	}else{
-		var data = (typeof event.data === "string") ? JSON.parse(event.data) : event.data;
-		switch (data.event) {
-            case 'ready':
-	        	$(".vid-mute .vimplayer").each(function(){
-	    			$(this)[0].contentWindow.postMessage({"method":"setVolume","value": 0}, '*');
-	    		});
-	        	$(".vid-autoplay .vimplayer").each(function(){
-	        		$(this).closest(".vid-autoplay").css("opacity",1)
-	    		});
-	            break;
-		 };
+		return;
+	}
+	var data = event.data;
+	if (typeof data === "string") {
+		if (!data || data === "[object Object]") {
+			return;
+		}
+		try {
+			data = JSON.parse(data);
+		} catch (e) {
+			return;
+		}
+	}
+	if (!data || typeof data !== "object") {
+		return;
+	}
+	switch (data.event) {
+		case 'ready':
+			$(".vid-mute .vimplayer").each(function(){
+				if (this.contentWindow) {
+					this.contentWindow.postMessage(JSON.stringify({"method":"setVolume","value": 0}), '*');
+				}
+			});
+			$(".vid-autoplay .vimplayer").each(function(){
+				$(this).closest(".vid-autoplay").css("opacity",1);
+			});
+			break;
 	}
 };
 

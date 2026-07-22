@@ -71,6 +71,8 @@ _None currently active._
 ### Admin Panel
 - [x] Fix `translations is not defined` in shared admin initialization and load
   the translation bundle before `deznav-init.js` on Members
+- [x] Portfolio dynamic add: append new videos at bottom of grid (Option 2),
+  orphan JSON cleanup, ghost index 9 removed on VPS, add/delete verified
 - [ ] "Mark as read" action on contact form submissions (admin/index.html + admin/submissions.html)
 - [ ] Disable / enable member toggle on admin/members.html
 - [ ] Verify dashboard stats load correctly from live member data

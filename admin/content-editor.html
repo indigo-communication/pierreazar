@@ -338,14 +338,14 @@
                                   <span class="section-label mb-0">&#127916; Portfolio Videos</span>
                                   <button type="button" id="btn-add-portfolio-video" class="btn btn-success btn-sm" onclick="toggleAddVideoForm()">&#43; Add New Video</button>
                                 </div>
-                                <p class="text-muted small">Paste a YouTube or Vimeo URL (or just the video ID) — auto-detected. New videos are added at the top-left of the portfolio.</p>
+                                <p class="text-muted small">Paste a YouTube or Vimeo URL (or just the video ID) — auto-detected. New videos are added at the bottom of the portfolio grid.</p>
 
                                 <!-- Add Video inline form -->
                                 <div id="add-video-bar" class="mb-3">
                                   <div id="add-video-form" style="display:none;" class="mt-2 p-3 border rounded bg-light">
                                     <div class="row g-2 align-items-end">
                                       <div class="col">
-                                        <label class="form-label mb-1 small">YouTube or Vimeo URL / ID</label>
+                                        <label class="form-label mb-1 small" for="new-video-url">YouTube or Vimeo URL / ID</label>
                                         <input type="text" id="new-video-url" class="form-control form-control-sm" placeholder="https://youtu.be/… or https://vimeo.com/…" autocomplete="off">
                                       </div>
                                       <div class="col-auto">
@@ -643,16 +643,18 @@ function buildPortfolioVideoRows(content) {
     if (!container) return;
     container.innerHTML = '';
 
-    _dynamicPortfolioIndices = content['_dynamic_portfolio_indices'] || [];
+    _dynamicPortfolioIndices = (content['dynamic_portfolio_indices'] || content['_dynamic_portfolio_indices'] || []).filter(function(v, i, a) {
+        return a.indexOf(v) === i;
+    });
 
     // Dynamic (new) videos first — labelled "New Video N" with delete button
     _dynamicPortfolioIndices.forEach(function(idx) {
         var field = 'portfolio_video_' + idx;
         var row = document.createElement('div');
         row.className = 'col-md-6 col-lg-4';
-        var num = idx - 8; // display number (1,2,3…)
+        var num = _dynamicPortfolioIndices.indexOf(idx) + 1;
         row.innerHTML =
-            '<label class="form-label d-flex justify-content-between align-items-center">' +
+            '<label class="form-label d-flex justify-content-between align-items-center" for="' + field + '">' +
             '<span>&#127381; New Video ' + num + '</span>' +
             '<button type="button" class="btn btn-outline-danger btn-sm py-0 px-1" ' +
             'onclick="deletePortfolioVideo(' + idx + ')" title="Remove this video">&#128465;</button>' +
@@ -688,6 +690,14 @@ function escHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+function adminThumbInputId(thumbField) {
+    return 'admin-thumb-' + String(thumbField || 'unknown').replace(/[^a-zA-Z0-9_-]/g, '-');
+}
+
+function getThumbInputEl(thumbField) {
+    return document.querySelector('[data-thumb-field="' + thumbField + '"]');
+}
+
 function savePortfolioVideos(e) {
     e.preventDefault();
     saveSection(e, 'portfolio-video', PAGE_VIDEO_FIELDS.portfolio);
@@ -699,23 +709,48 @@ function toggleAddVideoForm() {
     if (f.style.display !== 'none') document.getElementById('new-video-url').focus();
 }
 
+function fetchAdminContent() {
+    return fetch('/api/content?ts=' + Date.now(), { credentials: 'include', cache: 'no-store' })
+        .then(function(r){ if (r.status===401){ window.location.href='login.html'; return null; } return r.json(); });
+}
+
+function reloadPortfolioAdminContent() {
+    return fetchAdminContent()
+        .then(function(d){
+            if (!d || !d.ok || !d.content) return;
+            buildPortfolioVideoRows(d.content);
+            _loadedImages['portfolio'] = false;
+            switchPage('portfolio', false);
+            loadPageVideos('portfolio');
+        });
+}
+
 function addPortfolioVideo() {
     var url = (document.getElementById('new-video-url').value || '').trim();
     var res = document.getElementById('add-video-result');
+    var btn = document.querySelector('#add-video-form .btn-primary');
     if (!url) { res.textContent = 'Please enter a URL.'; res.style.color = 'red'; return; }
     res.textContent = 'Adding…'; res.style.color = '';
+    if (btn) btn.disabled = true;
     fetch('/api/portfolio/add-video', {
         method: 'POST', credentials: 'include',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({video_url: url})
     }).then(function(r){ return r.json(); }).then(function(d){
         if (d.ok) {
-            res.textContent = '✓ Added! Reloading…'; res.style.color = 'green';
-            setTimeout(function(){ window.location.reload(); }, 800);
+            res.textContent = '✓ Added! Updating list…'; res.style.color = 'green';
+            document.getElementById('new-video-url').value = '';
+            return reloadPortfolioAdminContent().then(function(){
+                res.textContent = '✓ Video added to portfolio.'; res.style.color = 'green';
+            });
         } else {
             res.textContent = '✗ ' + (d.error || 'Failed'); res.style.color = 'red';
         }
-    }).catch(function(){ res.textContent = '✗ Network error'; res.style.color = 'red'; });
+    }).catch(function(){
+        res.textContent = '✗ Network error'; res.style.color = 'red';
+    }).finally(function(){
+        if (btn) btn.disabled = false;
+    });
 }
 
 function deletePortfolioVideo(index) {
@@ -727,16 +762,37 @@ function deletePortfolioVideo(index) {
     }).then(function(r){ return r.json(); }).then(function(d){
         if (d.ok) {
             var result = document.getElementById('result-portfolio-video');
-            result.textContent = '✓ Video removed. Reloading…'; result.style.color = 'green';
-            setTimeout(function(){ window.location.reload(); }, 800);
+            result.textContent = '✓ Video removed.'; result.style.color = 'green';
+            reloadPortfolioAdminContent();
         } else { alert('Error: ' + (d.error || 'Failed to delete')); }
     }).catch(function(){ alert('Network error'); });
 }
 
 // ── Switch page panel ─────────────────────────────────────────────────────
 var _loadedImages = {};   // cache: page → loaded flag
+var PAGE_IDS = ['homepage', 'portfolio', 'course', 'onset', 'contact'];
 
-function switchPage(page) {
+function getInitialPage() {
+    var hash = (location.hash || '').replace(/^#/, '');
+    if (PAGE_IDS.indexOf(hash) !== -1) return hash;
+    var q = new URLSearchParams(location.search).get('page');
+    if (q && PAGE_IDS.indexOf(q) !== -1) return q;
+    return 'homepage';
+}
+
+function switchPage(page, updateUrl) {
+    if (PAGE_IDS.indexOf(page) === -1) page = 'homepage';
+    if (updateUrl !== false) {
+        var next = '#' + page;
+        if (location.hash !== next) {
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState(null, '', next);
+            } else {
+                location.hash = page;
+            }
+        }
+    }
+
     document.querySelectorAll('.page-btn').forEach(function(b){ b.classList.remove('active'); });
     document.querySelectorAll('.page-panel').forEach(function(p){ p.classList.remove('active'); });
     document.querySelector('[data-page="' + page + '"]').classList.add('active');
@@ -752,8 +808,7 @@ function switchPage(page) {
 
 // ── Load all content fields on startup ───────────────────────────────────
 document.addEventListener('DOMContentLoaded', function () {
-    fetch('/api/content', { credentials: 'include' })
-        .then(function(r){ if (r.status===401){ window.location.href='login.html'; return null; } return r.json(); })
+    fetchAdminContent()
         .then(function(d){
             if (!d || !d.ok) return;
             var c = d.content;
@@ -796,10 +851,11 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(function(){});
 
-    // Load images for the default page (homepage)
-    _loadedImages['homepage'] = true;
-    loadPageImages('homepage');
-    loadPageVideos('homepage');
+    switchPage(getInitialPage(), false);
+});
+
+window.addEventListener('hashchange', function () {
+    switchPage(getInitialPage(), false);
 });
 
 function setVal(id, val) {
@@ -948,7 +1004,9 @@ function loadPageVideos(page) {
                 html += '<div class="video-meta">Video link: ' + escH(v.value || 'Not set') + '</div>';
                 html += '<div class="input-group input-group-sm">';
                 var uploadPath = v.upload_path || v.thumbnail || '';
-                html += '<input type="text" class="form-control" id="' + escH(thumbField) + '" value="' + escH(v.thumbnail || '') + '" data-upload-path="' + escH(uploadPath) + '" placeholder="images/photos/your-thumb.jpg">';
+                var thumbInputId = adminThumbInputId(thumbField);
+                html += '<label class="visually-hidden" for="' + escH(thumbInputId) + '">' + escH(label) + ' thumbnail path</label>';
+                html += '<input type="text" class="form-control" id="' + escH(thumbInputId) + '" data-thumb-field="' + escH(thumbField) + '" value="' + escH(v.thumbnail || '') + '" data-upload-path="' + escH(uploadPath) + '" placeholder="images/photos/your-thumb.jpg">';
                 html += '<button class="btn btn-outline-light" type="button" onclick="triggerVideoThumbReplace(' + escH(JSON.stringify(thumbField)) + ',' + escH(JSON.stringify(page)) + ')">Replace Thumb</button>';
                 html += '<button class="btn btn-outline-danger" type="button" onclick="deleteVideoThumb(' + escH(JSON.stringify(thumbField)) + ',' + escH(JSON.stringify(page)) + ')">Delete Thumb</button>';
                 html += '</div>';
@@ -1021,7 +1079,7 @@ function triggerVideoThumbReplace(thumbField, page) {
     input.style.display = 'none';
     input.addEventListener('change', function(){
         if (!input.files || !input.files[0]) return;
-        var inputEl = document.getElementById(thumbField);
+        var inputEl = getThumbInputEl(thumbField);
         var targetPath = inputEl ? (inputEl.getAttribute('data-upload-path') || inputEl.value) : '';
         if (!targetPath) {
             showVideoStatus(page, false, 'Set thumbnail path first (e.g. images/photos/new-thumb.jpg).');
@@ -1050,7 +1108,7 @@ function uploadVideoThumb(targetPath, page, file, thumbField) {
             var savedPath = d.path || targetPath;
             var payload = {};
             payload[thumbField] = savedPath;
-            var inputEl = document.getElementById(thumbField);
+            var inputEl = getThumbInputEl(thumbField);
             if (inputEl) {
                 inputEl.value = savedPath;
                 inputEl.setAttribute('data-upload-path', savedPath);
@@ -1087,7 +1145,7 @@ function deleteVideoThumb(thumbField, page) {
     .then(function(d){
         if (!d) return;
         if (d.ok) {
-            var inputEl = document.getElementById(thumbField);
+            var inputEl = getThumbInputEl(thumbField);
             if (inputEl) {
                 inputEl.value = '';
                 inputEl.setAttribute('data-upload-path', '');

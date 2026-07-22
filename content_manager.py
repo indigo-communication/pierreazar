@@ -410,7 +410,13 @@ def _unique_portfolio_thumbnail(source_path='images/photos/img_028.jpg'):
         if not os.path.exists(dst):
             break
     if os.path.isfile(src):
-        shutil.copy2(src, dst)
+        try:
+            shutil.copy2(src, dst)
+        except OSError as e:
+            raise OSError(
+                f'Cannot write thumbnail {name}: {e}. '
+                'Run: chown -R aynbeirut:aynbeirut on the site files.'
+            ) from e
     return name
 
 
@@ -456,7 +462,13 @@ def _copy_image_if_exists(src_rel, dst_rel):
     if src == dst or not os.path.isfile(src):
         return dst_rel
     os.makedirs(os.path.dirname(dst), exist_ok=True)
-    shutil.copy2(src, dst)
+    try:
+        shutil.copy2(src, dst)
+    except OSError as e:
+        raise OSError(
+            f'Cannot write thumbnail {dst_rel}: {e}. '
+            'Fix file ownership on the server (chown aynbeirut:aynbeirut) or use a new thumbnail path.'
+        ) from e
     return dst_rel
 
 
@@ -583,8 +595,7 @@ def add_portfolio_video(video_url, thumb_path=None):
     next_index = max((it['index'] for it in items), default=8) + 1
 
     if not thumb_path:
-        thumb_path = dedicated_video_thumbnail_path(f'portfolio_video_{next_index}_thumbnail')
-        _copy_image_if_exists('images/photos/img_028.jpg', thumb_path)
+        thumb_path = _unique_portfolio_thumbnail('images/photos/img_028.jpg')
 
     new_item = {
         'index': next_index,
@@ -946,7 +957,11 @@ def _parse_video_input(value):
     if re.fullmatch(r'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}', raw):
         return 'bunny', raw
     if 'youtube.com' in lower or 'youtu.be' in lower:
-        y = re.search(r'(?:v=|\/embed\/|youtu\.be\/)([A-Za-z0-9_-]{6,})', raw)
+        y = re.search(
+            r'(?:v=|/embed/|/shorts/|/live/|youtu\.be/)([A-Za-z0-9_-]{6,})',
+            raw,
+            re.IGNORECASE,
+        )
         return ('youtube', y.group(1)) if y else ('', '')
     if 'vimeo.com' in lower or 'player.vimeo.com' in lower:
         v = re.search(r'vimeo\.com/(?:video/)?(\d+)', raw)

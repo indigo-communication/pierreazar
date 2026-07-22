@@ -346,7 +346,7 @@
                                     <div class="row g-2 align-items-end">
                                       <div class="col">
                                         <label class="form-label mb-1 small" for="new-video-url">YouTube or Vimeo URL / ID</label>
-                                        <input type="text" id="new-video-url" class="form-control form-control-sm" placeholder="https://youtu.be/… or https://vimeo.com/…" autocomplete="off">
+                                        <input type="text" id="new-video-url" class="form-control form-control-sm" placeholder="youtu.be/…, youtube.com/watch?v=…, youtube.com/shorts/…, vimeo.com/…" autocomplete="off">
                                       </div>
                                       <div class="col-auto">
                                         <button type="button" class="btn btn-primary btn-sm" onclick="addPortfolioVideo()">&#128190; Save &amp; Add</button>
@@ -736,18 +736,28 @@ function addPortfolioVideo() {
         method: 'POST', credentials: 'include',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({video_url: url})
-    }).then(function(r){ return r.json(); }).then(function(d){
+    }).then(function(r){
+        if (r.status === 401) { window.location.href = 'login.html'; return null; }
+        return r.text().then(function(text){
+            var d;
+            try { d = text ? JSON.parse(text) : {}; } catch (e) {
+                throw new Error(text && text.length < 120 ? text : 'Invalid server response');
+            }
+            return { status: r.status, data: d };
+        });
+    }).then(function(payload){
+        if (!payload) return;
+        var d = payload.data;
         if (d.ok) {
             res.textContent = '✓ Added! Updating list…'; res.style.color = 'green';
             document.getElementById('new-video-url').value = '';
             return reloadPortfolioAdminContent().then(function(){
                 res.textContent = '✓ Video added to portfolio.'; res.style.color = 'green';
             });
-        } else {
-            res.textContent = '✗ ' + (d.error || 'Failed'); res.style.color = 'red';
         }
-    }).catch(function(){
-        res.textContent = '✗ Network error'; res.style.color = 'red';
+        res.textContent = '✗ ' + (d.error || ('Failed (HTTP ' + payload.status + ')')); res.style.color = 'red';
+    }).catch(function(err){
+        res.textContent = '✗ ' + (err && err.message ? err.message : 'Network error'); res.style.color = 'red';
     }).finally(function(){
         if (btn) btn.disabled = false;
     });

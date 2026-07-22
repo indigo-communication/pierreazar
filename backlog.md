@@ -73,6 +73,8 @@ _None currently active._
   the translation bundle before `deznav-init.js` on Members
 - [x] Portfolio dynamic add: append new videos at bottom of grid (Option 2),
   orphan JSON cleanup, ghost index 9 removed on VPS, add/delete verified
+- [x] Portfolio add-video: YouTube Shorts URL parsing + clearer admin error messages (Jul 22)
+- [x] Portfolio add-video: fix Permission denied on 2nd add (root-owned thumb files from scp deploys)
 - [ ] "Mark as read" action on contact form submissions (admin/index.html + admin/submissions.html)
 - [ ] Disable / enable member toggle on admin/members.html
 - [ ] Verify dashboard stats load correctly from live member data

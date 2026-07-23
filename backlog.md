@@ -6,7 +6,8 @@ _None currently active._
 ## Pending / Next Steps
 
 ### Done this session (UI)
-- [x] Course/home price UI: strike $149 + show $99 offer (display only; backend charge unchanged)
+- [x] Course/home price UI: strike $149 + show $99 offer
+- [x] Go live: backend `course_price` restored from $0.20 test to $99 on VPS (Jul 23)
 - [x] Replaced “1-month offer” with “Limited offer” on home/course UI
 - [x] Corrected “COURSE SYLLABOUS” to “COURSE SYLLABUS” site-wide
 - [x] Deployed and verified the updated HTML pages

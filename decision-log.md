@@ -1,5 +1,11 @@
 # Decision Log — Pierre Azar Web
 
+## 2026-07-23
+- End-to-end payment testing completed. Production `data/payment_config.json`
+  `course_price` restored from `$0.20` to `$99` (CyberSource live, demo off).
+- Code default `_DEFAULT_PAYMENT_CONFIG['course_price']` aligned to `$99` so a
+  missing config file matches the live offer, not the old `$149` list price.
+
 ## 2026-07-18
 - The `$149` list price remains struck through while the UI displays `$99`.
 - The promotional label is “Limited offer”.

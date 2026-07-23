@@ -23,10 +23,14 @@ Website for Pierre Azar (pierreazar.com), built on the Indigo website builder pl
 - Nine older paid-marked orders lacked gateway evidence and were excluded for
   manual review. No order, sale, activation-code, or legacy course-token records
   were deleted.
-- Current blocker: Premium login and course authorization work, but all five
-  configured Bunny Stream embeds return Bunny's 404 player. Both local and
-  production token keys fail, and no Bunny dashboard/API access is filed in the
-  project credentials or access documentation.
+- Bunny Stream course videos live (library `711140`, 5 chapters, token auth).
+  Public promo uses YouTube trailer only; paid chapters behind login +
+  signed `/api/course-videos`.
+- **Go live (Jul 23):** Production checkout charges **$99** (`course_price` in
+  VPS `data/payment_config.json`; was `$0.20` for E2E testing). UI still shows
+  $149 struck / $99 offer.
+- Pending: Premium **device limits** for login-based course access (legacy tokens
+  already capped at 2 IPs).
 - Buyer purchase emails now include Pierre's workshop welcome text and route
   new buyers through password setup or existing members through login.
 - `pierre@pierreazar.com` was removed from code and runtime member/session/

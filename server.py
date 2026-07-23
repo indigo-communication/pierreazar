@@ -169,7 +169,7 @@ _DEFAULT_PAYMENT_CONFIG = {
     'secret_key':   '',
     'gateway_url':  'apitest.cybersource.com',
     'currency':     'USD',
-    'course_price': 149.00,
+    'course_price': 99.00,
     'course_name':  'Cinematography Workshop',
     'return_base_url': 'https://pierreazar.com',
 }

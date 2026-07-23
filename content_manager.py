@@ -908,7 +908,9 @@ def _extract_video_src(content, element_id):
         content
     )
     if m:
-        return m.group(1).strip()
+        src = m.group(1).strip()
+        if src and src not in ('about:blank', '#'):
+            return src
 
     block_m = re.search(r'<div id="' + re.escape(element_id) + r'"[^>]*>', content)
     if not block_m:
@@ -928,6 +930,14 @@ def _extract_video_src(content, element_id):
             return f'https://www.youtube.com/embed/{vid}'
         if source == 'vimeo':
             return f'https://player.vimeo.com/video/{vid}'
+
+    # Home/course promo also mirrors the trailer in #pa-course-iframe.
+    if element_id == 'element-676387d0a7f9742':
+        pa_m = re.search(r'id="pa-course-iframe"[^>]*src="([^"]+)"', content)
+        if pa_m:
+            src = pa_m.group(1).strip()
+            if src and src not in ('about:blank', '#'):
+                return src
 
     return ''
 

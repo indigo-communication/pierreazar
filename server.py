@@ -125,7 +125,7 @@ def _bunny_embed_is_available(embed_url):
 _PROMO_YOUTUBE_FALLBACK = 'sIcsHObKmzI'
 
 def _resolve_course_promo_embed():
-    """Signed Bunny intro or configured YouTube/Vimeo promo for homepage/course teaser."""
+    """Public homepage/course trailer — never use paid Bunny chapters from course_link.txt."""
     link = ''
     try:
         all_content = cm.get_all()
@@ -138,7 +138,6 @@ def _resolve_course_promo_embed():
         link = ''
 
     source, vid = cm._parse_video_input(link)
-    expires = int(time.time()) + (60 * 60 * 6)
 
     if source == 'youtube' and vid and _youtube_is_available(vid):
         return {'ok': True, 'provider': 'youtube', 'embed_url': _youtube_embed_url(vid)}
@@ -149,23 +148,6 @@ def _resolve_course_promo_embed():
             '?autoplay=1&loop=1&title=0&byline=0&badge=0&muted=1'
         )
         return {'ok': True, 'provider': 'vimeo', 'embed_url': url}
-
-    library_id, videos = _parse_bunny_course_config()
-    token_key = _read_bunny_token_key()
-    bunny_vid = vid if source == 'bunny' else ''
-    if not bunny_vid and videos:
-        bunny_vid = videos[0]['video_id']
-
-    if library_id and bunny_vid and token_key:
-        url = _build_bunny_embed_url(library_id, bunny_vid, token_key, expires)
-        url += '&autoplay=true&loop=true&muted=true&preload=true'
-        if _bunny_embed_is_available(url):
-            return {
-                'ok': True,
-                'provider': 'bunny',
-                'embed_url': url,
-                'fallback': source != 'bunny',
-            }
 
     if _youtube_is_available(_PROMO_YOUTUBE_FALLBACK):
         return {
@@ -995,7 +977,7 @@ def _upsert_premium_buyer(order, migration_version=None):
         member['email'] = email
         if name and not member.get('name'):
             member['name'] = name
-        member['active'] = member.get('active', True)
+        member['active'] = True
         member['premium'] = True
         existing_since = str(member.get('premium_since', '') or '')
         member['premium_since'] = min(

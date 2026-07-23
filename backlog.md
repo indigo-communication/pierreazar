@@ -46,27 +46,29 @@ _None currently active._
 - [x] Confirm only `contact@pierreazar.com` and `azarpierre1@gmail.com` remain active
 
 ### Premium buyer follow-up
-- [ ] **BLOCKER:** Restore Bunny Stream course videos; all five configured
-  library/video IDs currently return the Bunny 404 player
-- [ ] Obtain verified Bunny dashboard/API access or corrected library/video IDs
-  and token-auth key; none are filed in project access records
-- [ ] After Bunny restores or recreates the video library, evaluate and configure
-  the **Volume delivery tier** for cost-sensitive course streaming
-- [ ] Confirm MENA playback performance on Volume before making it permanent;
-  switch back to Standard if latency or buffering is unacceptable
-- [ ] Measure actual encoded traffic per full workshop view in Bunny analytics
-  before recording any per-student or monthly cost
-- [ ] Configure low-balance alerts/auto-recharge so Stream is not suspended again
-- [ ] Confirm the first real buyer completes password setup from the emailed link
-  and opens the course
-- [ ] Manually review 9 historical paid-marked orders excluded for missing
-  gateway evidence; do not grant access without proof
+- [x] Bunny Stream course videos restored — library `711140`, 5 chapters, token auth live (Jul 23)
+- [x] Bunny dashboard security configured (Anwar): embed token auth, allowed domains,
+  block direct URL access
+- [x] Public promo fixed — homepage/course show YouTube trailer only; paid chapters stay
+  behind login + signed `/api/course-videos`
+- [x] Paid buyers reactivate on new purchase (`active: true` even if old test account was disabled)
+- [x] First end-to-end purchase test: pay → password setup → course access verified
+- [ ] **Premium device/account limits** — enforce “stream on up to 2 devices” for Premium
+  member sessions (legacy bearer tokens already use `COURSE_MAX_IPS = 2`; login-based
+  course access is not limited yet)
+- [ ] After Bunny trial, add billing + low-balance alerts/auto-recharge so library `711140`
+  is not suspended
+- [ ] Evaluate **Volume delivery tier** after real traffic; confirm MENA playback before
+  making permanent
+- [ ] Measure actual encoded traffic per full workshop view in Bunny analytics before
+  recording any per-student or monthly cost
+- [ ] Manually review 9 historical paid-marked orders excluded for missing gateway
+  evidence; do not grant access without proof
 - [x] Diagnose Gmail suppression from delivered MailChannels headers
 - [x] Back up and repair authoritative Hostinger SPF/DKIM records
-- [x] Replace obsolete VPS MX with Hostinger `mx1`/`mx2` after confirming all
-  active Pierre Azar mailboxes are hosted there
-- [ ] After DNS cache expiry, send one Gmail setup-link check and confirm
-  SPF/DKIM authentication before resuming purchase-email tests
+- [x] Replace obsolete VPS MX with Hostinger `mx1`/`mx2` after confirming all active
+  Pierre Azar mailboxes are hosted there
+- [ ] Send one Gmail setup-link delivery check and confirm SPF/DKIM on received headers
 
 ### Admin Panel
 - [x] Fix `translations is not defined` in shared admin initialization and load

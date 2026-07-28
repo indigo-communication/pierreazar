@@ -1,5 +1,10 @@
 # Decision Log — Pierre Azar Web
 
+## 2026-07-28
+- Meta Pixel **1692988635305025** added to public Indigo pages (User analytics
+  slot) and custom funnel pages (payment, member, course player). Tracks
+  `PageView` only; admin templates excluded.
+
 ## 2026-07-23
 - End-to-end payment testing completed. Production `data/payment_config.json`
   `course_price` restored from `$0.20` to `$99` (CyberSource live, demo off).

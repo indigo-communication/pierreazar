@@ -1,9 +1,10 @@
 # Decision Log — Pierre Azar Web
 
 ## 2026-07-28
-- Meta Pixel **1692988635305025** added to public Indigo pages (User analytics
-  slot) and custom funnel pages (payment, member, course player). Tracks
-  `PageView` only; admin templates excluded.
+- Meta Pixel **1692988635305025** on public pages (`PageView`); snippet at top of
+  `<head>` so Meta’s checker can find it (not visible on the page UI).
+- **Purchase** standard event on `payment-success.html` with `value` + `currency`
+  from post-payment redirect query params; deduped per order in `sessionStorage`.
 
 ## 2026-07-23
 - End-to-end payment testing completed. Production `data/payment_config.json`

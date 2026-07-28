@@ -637,9 +637,15 @@ def _receipt_access_key(order_id, email):
     raw = f'{order_id}:{email.strip().lower()}'
     return hmac.new(pepper.encode(), raw.encode(), hashlib.sha256).hexdigest()[:32]
 
-def _payment_success_redirect(order_id, email, course_token=None):
+def _payment_success_redirect(order_id, email, course_token=None, order=None):
     key = _receipt_access_key(order_id, email)
-    qs = urllib.parse.urlencode({'order': order_id, 'key': key})
+    cfg = get_payment_config()
+    params = {'order': order_id, 'key': key}
+    src = order if order is not None else _find_paid_order(order_id, email)
+    if src:
+        params['amount'] = f"{round(float(src.get('amount', cfg.get('course_price', 99))), 2):.2f}"
+        params['currency'] = (src.get('currency') or cfg.get('currency', 'USD'))
+    qs = urllib.parse.urlencode(params)
     if course_token:
         qs += '&' + urllib.parse.urlencode({'token': course_token})
     return f'/payment-success.html?{qs}'
@@ -789,7 +795,7 @@ def _finalize_paid_order(order_id, cfg_data, gateway_name='cybersource', payment
             _log_email_error(f'purchase_notify:{order_id}', e)
 
     _write_json(ORDERS_FILE, orders)
-    return {'ok': True, 'redirect': _payment_success_redirect(order_id, buyer_email)}
+    return {'ok': True, 'redirect': _payment_success_redirect(order_id, buyer_email, order=order)}
 
 # ── Areeba / MPGS hosted checkout ────────────────────────────────────────────
 def _areeba_create_session(cfg_data, order_id, amount, name, email):

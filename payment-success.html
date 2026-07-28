@@ -3,6 +3,45 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1692988635305025');
+fbq('track', 'PageView');
+</script>
+<script>
+(function () {
+  var p = new URLSearchParams(window.location.search);
+  var order = p.get('order');
+  var key = p.get('key');
+  if (!order || !key) return;
+  var dedupeKey = 'pa_meta_purchase_' + order;
+  try {
+    if (sessionStorage.getItem(dedupeKey)) return;
+    sessionStorage.setItem(dedupeKey, '1');
+  } catch (e) {}
+  var amount = parseFloat(p.get('amount') || '99');
+  if (!isFinite(amount) || amount <= 0) amount = 99;
+  var currency = (p.get('currency') || 'USD').toUpperCase();
+  fbq('track', 'Purchase', {
+    value: amount,
+    currency: currency,
+    content_name: 'Cinematography Workshop',
+    content_type: 'product'
+  });
+})();
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1692988635305025&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
     <title>Payment Successful — Pierre Azar</title>
     <link rel="icon" type="image/png" href="images/photos/img_033.jpg">
     <style>
@@ -19,23 +58,6 @@
         .btn.secondary { background: transparent; color: #fff; border: 1px solid #444; }
         #receipt-note { font-size: 13px; color: #777; margin-top: 8px; }
     </style>
-<!-- Meta Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1692988635305025');
-fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=1692988635305025&ev=PageView&noscript=1"
-/></noscript>
-<!-- End Meta Pixel Code -->
 </head>
 <body>
     <div class="card">

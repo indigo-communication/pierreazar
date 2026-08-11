@@ -210,6 +210,7 @@
                                             <th class="mw-100">Course</th>
                                             <th class="mw-80">Amount</th>
                                             <th class="mw-80">Status</th>
+                                            <th class="mw-120">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="sales-tbody">
@@ -321,6 +322,9 @@ function loadSales() {
                 return;
             }
             tbody.innerHTML = sales.map(function(s) {
+                var resendBtn = s.status === 'paid' ? 
+                    '<button class="btn btn-sm btn-outline-primary" onclick="resendToken(\''+s.order_id+'\', \''+s.email+'\')">Resend Link</button>' : 
+                    '—';
                 return '<tr>' +
                     '<td class="text-nowrap">' + formatDate(s.date) + '</td>' +
                     '<td>' + (s.name||'—') + '</td>' +
@@ -328,6 +332,7 @@ function loadSales() {
                     '<td>' + (s.course||'Cinematography Workshop') + '</td>' +
                     '<td>$' + (parseFloat(s.amount)||0).toFixed(2) + '</td>' +
                     '<td>' + statusBadge(s.status) + '</td>' +
+                    '<td>' + resendBtn + '</td>' +
                     '</tr>';
             }).join('');
         })
@@ -361,6 +366,25 @@ function saveSale() {
             msg.className='alert alert-danger'; msg.textContent=d.error||'Error saving.';
         }
     }).catch(function(e){ msg.className='alert alert-danger'; msg.textContent=e.message; });
+}
+
+function resendToken(orderId, email) {
+    if (!confirm('Resend course access link to ' + email + '?')) return;
+    fetch('/api/admin/resend-course-token', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({order_id: orderId, email: email})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+        if (d.ok) {
+            alert('Course link resent to ' + email);
+            loadSales();
+        } else {
+            alert('Error: ' + (d.error || 'Failed to resend token'));
+        }
+    })
+    .catch(function(e){ alert('Error: ' + e.message); });
 }
 
 document.addEventListener('DOMContentLoaded', loadSales);

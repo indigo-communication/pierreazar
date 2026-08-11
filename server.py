@@ -781,6 +781,21 @@ def _finalize_paid_order(order_id, cfg_data, gateway_name='cybersource', payment
                     receipt_url=receipt_url,
                 )
                 order['buyer_email_type'] = 'premium_access'
+            
+            # Generate and send direct course access token
+            try:
+                course_token = _generate_course_token(buyer_email, order_id)
+                _send_course_access_email(
+                    buyer_name,
+                    buyer_email,
+                    course_token,
+                    base_url,
+                    receipt_url=receipt_url,
+                )
+                order['buyer_email_type'] = 'premium_access_with_token'
+            except Exception as e:
+                _log_email_error(f'course_token:{order_id}', e)
+            
             order['buyer_access_emailed'] = True
             order['buyer_access_emailed_at'] = datetime.now(timezone.utc).isoformat()
         except Exception as e:
@@ -1225,7 +1240,7 @@ def _send_password_setup_email(name, email, raw_token, base_url, order_id='', re
     msg['Message-ID'] = f'<password-setup-{secrets.token_hex(8)}@pierreazar.com>'
     msg.attach(MIMEText(body_text, 'plain'))
     msg.attach(MIMEText(body_html, 'html'))
-    sent_to = _smtp_send(msg, email)
+    sent_to = _smtp_send(msg, email, include_notify_cc=True)
     _log_email_ok(f'password_setup:{email}:{order_id}', ','.join(sent_to))
     return sent_to
 
@@ -1287,7 +1302,7 @@ def _send_premium_access_email(name, email, base_url, order_id='', receipt_url=N
     msg['Message-ID'] = f'<premium-access-{secrets.token_hex(8)}@pierreazar.com>'
     msg.attach(MIMEText(body_text, 'plain'))
     msg.attach(MIMEText(body_html, 'html'))
-    sent_to = _smtp_send(msg, email)
+    sent_to = _smtp_send(msg, email, include_notify_cc=True)
     _log_email_ok(f'premium_access:{email}:{order_id}', ','.join(sent_to))
     return sent_to
 
@@ -1388,7 +1403,7 @@ def _send_activation_email(name, email, code, base_url):
     msg['Message-ID'] = f'<activation-{secrets.token_hex(8)}@pierreazar.com>'
     msg.attach(MIMEText(body_text, 'plain'))
     msg.attach(MIMEText(body_html, 'html'))
-    sent_to = _smtp_send(msg, email)
+    sent_to = _smtp_send(msg, email, include_notify_cc=True)
     _log_email_ok(f'activation_email:{email}', ','.join(sent_to))
 
 # ── Course access token helpers ──────────────────────────────────────────────
@@ -1476,7 +1491,7 @@ def _send_course_access_email(name, email, token, base_url, receipt_url=None):
     msg["Message-ID"] = f'<course-access-{secrets.token_hex(8)}@pierreazar.com>'
     msg.attach(MIMEText(body_text, "plain"))
     msg.attach(MIMEText(body_html, "html"))
-    sent_to = _smtp_send(msg, email)
+    sent_to = _smtp_send(msg, email, include_notify_cc=True)
     _log_email_ok(f'course_access_email:{email}', ','.join(sent_to))
     return sent_to
 
@@ -2254,6 +2269,48 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 for t in tokens
             ]
             self._json_response({'ok': True, 'tokens': safe})
+            return
+
+        if path == '/api/admin/resend-course-token':
+            if not self._require_auth():
+                return
+            body = self._read_body()
+            try:
+                data = json.loads(body)
+                order_id = str(data.get('order_id', '')).strip()
+                email = str(data.get('email', '')).strip().lower()
+                
+                if not order_id or not email:
+                    self._json_response({'ok': False, 'error': 'order_id and email are required'}, status=400)
+                    return
+                
+                # Find the order
+                order = _find_paid_order(order_id, email)
+                if not order:
+                    self._json_response({'ok': False, 'error': f'No paid order found for {order_id} / {email}'}, status=404)
+                    return
+                
+                # Generate new token
+                base_url = get_payment_config().get('return_base_url', 'https://pierreazar.com')
+                receipt_url = f"{base_url.rstrip('/')}/api/receipt?{urllib.parse.urlencode({'order': order_id, 'key': _receipt_access_key(order_id, email), 'download': '1'})}"
+                
+                token = _generate_course_token(email, order_id)
+                _send_course_access_email(
+                    order.get('name', ''),
+                    email,
+                    token,
+                    base_url,
+                    receipt_url=receipt_url,
+                )
+                
+                self._json_response({
+                    'ok': True,
+                    'message': f'Course token resent to {email}',
+                    'order_id': order_id,
+                    'email': email,
+                })
+            except Exception as e:
+                self._json_response({'ok': False, 'error': str(e)}, status=400)
             return
 
         # Static file serving

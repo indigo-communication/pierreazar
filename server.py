@@ -781,20 +781,21 @@ def _finalize_paid_order(order_id, cfg_data, gateway_name='cybersource', payment
                     receipt_url=receipt_url,
                 )
                 order['buyer_email_type'] = 'premium_access'
-            
-            # Generate and send direct course access token
-            try:
-                course_token = _generate_course_token(buyer_email, order_id)
-                _send_course_access_email(
-                    buyer_name,
-                    buyer_email,
-                    course_token,
-                    base_url,
-                    receipt_url=receipt_url,
-                )
-                order['buyer_email_type'] = 'premium_access_with_token'
-            except Exception as e:
-                _log_email_error(f'course_token:{order_id}', e)
+
+            # Direct course token only after the buyer has a password (legacy fallback).
+            if not account['needs_password_setup']:
+                try:
+                    course_token = _generate_course_token(buyer_email, order_id)
+                    _send_course_access_email(
+                        buyer_name,
+                        buyer_email,
+                        course_token,
+                        base_url,
+                        receipt_url=receipt_url,
+                    )
+                    order['buyer_email_type'] = 'premium_access_with_token'
+                except Exception as e:
+                    _log_email_error(f'course_token:{order_id}', e)
             
             order['buyer_access_emailed'] = True
             order['buyer_access_emailed_at'] = datetime.now(timezone.utc).isoformat()
@@ -1186,9 +1187,10 @@ def _smtp_send(msg, recipients, include_notify_cc=False):
     return recipients
 
 def _send_password_setup_email(name, email, raw_token, base_url, order_id='', receipt_url=None):
+    quoted = urllib.parse.quote(raw_token, safe='')
     setup_url = (
         f"{base_url.rstrip('/')}/member/set-password"
-        f"#token={urllib.parse.quote(raw_token)}"
+        f"?token={quoted}"
     )
     subject = "Welcome to the Cinematography Workshop!"
     receipt_line = f"\nDownload your receipt: {receipt_url}\n" if receipt_url else ''
@@ -2289,10 +2291,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if not order:
                     self._json_response({'ok': False, 'error': f'No paid order found for {order_id} / {email}'}, status=404)
                     return
-                
-                # Generate new token
+
                 base_url = get_payment_config().get('return_base_url', 'https://pierreazar.com')
                 receipt_url = f"{base_url.rstrip('/')}/api/receipt?{urllib.parse.urlencode({'order': order_id, 'key': _receipt_access_key(order_id, email), 'download': '1'})}"
+
+                members = _read_json(MEMBERS_FILE)
+                member = next(
+                    (m for m in members if _normalize_email(m.get('email')) == email),
+                    None,
+                )
+                if member and member.get('password_pending'):
+                    _issue_password_setup_email(order, base_url, receipt_url=receipt_url)
+                    self._json_response({
+                        'ok': True,
+                        'message': f'Password setup link resent to {email}',
+                        'order_id': order_id,
+                        'email': email,
+                    })
+                    return
                 
                 token = _generate_course_token(email, order_id)
                 _send_course_access_email(
@@ -2337,6 +2353,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 message = str(data.get('message', '')).strip()[:5000]
                 if not name or not email or not message:
                     raise ValueError("Missing required fields")
+                if not _EMAIL_RE.match(email):
+                    raise ValueError("Please enter a valid email address")
 
                 # Save to submissions store
                 submissions = _read_json(SUBMISSIONS_FILE)
@@ -2359,11 +2377,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         email_sent = True
                     except Exception as mail_err:
                         email_error = str(mail_err)
-                    try:
-                        _send_contact_confirmation_email(name, email, message)
-                        confirmation_sent = True
-                    except Exception as confirmation_err:
-                        confirmation_error = str(confirmation_err)
+                    if _EMAIL_RE.match(email):
+                        try:
+                            _send_contact_confirmation_email(name, email, message)
+                            confirmation_sent = True
+                        except Exception as confirmation_err:
+                            confirmation_error = str(confirmation_err)
 
                 self._json_response({
                     'ok': True,

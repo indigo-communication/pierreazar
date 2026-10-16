@@ -42,6 +42,14 @@
         }
         return;
       }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        if (msgDiv) {
+          msgDiv.style.display = 'block';
+          msgDiv.style.color = '#ff6b6b';
+          msgDiv.textContent = 'Please enter a valid email address.';
+        }
+        return;
+      }
 
       btn.style.opacity = '0.6';
       btn.style.pointerEvents = 'none';

@@ -4676,16 +4676,118 @@ if(window.location.protocol != 'https:')
 #vbid-6fed10fa-dtmmv94e .preview-video-source { opacity: 1 !important; transition: none !important; }
 #vbid-6fed10fa-dtmmv94e .preview-video-source.pa-active { opacity: 1 !important; }
 #vbid-6fed10fa-dtmmv94e .inner-pic.pa-playing { background-image: none !important; }
-#vbid-6fed10fa-dtmmv94e .preview-video-holder,
-#vbid-6fed10fa-dtmmv94e .preview-video-source { position: relative !important; width: 100% !important; height: 100% !important; }
-#vbid-6fed10fa-dtmmv94e .preview-video-source iframe {
-    display: block !important; position: relative !important;
-    top: auto !important; left: auto !important;
-    width: 100% !important; height: 100% !important;
-    margin: 0 !important; border: none !important; pointer-events: auto !important;
+#vbid-6fed10fa-dtmmv94e .inner-pic {
+  position: relative !important;
+  overflow: hidden !important;
+  background-image: none !important;
+  background-color: #000 !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  aspect-ratio: 16 / 9 !important; /* match course promo video */
+  width: 100% !important;
+  max-height: 400px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
-#vbid-6fed10fa-dtmmv94e .inner-pic { position: relative !important; overflow: hidden !important; }
+#vbid-6fed10fa-dtmmv94e .preview-video-holder,
+#vbid-6fed10fa-dtmmv94e .preview-video-source {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 2;
+}
+#vbid-6fed10fa-dtmmv94e .preview-video-source iframe {
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  border: none !important;
+  pointer-events: auto !important;
+}
 #vbid-6fed10fa-dtmmv94e a.image-link { pointer-events: none !important; }
+
+@media (max-width: 768px) {
+  #vbid-6fed10fa-dtmmv94e .matrix #items-holder,
+  #vbid-6fed10fa-dtmmv94e .matrix #items-holder-wrapper,
+  #vbid-6fed10fa-dtmmv94e .gallery-wrapper,
+  #vbid-6fed10fa-dtmmv94e .sub.container.matrix {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+  }
+  #vbid-6fed10fa-dtmmv94e .matrix .sub.item-box.page-box,
+  #vbid-6fed10fa-dtmmv94e .page-wrapper,
+  #vbid-6fed10fa-dtmmv94e .item-content.multi_layout,
+  #vbid-6fed10fa-dtmmv94e .multi-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box !important;
+  }
+  #vbid-6fed10fa-dtmmv94e .style-6fed10fa-yrdkdaje .multi_layout .helper-div.middle-center,
+  #vbid-6fed10fa-dtmmv94e .multi_layout .helper-div.middle-center {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+  }
+  #vbid-6fed10fa-dtmmv94e .style-6fed10fa-yrdkdaje .multi_layout .helper-div.middle-center .pic-side,
+  #vbid-6fed10fa-dtmmv94e .multi_layout .pic-side {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    margin: 0 auto !important;
+    transform: none !important;
+  }
+  #vbid-6fed10fa-dtmmv94e .multi_layout .pic-side .vertical-aligner,
+  #vbid-6fed10fa-dtmmv94e .multi_layout .pic-side .vertical-aligner a.image-link {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    display: block !important;
+  }
+  #vbid-6fed10fa-dtmmv94e .multi_layout .text-side {
+    display: none !important;
+  }
+  #vbid-6fed10fa-dtmmv94e .inner-pic-holder {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
+    margin: 0 auto !important;
+  }
+  #vbid-6fed10fa-dtmmv94e .inner-pic {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 56.25vw !important;
+    max-height: 400px !important;
+    aspect-ratio: 16 / 9 !important;
+    display: block !important;
+    margin: 0 auto 16px !important;
+  }
+}
 
 /* ── Top hero: nudge image container right ── */
 #vbid-38497da5-v22rkfln-holder { transform: translateX(4%) !important; }
@@ -5117,7 +5219,7 @@ if(window.location.protocol != 'https:')
 			
 			<div class="page-wrapper item-wrapper ">
 					
-					<div class="item-content leaf multi_layout page content -container" data-self="vbid-6fed10fa-9ndscatr" data-preview-style="style-6fed10fa-yrdkdaje" data-style="style-ed018-yjvbvfoyx6" data-orig-thumb-height="1137" data-orig-thumb-width="807" data-vbid="vbid-6fed10fa-9ndscatr" data-bgimg="images/photos/img_007.jpg">
+					<div class="item-content leaf multi_layout page content -container" data-self="vbid-6fed10fa-9ndscatr" data-preview-style="style-6fed10fa-yrdkdaje" data-style="style-ed018-yjvbvfoyx6" data-orig-thumb-height="1137" data-orig-thumb-width="807" data-vbid="vbid-6fed10fa-9ndscatr">
 <div  class="multi-container preview image-cover" >
 	<div class="Picture item-preview">
 		<div class="preview-image-holder">
@@ -5130,15 +5232,15 @@ if(window.location.protocol != 'https:')
 					<div id="vbid-6fed10fa-dfbcl8qf-holder" class="preview-image-holder inner-pic-holder" data-menu-name="PREVIEW_INLINE_IMAGE_HOLDER">
     
     <a class="image-link top-layer not-wrapping" href="/vbid-6fed10fa-j7losq0u"  data-link-type="LIGHTBOX" target="_self"></a> 
-    <div id="vbid-6fed10fa-dfbcl8qf" class="inner-pic preview-element  magic-circle-holder  load-high-res " data-menu-name="PREVIEW_INLINE_IMAGE" style="background-image:url(images/photos/img_007.jpg);" data-orig-width="807" data-orig-height="1137" >
+    <div id="vbid-6fed10fa-dfbcl8qf" class="inner-pic preview-element  magic-circle-holder  load-high-res " data-menu-name="PREVIEW_INLINE_IMAGE" data-orig-width="807" data-orig-height="1137" >
         
         
 
 <div class="preview-video-holder removable-parent">
-	<div id="element-a040d6d7a932d90" class="preview-element preview-video-source magic-circle-holder vid-loop allow-mobile-hide" data-menu-name="PREVIEW_VIDEO" data-json-name="PREVIEW_VIDEO"   data-spimeVID_LOOP = 'true'  data-spimeVIDEO_ID = '1000452483'  data-spimeVID_COVER = 'False'  data-spimeSOURCE = 'vimeo'  data-spimeCONTEXT = 'PREVIEW'  data-spimeVBID = 'element-a040d6d7a932d90'  >
+	<div id="element-a040d6d7a932d90" class="preview-element preview-video-source magic-circle-holder vid-autoplay vid-mute vid-loop allow-mobile-hide" data-menu-name="PREVIEW_VIDEO" data-json-name="PREVIEW_VIDEO"   data-spimeVID_LOOP = 'true'  data-spimeVID_AUTOPLAY = 'true'  data-spimeVID_MUTE = 'true'  data-spimeVIDEO_ID = '1000452483'  data-spimeVID_COVER = 'False'  data-spimeSOURCE = 'vimeo'  data-spimeCONTEXT = 'PREVIEW'  data-spimeVBID = 'element-a040d6d7a932d90'  >
 		
 		
-		<iframe class="vimplayer preview video-frame" id="element-a040d6d7a932d90-vidframe" src="https://player.vimeo.com/video/1000452483?api=1&player_id=element-a040d6d7a932d90-vidframe&autoplay=1&loop=1&muted=1&controls=1&title=0&byline=0&badge=0&background=0&autopause=0&dnt=1" data-pa-src="https://player.vimeo.com/video/1000452483?api=1&player_id=element-a040d6d7a932d90-vidframe&autoplay=1&loop=1&muted=1&controls=1&title=0&byline=0&badge=0&background=0&autopause=0&dnt=1" allow="autoplay" frameborder="0" width="100%" height="100%"></iframe>
+		<iframe class="vimplayer preview video-frame" id="element-a040d6d7a932d90-vidframe" src="https://player.vimeo.com/video/1000452483?autoplay=1&muted=1&loop=1&controls=1&title=0&byline=0&badge=0&background=0&autopause=0&playsinline=1&dnt=1" data-pa-src="https://player.vimeo.com/video/1000452483?autoplay=1&muted=1&loop=1&controls=1&title=0&byline=0&badge=0&background=0&autopause=0&playsinline=1&dnt=1" allow="autoplay; fullscreen; picture-in-picture" frameborder="0" width="100%" height="100%"></iframe>
 		
 	</div>
 </div>
@@ -5213,7 +5315,7 @@ if(window.location.protocol != 'https:')
 			
 			<div class="page-wrapper item-wrapper ">
 					
-					<div class="item-content leaf multi_layout page content -container" data-self="vbid-6fed10fa-ekneqkjp" data-preview-style="style-6fed10fa-yrdkdaje" data-style="style-ed018-zvvitjsa4x" data-orig-thumb-height="1600" data-orig-thumb-width="900" data-vbid="vbid-6fed10fa-ekneqkjp" data-bgimg="images/photos/img_008.jpg">
+					<div class="item-content leaf multi_layout page content -container" data-self="vbid-6fed10fa-ekneqkjp" data-preview-style="style-6fed10fa-yrdkdaje" data-style="style-ed018-zvvitjsa4x" data-orig-thumb-height="1600" data-orig-thumb-width="900" data-vbid="vbid-6fed10fa-ekneqkjp">
 <div  class="multi-container preview image-cover" >
 	<div class="Picture item-preview">
 		<div class="preview-image-holder">
@@ -5226,15 +5328,15 @@ if(window.location.protocol != 'https:')
 					<div id="vbid-6fed10fa-c3w2mmzm-holder" class="preview-image-holder inner-pic-holder" data-menu-name="PREVIEW_INLINE_IMAGE_HOLDER">
     
     <a class="image-link top-layer not-wrapping" href="/vbid-6fed10fa-x1kzwsok"  data-link-type="LIGHTBOX" target="_self"></a> 
-    <div id="vbid-6fed10fa-c3w2mmzm" class="inner-pic preview-element  magic-circle-holder  load-high-res " data-menu-name="PREVIEW_INLINE_IMAGE" style="background-image:url(images/photos/img_008.jpg);" data-orig-width="900" data-orig-height="1600" >
+    <div id="vbid-6fed10fa-c3w2mmzm" class="inner-pic preview-element  magic-circle-holder  load-high-res " data-menu-name="PREVIEW_INLINE_IMAGE" data-orig-width="900" data-orig-height="1600" >
         
         
 
 <div class="preview-video-holder removable-parent">
-	<div id="element-8a4e9ff9e6eb6c1" class="preview-element preview-video-source magic-circle-holder vid-loop allow-mobile-hide" data-menu-name="PREVIEW_VIDEO" data-json-name="PREVIEW_VIDEO"   data-spimeVID_LOOP = 'true'  data-spimeVIDEO_ID = '996151610'  data-spimeVID_COVER = 'False'  data-spimeSOURCE = 'vimeo'  data-spimeCONTEXT = 'PREVIEW'  data-spimeVBID = 'element-8a4e9ff9e6eb6c1'  >
+	<div id="element-8a4e9ff9e6eb6c1" class="preview-element preview-video-source magic-circle-holder vid-autoplay vid-mute vid-loop allow-mobile-hide" data-menu-name="PREVIEW_VIDEO" data-json-name="PREVIEW_VIDEO"   data-spimeVID_LOOP = 'true'  data-spimeVID_AUTOPLAY = 'true'  data-spimeVID_MUTE = 'true'  data-spimeVIDEO_ID = '996151610'  data-spimeVID_COVER = 'False'  data-spimeSOURCE = 'vimeo'  data-spimeCONTEXT = 'PREVIEW'  data-spimeVBID = 'element-8a4e9ff9e6eb6c1'  >
 		
 		
-		<iframe class="vimplayer preview video-frame" id="element-8a4e9ff9e6eb6c1-vidframe" src="https://player.vimeo.com/video/996151610?api=1&player_id=element-8a4e9ff9e6eb6c1-vidframe&autoplay=1&loop=1&muted=1&controls=1&title=0&byline=0&badge=0&background=0&autopause=0&dnt=1" data-pa-src="https://player.vimeo.com/video/996151610?api=1&player_id=element-8a4e9ff9e6eb6c1-vidframe&autoplay=1&loop=1&muted=1&controls=1&title=0&byline=0&badge=0&background=0&autopause=0&dnt=1" allow="autoplay" frameborder="0" width="100%" height="100%"></iframe>
+		<iframe class="vimplayer preview video-frame" id="element-8a4e9ff9e6eb6c1-vidframe" src="https://player.vimeo.com/video/996151610?autoplay=1&muted=1&loop=1&controls=1&title=0&byline=0&badge=0&background=0&autopause=0&playsinline=1&dnt=1" data-pa-src="https://player.vimeo.com/video/996151610?autoplay=1&muted=1&loop=1&controls=1&title=0&byline=0&badge=0&background=0&autopause=0&playsinline=1&dnt=1" allow="autoplay; fullscreen; picture-in-picture" frameborder="0" width="100%" height="100%"></iframe>
 		
 	</div>
 </div>
@@ -5309,7 +5411,7 @@ if(window.location.protocol != 'https:')
 			
 			<div class="page-wrapper item-wrapper ">
 					
-					<div class="item-content leaf multi_layout page content -container" data-self="vbid-6fed10fa-jozun2at" data-preview-style="style-6fed10fa-yrdkdaje" data-style="style-ed018-yjvbvfoyx6" data-orig-thumb-height="2774" data-orig-thumb-width="4160" data-vbid="vbid-6fed10fa-jozun2at" data-bgimg="images/photos/img_009.jpg">
+					<div class="item-content leaf multi_layout page content -container" data-self="vbid-6fed10fa-jozun2at" data-preview-style="style-6fed10fa-yrdkdaje" data-style="style-ed018-yjvbvfoyx6" data-orig-thumb-height="2774" data-orig-thumb-width="4160" data-vbid="vbid-6fed10fa-jozun2at">
 <div  class="multi-container preview image-cover" >
 	<div class="Picture item-preview">
 		<div class="preview-image-holder">
@@ -5322,15 +5424,15 @@ if(window.location.protocol != 'https:')
 					<div id="vbid-6fed10fa-5tl59pta-holder" class="preview-image-holder inner-pic-holder" data-menu-name="PREVIEW_INLINE_IMAGE_HOLDER">
     
     <a class="image-link top-layer not-wrapping" href="/vbid-6fed10fa-t6mwsv5t"  data-link-type="LIGHTBOX" target="_self"></a> 
-    <div id="vbid-6fed10fa-5tl59pta" class="inner-pic preview-element  magic-circle-holder  load-high-res " data-menu-name="PREVIEW_INLINE_IMAGE" style="background-image:url(images/photos/img_009.jpg);" data-orig-width="4160" data-orig-height="2774" >
+    <div id="vbid-6fed10fa-5tl59pta" class="inner-pic preview-element  magic-circle-holder  load-high-res " data-menu-name="PREVIEW_INLINE_IMAGE" data-orig-width="4160" data-orig-height="2774" >
         
         
 
 <div class="preview-video-holder removable-parent">
-	<div id="element-6d74b124fdb89cc" class="preview-element preview-video-source magic-circle-holder vid-loop allow-mobile-hide" data-menu-name="PREVIEW_VIDEO" data-json-name="PREVIEW_VIDEO"   data-spimeVID_LOOP = 'true'  data-spimeVIDEO_ID = '291044785'  data-spimeVID_COVER = 'False'  data-spimeSOURCE = 'vimeo'  data-spimeCONTEXT = 'PREVIEW'  data-spimeVBID = 'element-6d74b124fdb89cc'  >
+	<div id="element-6d74b124fdb89cc" class="preview-element preview-video-source magic-circle-holder vid-autoplay vid-mute vid-loop allow-mobile-hide" data-menu-name="PREVIEW_VIDEO" data-json-name="PREVIEW_VIDEO"   data-spimeVID_LOOP = 'true'  data-spimeVID_AUTOPLAY = 'true'  data-spimeVID_MUTE = 'true'  data-spimeVIDEO_ID = '291044785'  data-spimeVID_COVER = 'False'  data-spimeSOURCE = 'vimeo'  data-spimeCONTEXT = 'PREVIEW'  data-spimeVBID = 'element-6d74b124fdb89cc'  >
 		
 		
-		<iframe class="vimplayer preview video-frame" id="element-6d74b124fdb89cc-vidframe" src="https://player.vimeo.com/video/291044785?api=1&player_id=element-6d74b124fdb89cc-vidframe&autoplay=1&loop=1&muted=1&controls=1&title=0&byline=0&badge=0&background=0&autopause=0&dnt=1" data-pa-src="https://player.vimeo.com/video/291044785?api=1&player_id=element-6d74b124fdb89cc-vidframe&autoplay=1&loop=1&muted=1&controls=1&title=0&byline=0&badge=0&background=0&autopause=0&dnt=1" allow="autoplay" frameborder="0" width="100%" height="100%"></iframe>
+		<iframe class="vimplayer preview video-frame" id="element-6d74b124fdb89cc-vidframe" src="https://player.vimeo.com/video/291044785?autoplay=1&muted=1&loop=1&controls=1&title=0&byline=0&badge=0&background=0&autopause=0&playsinline=1&dnt=1" data-pa-src="https://player.vimeo.com/video/291044785?autoplay=1&muted=1&loop=1&controls=1&title=0&byline=0&badge=0&background=0&autopause=0&playsinline=1&dnt=1" allow="autoplay; fullscreen; picture-in-picture" frameborder="0" width="100%" height="100%"></iframe>
 		
 	</div>
 </div>
@@ -7003,13 +7105,12 @@ if(window.location.protocol != 'https:')
 
 
 <script>
-/* ── Selected works: lazy-load gallery videos on scroll ── */
+/* ── Selected works: autoplay muted gallery videos ── */
 (function() {
-  function revealInlineVideos() {
+  function initSelectedWorksVideos() {
     var gallery = document.getElementById('vbid-6fed10fa-dtmmv94e');
     if (!gallery) return;
-    var sources = gallery.querySelectorAll('.preview-video-source');
-    sources.forEach(function(source) {
+    gallery.querySelectorAll('.preview-video-source').forEach(function(source) {
       source.classList.add('pa-active');
       var pic = source.closest('.inner-pic');
       if (pic) pic.classList.add('pa-playing');
@@ -7019,11 +7120,10 @@ if(window.location.protocol != 'https:')
       }
     });
   }
-
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', revealInlineVideos);
+    document.addEventListener('DOMContentLoaded', initSelectedWorksVideos);
   } else {
-    revealInlineVideos();
+    initSelectedWorksVideos();
   }
 })();
 </script>

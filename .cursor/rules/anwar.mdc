@@ -7,7 +7,7 @@ alwaysApply: true
 # UNIVERSAL SCOPE (NON-NEGOTIABLE)
 These rules apply to **every** workspace Anwar opens — client work, products, SEO, Grabio, Pierre Azar, emoove, VPS repos, new folders, monorepos, subfolders — **no exceptions** unless Anwar explicitly overrides in the current message.
 
-Project-local `.cursor/rules/` files may add **project-specific** notes only. They must **not** weaken, skip, or replace Rules 1–34 here.
+Project-local `.cursor/rules/` files may add **project-specific** notes only. They must **not** weaken, skip, or replace Rules 1–36 here.
 
 # SESSION START (every project, every conversation)
 1. Read `README.md` — state current knowledge; never start from zero (Rule 2).
@@ -155,3 +155,11 @@ If the agent listed client-delivered access as "missing" or drafted a re-request
 - **Binding order:** `users.subAccountId` → that doc’s `storeId` is canonical for the session. **`activeStoreId` must not override** a different store’s subAccount.
 - **One-store scripts:** Patch only `where('storeId','==', target)`; never rewrite another tenant’s `users`/`subAccounts` when fixing one client.
 - **Finance/UI:** Queries and SOT paths are **store-scoped** only. Cross-tenant data in a client UI = **Sev-1** — fix Firestore + code same session; evidence in `reporting/data/*-tenant-*-{date}.json`.
+
+## 36. END OF TASK — LOCAL AND CLOUD STAY IN STEP — NON-NEGOTIABLE
+- Anwar works in two places: the laptop and the Cursor cloud agent. Both follow this CoC and the same project docs (`README.md`, `backlog.md`, `decision-log.md`, `architecture.md`).
+- When Anwar says the task is **complete**, or **enough for today**, commit the finished work and push it to GitHub before stopping.
+- Push the owner remote and the parallel remote. `a-nooor` is the owner. `AynBeirut` is the parallel admin. Keep both copies in step.
+- Never commit or push `.credentials.md`, `.env`, paste files, keys, or service-account JSON.
+- Do not push unrelated uncommitted files. Do not force-push.
+- When this CoC changes, copy it to each project's `.cursor/rules/anwar.mdc` and push those repos so the cloud agent reads the same rule.
